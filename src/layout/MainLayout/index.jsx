@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Box, Toolbar, IconButton } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { Outlet } from 'react-router-dom';
-import Header from './Header/Header';
-import Sidebar from './Sidebar/Sidebar';
-import MenuIcon from '@mui/icons-material/Menu';
+
+// Componentes del layout
+import Header from './Header';
+import Sidebar from './Sidebar';
 
 const drawerWidth = 260;
 
-export default function DashboardLayout() {
+const MainLayout = () => {
+  const theme = useTheme();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(true);
 
@@ -49,4 +51,6 @@ export default function DashboardLayout() {
       </Box>
     </Box>
   );
-}
+};
+
+export default MainLayout;
