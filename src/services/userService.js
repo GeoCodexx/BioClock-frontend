@@ -1,7 +1,7 @@
 import api from './api';
 
-export const getUsers = async ({ search = '', page = 1, limit = 10 } = {}) => {
-  const res = await api.get('/users', { params: { search, page, limit } });
+export const getPaginatedUsers = async ({ search = '', page = 1, limit = 10 } = {}) => {
+  const res = await api.get('/users/paginated', { params: { search, page, limit } });
   return res.data;
 };
 
@@ -22,5 +22,10 @@ export const deleteUser = async (id) => {
 
 export const getUserById = async (id) => {
   const res = await api.get(`/users/${id}`);
+  return res.data;
+};
+
+export const getUsers = async () => {
+  const res = await api.get('/users');
   return res.data;
 };

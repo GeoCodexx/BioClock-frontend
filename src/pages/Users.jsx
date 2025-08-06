@@ -4,7 +4,7 @@ import UserForm from '../components/User/UserForm';
 import UserTable from '../components/User/UserTable';
 import UserExportButtons from '../components/User/UserExportButtons';
 import UserSearchBar from '../components/User/UserSearchBar';
-import { getUsers, createUser, updateUser, deleteUser } from '../services/userService';
+import { getPaginatedUsers, createUser, updateUser, deleteUser } from '../services/userService';
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -29,7 +29,7 @@ export default function Users() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const data = await getUsers({ search, page: page + 1, limit: rowsPerPage });
+      const data = await getPaginatedUsers({ search, page: page + 1, limit: rowsPerPage });
       setUsers(data.users);
       setTotal(data.total);
     } catch (err) {

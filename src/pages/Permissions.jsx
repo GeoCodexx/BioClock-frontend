@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Typography,
   CircularProgress,
@@ -10,25 +10,25 @@ import {
   TablePagination,
   Button,
 } from "@mui/material";
-import RoleForm from "../components/Role/RoleForm";
-import RoleTable from "../components/Role/RoleTable";
-import RoleSearchBar from "../components/Role/RoleSearchBar";
 import {
-  getPaginatedRoles,
-  createRole,
-  updateRole,
-  deleteRole,
-} from "../services/roleService";
-import RoleExportButtons from "../components/Role/RoleExportButtons";
+  createPermission,
+  getPaginatedPermissions,
+  updatePermission,
+  deletePermission,
+} from "../services/permissionService";
+import PermissionForm from "../components/Permission/PermissionForm";
+import PermissionTable from "../components/Permission/PermissionTable";
+import PermissionSearchBar from "../components/Permission/PermissionSearchBar";
+import PermissionExportButtons from "../components/Permission/PermissionExportButtons";
 
-export default function Roles() {
-  const [roles, setRoles] = useState([]);
+export default function Permissions() {
+  const [permissions, setPermissions] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState("");
-  const [editRole, setEditRole] = useState(null);
+  const [editPermission, setEditPermission] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
   const [page, setPage] = useState(0);
@@ -37,22 +37,22 @@ export default function Roles() {
   const [searchInput, setSearchInput] = useState("");
 
   useEffect(() => {
-    fetchRoles();
+    fetchPermissions();
     // eslint-disable-next-line
   }, [page, rowsPerPage, search]);
 
-  const fetchRoles = async () => {
+  const fetchPermissions = async () => {
     setLoading(true);
     try {
-      const data = await getPaginatedRoles({
+      const data = await getPaginatedPermissions({
         search,
         page: page + 1,
         limit: rowsPerPage,
       });
-      setRoles(data.roles);
+      setPermissions(data.permissions);
       setTotal(data.total);
     } catch (err) {
-      setError("Error al cargar roles");
+      setError("Error al cargar permisos");
     } finally {
       setLoading(false);
     }
@@ -61,50 +61,50 @@ export default function Roles() {
   const handleRegister = async (data) => {
     setFormError("");
     try {
-      if (editRole) {
-        await updateRole(editRole._id, data);
+      if (editPermission) {
+        await updatePermission(editPermission._id, data);
       } else {
-        await createRole(data);
+        await createPermission(data);
       }
       setOpen(false);
-      setEditRole(null);
-      fetchRoles();
+      setEditPermission(null);
+      fetchPermissions();
     } catch (err) {
-      setFormError(err.response?.data?.message || "Error al guardar rol");
+      setFormError(err.response?.data?.message || "Error al guardar permiso");
     }
   };
-
-  const handleEdit = (role) => {
-    setEditRole(role);
+  const handleEdit = (permission) => {
+    setEditPermission(permission);
     setOpen(true);
   };
 
-  const handleDelete = (roleId) => {
-    setDeleteId(roleId);
+  const handleDelete = (permissionId) => {
+    setDeleteId(permissionId);
     setDeleteError("");
   };
 
   const confirmDelete = async () => {
     setDeleteError("");
     try {
-      await deleteRole(deleteId);
+      await deletePermission(deleteId);
       setDeleteId(null);
-      fetchRoles();
+      fetchPermissions();
     } catch (err) {
-      setDeleteError(err.response?.data?.message || "Error al eliminar rol");
+      setDeleteError(
+        err.response?.data?.message || "Error al eliminar permiso"
+      );
     }
   };
 
   const handleClose = () => {
     setOpen(false);
-    setEditRole(null);
+    setEditPermission(null);
     setFormError("");
   };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
-
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -122,19 +122,23 @@ export default function Roles() {
   return (
     <>
       <Typography variant="h5" gutterBottom>
-        Roles
+        Gestión de Permisos
       </Typography>
-      <RoleSearchBar
+      <PermissionSearchBar
         searchInput={searchInput}
         setSearchInput={setSearchInput}
         onSearch={handleSearch}
         onAdd={() => {
           setOpen(true);
-          setEditRole(null);
+          setEditPermission(null);
         }}
       />
-      <RoleExportButtons roles={roles} />
-      <RoleTable roles={roles} onEdit={handleEdit} onDelete={handleDelete} />
+      <PermissionExportButtons permissions={permissions}/>
+      <PermissionTable
+        permissions={permissions}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
       <TablePagination
         component="div"
         count={total}
@@ -145,19 +149,24 @@ export default function Roles() {
         labelRowsPerPage="Filas por página"
       />
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editRole ? "Editar Rol" : "Registrar Rol"}</DialogTitle>
+        <DialogTitle>
+          {editPermission ? "Editar Permiso" : "Registrar Permiso"}
+        </DialogTitle>
         <DialogContent>
           {formError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {formError}
             </Alert>
           )}
-          <RoleForm onSubmit={handleRegister} defaultValues={editRole || {}} />
+          <PermissionForm
+            onSubmit={handleRegister}
+            defaultValues={editPermission || {}}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button type="submit" form="role-form" variant="contained">
-            {editRole ? "Guardar Cambios" : "Registrar"}
+          <Button type="submit" form="permission-form" variant="contained">
+            {editPermission ? "Guardar Cambios" : "Registrar"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -169,7 +178,9 @@ export default function Roles() {
               {deleteError}
             </Alert>
           )}
-          ¿Estás seguro de que deseas eliminar este rol?
+          <Typography>
+            ¿Estás seguro de que deseas eliminar este permiso?
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteId(null)}>Cancelar</Button>

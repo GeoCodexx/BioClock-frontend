@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   CircularProgress,
@@ -10,25 +10,25 @@ import {
   TablePagination,
   Button,
 } from "@mui/material";
-import RoleForm from "../components/Role/RoleForm";
-import RoleTable from "../components/Role/RoleTable";
-import RoleSearchBar from "../components/Role/RoleSearchBar";
+import DepartmentForm from "../components/Department/DepartmentForm";
+import DepartmentTable from "../components/Department/DepartmentTable";
+import DepartmentSearchBar from "../components/Department/DepartmentSearchBar";
 import {
-  getPaginatedRoles,
-  createRole,
-  updateRole,
-  deleteRole,
-} from "../services/roleService";
-import RoleExportButtons from "../components/Role/RoleExportButtons";
+  getPaginatedDepartments,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment,
+} from "../services/departmentService";
+import DepartmentExportButtons from "../components/Department/DepartmentExportButtons";
 
-export default function Roles() {
-  const [roles, setRoles] = useState([]);
+export default function Departments() {
+  const [departments, setDepartments] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState("");
-  const [editRole, setEditRole] = useState(null);
+  const [editDepartment, setEditDepartment] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
   const [page, setPage] = useState(0);
@@ -37,22 +37,23 @@ export default function Roles() {
   const [searchInput, setSearchInput] = useState("");
 
   useEffect(() => {
-    fetchRoles();
+    fetchDepartments();
     // eslint-disable-next-line
   }, [page, rowsPerPage, search]);
 
-  const fetchRoles = async () => {
+  const fetchDepartments = async () => {
     setLoading(true);
     try {
-      const data = await getPaginatedRoles({
+      const data = await getPaginatedDepartments({
         search,
         page: page + 1,
         limit: rowsPerPage,
       });
-      setRoles(data.roles);
+      setDepartments(data.departments);
       setTotal(data.total);
+      console.log(data);
     } catch (err) {
-      setError("Error al cargar roles");
+      setError("Error al cargar departamentos");
     } finally {
       setLoading(false);
     }
@@ -61,43 +62,47 @@ export default function Roles() {
   const handleRegister = async (data) => {
     setFormError("");
     try {
-      if (editRole) {
-        await updateRole(editRole._id, data);
+      if (editDepartment) {
+        await updateDepartment(editDepartment._id, data);
       } else {
-        await createRole(data);
+        await createDepartment(data);
       }
       setOpen(false);
-      setEditRole(null);
-      fetchRoles();
+      setEditDepartment(null);
+      fetchDepartments();
     } catch (err) {
-      setFormError(err.response?.data?.message || "Error al guardar rol");
+      setFormError(
+        err.response?.data?.message || "Error al guardar departamento"
+      );
     }
   };
 
-  const handleEdit = (role) => {
-    setEditRole(role);
+  const handleEdit = (department) => {
+    setEditDepartment(department);
     setOpen(true);
   };
 
-  const handleDelete = (roleId) => {
-    setDeleteId(roleId);
+  const handleDelete = (departmentId) => {
+    setDeleteId(departmentId);
     setDeleteError("");
   };
 
   const confirmDelete = async () => {
-    setDeleteError("");
     try {
-      await deleteRole(deleteId);
+      await deleteDepartment(deleteId);
       setDeleteId(null);
-      fetchRoles();
+      setDeleteError("");
+      fetchDepartments();
     } catch (err) {
-      setDeleteError(err.response?.data?.message || "Error al eliminar rol");
+      setDeleteError(
+        err.response?.data?.message || "Error al eliminar departamento"
+      );
     }
   };
 
   const handleClose = () => {
     setOpen(false);
-    setEditRole(null);
+    setEditDepartment(null);
     setFormError("");
   };
 
@@ -122,19 +127,23 @@ export default function Roles() {
   return (
     <>
       <Typography variant="h5" gutterBottom>
-        Roles
+        Departments
       </Typography>
-      <RoleSearchBar
+      <DepartmentSearchBar
         searchInput={searchInput}
         setSearchInput={setSearchInput}
         onSearch={handleSearch}
         onAdd={() => {
           setOpen(true);
-          setEditRole(null);
+          setEditDepartment(null);
         }}
       />
-      <RoleExportButtons roles={roles} />
-      <RoleTable roles={roles} onEdit={handleEdit} onDelete={handleDelete} />
+      <DepartmentExportButtons departments={departments} />
+      <DepartmentTable
+        departments={departments}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
       <TablePagination
         component="div"
         count={total}
@@ -145,19 +154,24 @@ export default function Roles() {
         labelRowsPerPage="Filas por página"
       />
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>{editRole ? "Editar Rol" : "Registrar Rol"}</DialogTitle>
+        <DialogTitle>
+          {editDepartment ? "Editar departamento" : "Nuevo departamento"}
+        </DialogTitle>
         <DialogContent>
           {formError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {formError}
             </Alert>
           )}
-          <RoleForm onSubmit={handleRegister} defaultValues={editRole || {}} />
+          <DepartmentForm
+            onSubmit={handleRegister}
+            defaultValues={editDepartment || {}}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button type="submit" form="role-form" variant="contained">
-            {editRole ? "Guardar Cambios" : "Registrar"}
+          <Button type="submit" form="department-form" variant="contained">
+            {editDepartment ? "Guardar Cambios" : "Registrar"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -169,11 +183,13 @@ export default function Roles() {
               {deleteError}
             </Alert>
           )}
-          ¿Estás seguro de que deseas eliminar este rol?
+          <Typography>
+            ¿Estás seguro de querer eliminar este departamento?
+          </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteId(null)}>Cancelar</Button>
-          <Button color="error" variant="contained" onClick={confirmDelete}>
+          <Button onClick={confirmDelete} color="error">
             Eliminar
           </Button>
         </DialogActions>

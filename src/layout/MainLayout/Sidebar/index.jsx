@@ -1,4 +1,4 @@
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link } from "react-router-dom";
 import {
   Box,
   Drawer,
@@ -11,25 +11,27 @@ import {
   useTheme,
   Tooltip,
   Avatar,
-  Divider
-} from '@mui/material';
+  Divider,
+} from "@mui/material";
 
 // Iconos
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import PeopleIcon from '@mui/icons-material/People';
-import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import BusinessIcon from '@mui/icons-material/Business';
-import EventNoteIcon from '@mui/icons-material/EventNote';
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import PeopleIcon from "@mui/icons-material/People";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import BusinessIcon from "@mui/icons-material/Business";
+import EventNoteIcon from "@mui/icons-material/EventNote";
 
 const drawerWidth = 260;
 const collapsedWidth = 80;
 
 const menuItems = [
-  { text: 'Dashboard', path: '/', icon: <DashboardIcon /> },
-  { text: 'Usuarios', path: '/users', icon: <PeopleIcon /> },
-  { text: 'Roles', path: '/roles', icon: <VpnKeyIcon /> },
-  { text: 'Departamentos', path: '/departments', icon: <BusinessIcon /> },
-  { text: 'Asistencias', path: '/attendances', icon: <EventNoteIcon /> },
+  { text: "Dashboard", path: "/", icon: <DashboardIcon /> },
+  { text: "Horarios", path: "/schedules", icon: <EventNoteIcon /> },
+  { text: "Departamentos", path: "/departments", icon: <BusinessIcon /> },
+  { text: "Permisos", path: "/permisos", icon: <VpnKeyIcon /> },
+  { text: "Roles", path: "/roles", icon: <VpnKeyIcon /> },
+  { text: "Usuarios", path: "/users", icon: <PeopleIcon /> },
+  { text: "Asistencias", path: "/attendances", icon: <EventNoteIcon /> },
 ];
 
 const Sidebar = ({ isOpen }) => {
@@ -47,19 +49,19 @@ const Sidebar = ({ isOpen }) => {
         sx={{
           px: 2.5,
           py: 3,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
         {isOpen && (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             <Avatar
               sx={{
                 width: 40,
                 height: 40,
                 bgcolor: theme.palette.primary.main,
-                mr: 2
+                mr: 2,
               }}
             >
               A
@@ -86,25 +88,27 @@ const Sidebar = ({ isOpen }) => {
                   borderRadius: 1,
                   mb: 0.5,
                   minHeight: 48,
-                  justifyContent: isOpen ? 'initial' : 'center',
-                  '&.Mui-selected': {
+                  justifyContent: isOpen ? "initial" : "center",
+                  "&.Mui-selected": {
                     bgcolor: `${theme.palette.primary.main}15`,
                     color: theme.palette.primary.main,
-                    '&:hover': {
+                    "&:hover": {
                       bgcolor: `${theme.palette.primary.main}25`,
                     },
-                    '& .MuiListItemIcon-root': {
+                    "& .MuiListItemIcon-root": {
                       color: theme.palette.primary.main,
-                    }
+                    },
                   },
                 }}
               >
                 <ListItemIcon
                   sx={{
                     minWidth: 36,
-                    mr: isOpen ? 3 : 'auto',
-                    justifyContent: 'center',
-                    color: activeRoute(item.path) ? theme.palette.primary.main : 'inherit'
+                    mr: isOpen ? 3 : "auto",
+                    justifyContent: "center",
+                    color: activeRoute(item.path)
+                      ? theme.palette.primary.main
+                      : "inherit",
                   }}
                 >
                   {item.icon}
@@ -123,20 +127,20 @@ const Sidebar = ({ isOpen }) => {
       variant="permanent"
       sx={{
         width: isOpen ? drawerWidth : collapsedWidth,
-        transition: theme.transitions.create('width', {
+        transition: theme.transitions.create("width", {
           easing: theme.transitions.easing.sharp,
           duration: theme.transitions.duration.enteringScreen,
         }),
         [`& .MuiDrawer-paper`]: {
           width: isOpen ? drawerWidth : collapsedWidth,
-          transition: theme.transitions.create('width', {
+          transition: theme.transitions.create("width", {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),
-          boxSizing: 'border-box',
+          boxSizing: "border-box",
           borderRight: `1px solid ${theme.palette.divider}`,
           bgcolor: theme.palette.background.paper,
-          overflowX: 'hidden'
+          overflowX: "hidden",
         },
       }}
     >

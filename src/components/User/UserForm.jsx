@@ -1,11 +1,23 @@
-import { useEffect, useState } from 'react';
-import { TextField, MenuItem, Select, InputLabel, FormControl, CircularProgress } from '@mui/material';
-import { useForm } from 'react-hook-form';
-import { getRoles } from '../../services/roleService';
-import { getDepartments } from '../../services/departmentService';
+import { useEffect, useState } from "react";
+import {
+  TextField,
+  MenuItem,
+  Select,
+  InputLabel,
+  FormControl,
+  CircularProgress,
+} from "@mui/material";
+import { useForm } from "react-hook-form";
+import { getRoles } from "../../services/roleService";
+import { getDepartments } from "../../services/departmentService";
 
 export default function UserForm({ onSubmit, defaultValues = {}, loading }) {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({ defaultValues });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({ defaultValues });
   const [roles, setRoles] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -23,7 +35,7 @@ export default function UserForm({ onSubmit, defaultValues = {}, loading }) {
       try {
         const [rolesData, departmentsData] = await Promise.all([
           getRoles(),
-          getDepartments()
+          getDepartments(),
         ]);
         setRoles(rolesData);
         setDepartments(departmentsData);
@@ -43,7 +55,7 @@ export default function UserForm({ onSubmit, defaultValues = {}, loading }) {
         margin="normal"
         fullWidth
         label="Nombre"
-        {...register('name', { required: 'Nombre requerido' })}
+        {...register("name", { required: "Nombre requerido" })}
         error={!!errors.name}
         helperText={errors.name?.message}
       />
@@ -51,7 +63,9 @@ export default function UserForm({ onSubmit, defaultValues = {}, loading }) {
         margin="normal"
         fullWidth
         label="Apellido Paterno"
-        {...register('firstSurname', { required: 'Apellido paterno requerido' })}
+        {...register("firstSurname", {
+          required: "Apellido paterno requerido",
+        })}
         error={!!errors.firstSurname}
         helperText={errors.firstSurname?.message}
       />
@@ -59,16 +73,34 @@ export default function UserForm({ onSubmit, defaultValues = {}, loading }) {
         margin="normal"
         fullWidth
         label="Apellido Materno"
-        {...register('secondSurname', { required: 'Apellido materno requerido' })}
+        {...register("secondSurname", {
+          required: "Apellido materno requerido",
+        })}
         error={!!errors.secondSurname}
         helperText={errors.secondSurname?.message}
       />
       <TextField
         margin="normal"
         fullWidth
+        label="DNI"
+        {...register("dni", { required: "DNI requerido" })}
+        error={!!errors.dni}
+        helperText={errors.dni?.message}
+      />
+      <TextField
+        margin="normal"
+        fullWidth
+        label="Teléfono"
+        {...register("phone", { required: "Teléfono requerido" })}
+        error={!!errors.phone}
+        helperText={errors.phone?.message}
+      />
+      <TextField
+        margin="normal"
+        fullWidth
         label="Email"
         type="email"
-        {...register('email', { required: 'Email requerido' })}
+        {...register("email", { required: "Email requerido" })}
         error={!!errors.email}
         helperText={errors.email?.message}
       />
@@ -77,7 +109,7 @@ export default function UserForm({ onSubmit, defaultValues = {}, loading }) {
         fullWidth
         label="Contraseña"
         type="password"
-        {...register('passwordHash', { required: 'Contraseña requerida' })}
+        {...register("passwordHash", { required: "Contraseña requerida" })}
         error={!!errors.passwordHash}
         helperText={errors.passwordHash?.message}
       />
@@ -86,14 +118,18 @@ export default function UserForm({ onSubmit, defaultValues = {}, loading }) {
         <Select
           labelId="role-label"
           label="Rol"
-          defaultValue={defaultValues.roleId || ''}
-          {...register('roleId', { required: 'Rol requerido' })}
+          defaultValue={defaultValues.roleId || ""}
+          {...register("roleId", { required: "Rol requerido" })}
         >
           {loadingData ? (
-            <MenuItem value=""><CircularProgress size={20} /></MenuItem>
+            <MenuItem value="">
+              <CircularProgress size={20} />
+            </MenuItem>
           ) : (
             roles.map((role) => (
-              <MenuItem key={role._id} value={role._id}>{role.name}</MenuItem>
+              <MenuItem key={role._id} value={role._id}>
+                {role.name}
+              </MenuItem>
             ))
           )}
         </Select>
@@ -103,18 +139,22 @@ export default function UserForm({ onSubmit, defaultValues = {}, loading }) {
         <Select
           labelId="department-label"
           label="Departamento"
-          defaultValue={defaultValues.departmentId || ''}
-          {...register('departmentId', { required: 'Departamento requerido' })}
+          defaultValue={defaultValues.departmentId || ""}
+          {...register("departmentId", { required: "Departamento requerido" })}
         >
           {loadingData ? (
-            <MenuItem value=""><CircularProgress size={20} /></MenuItem>
+            <MenuItem value="">
+              <CircularProgress size={20} />
+            </MenuItem>
           ) : (
             departments.map((dep) => (
-              <MenuItem key={dep._id} value={dep._id}>{dep.name}</MenuItem>
+              <MenuItem key={dep._id} value={dep._id}>
+                {dep.name}
+              </MenuItem>
             ))
           )}
         </Select>
       </FormControl>
     </form>
   );
-} 
+}

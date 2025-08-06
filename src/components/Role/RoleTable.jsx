@@ -11,6 +11,7 @@ export default function RoleTable({ roles, onEdit, onDelete }) {
                         <TableCell>Nombre</TableCell>
                         <TableCell>Descripción</TableCell>
                         <TableCell>Permisos</TableCell>
+                        <TableCell>Estado</TableCell>
                         <TableCell>Acciones</TableCell>
                     </TableRow>
                 </TableHead>
@@ -28,6 +29,7 @@ export default function RoleTable({ roles, onEdit, onDelete }) {
                                     ).join(', ')
                                     : ''}
                             </TableCell>
+                            <TableCell>{role.status}</TableCell>
                             <TableCell>
                                 <IconButton color="primary" size="small" onClick={() => onEdit && onEdit(role)}>
                                     <EditIcon />

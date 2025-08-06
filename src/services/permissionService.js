@@ -1,8 +1,8 @@
 import api from './api';
 
 
-export const getPermissions = async (params = {}) => {
-  const response = await api.get('/permissions', { params });
+export const getPaginatedPermissions = async ({ search = '', page = 1, limit = 10 } = {}) => {
+  const response = await api.get('/permissions/paginated', { params: { search, page, limit } });
   return response.data;
 };
 
@@ -24,4 +24,9 @@ export const updatePermission = async (id, data) => {
 export const deletePermission = async (id) => {
   const response = await api.delete(`/permissions/${id}`);
   return response.data;
+};
+
+export const getPermissions = async () => {
+  const res = await api.get('/permissions');
+  return res.data;
 };
