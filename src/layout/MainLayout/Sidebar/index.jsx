@@ -20,6 +20,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import BusinessIcon from "@mui/icons-material/Business";
 import EventNoteIcon from "@mui/icons-material/EventNote";
+import FingerprintIcon from "@mui/icons-material/Fingerprint";
 
 const drawerWidth = 260;
 const collapsedWidth = 80;
@@ -31,6 +32,11 @@ const menuItems = [
   { text: "Permisos", path: "/permisos", icon: <VpnKeyIcon /> },
   { text: "Roles", path: "/roles", icon: <VpnKeyIcon /> },
   { text: "Usuarios", path: "/users", icon: <PeopleIcon /> },
+  {
+    text: "Huellas Dactilares",
+    path: "/fingerprints",
+    icon: <FingerprintIcon />,
+  },
   { text: "Asistencias", path: "/attendances", icon: <EventNoteIcon /> },
 ];
 

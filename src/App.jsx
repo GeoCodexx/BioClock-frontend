@@ -11,6 +11,7 @@ import Departments from "./pages/Departments";
 import { ThemeProvider } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import theme from "./themes";
+import Fingerprint from "./pages/Fingerprints";
 
 
 function Attendances() {
@@ -41,6 +42,7 @@ export default function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="users" element={<Users />} />
+            <Route path="fingerprints" element={<Fingerprint />} />
             <Route path="roles" element={<Roles />} />
             <Route path="permisos" element={<Permissions />} />
             <Route path="departments" element={<Departments />} />
