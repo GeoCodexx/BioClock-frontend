@@ -113,48 +113,57 @@ export default function UserForm({ onSubmit, defaultValues = {}, loading }) {
         error={!!errors.passwordHash}
         helperText={errors.passwordHash?.message}
       />
-      <FormControl fullWidth margin="normal" error={!!errors.roleId}>
-        <InputLabel id="role-label">Rol</InputLabel>
-        <Select
-          labelId="role-label"
-          label="Rol"
-          defaultValue={defaultValues.roleId || ""}
-          {...register("roleId", { required: "Rol requerido" })}
-        >
-          {loadingData ? (
-            <MenuItem value="">
-              <CircularProgress size={20} />
-            </MenuItem>
-          ) : (
-            roles.map((role) => (
-              <MenuItem key={role._id} value={role._id}>
-                {role.name}
+      {roles.length > 0 && (
+        <FormControl fullWidth margin="normal" error={!!errors.roleId}>
+          <InputLabel id="role-label">Rol</InputLabel>
+          <Select
+            labelId="role-label"
+            label="Rol"
+            value={defaultValues.roleId?._id||""}
+            defaultValue={defaultValues.roleId?._id || ""}
+            {...register("roleId", { required: "Rol requerido" })}
+          >
+            {loadingData ? (
+              <MenuItem value="">
+                <CircularProgress size={20} />
               </MenuItem>
-            ))
-          )}
-        </Select>
-      </FormControl>
-      <FormControl fullWidth margin="normal" error={!!errors.departmentId}>
-        <InputLabel id="department-label">Departamento</InputLabel>
-        <Select
-          labelId="department-label"
-          label="Departamento"
-          defaultValue={defaultValues.departmentId || ""}
-          {...register("departmentId", { required: "Departamento requerido" })}
-        >
-          {loadingData ? (
-            <MenuItem value="">
-              <CircularProgress size={20} />
-            </MenuItem>
-          ) : (
-            departments.map((dep) => (
-              <MenuItem key={dep._id} value={dep._id}>
-                {dep.name}
+            ) : (
+              roles.map((role) => (
+                <MenuItem key={role._id} value={role._id}>
+                  {role.name}
+                </MenuItem>
+              ))
+            )}
+          </Select>
+        </FormControl>
+      )}
+
+      {departments.length > 0 && (
+        <FormControl fullWidth margin="normal" error={!!errors.departmentId}>
+          <InputLabel id="department-label">Departamento</InputLabel>
+          <Select
+            labelId="department-label"
+            label="Departamento"
+            value={defaultValues.departmentId?._id||""}
+            defaultValue={defaultValues.departmentId?._id || ""}
+            {...register("departmentId", {
+              required: "Departamento requerido",
+            })}
+          >
+            {loadingData ? (
+              <MenuItem value="">
+                <CircularProgress size={20} />
               </MenuItem>
-            ))
-          )}
-        </Select>
-      </FormControl>
+            ) : (
+              departments.map((dep) => (
+                <MenuItem key={dep._id} value={dep._id}>
+                  {dep.name}
+                </MenuItem>
+              ))
+            )}
+          </Select>
+        </FormControl>
+      )}
     </form>
   );
 }
