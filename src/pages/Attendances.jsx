@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Typography,
   CircularProgress,
@@ -10,25 +10,25 @@ import {
   TablePagination,
   Button,
 } from "@mui/material";
+import AttendanceForm from "../components/Attendance/AttendanceForm";
+import AttendanceTable from "../components/Attendance/AttendanceTable";
+import AttendanceExportButtons from "../components/Attendance/AttendanceExportButtons";
+import AttendanceSearchBar from "../components/Attendance/AttendanceSearchBar";
 import {
-  createSchedule,
-  getPaginatedSchedules,
-  updateSchedule,
-  deleteSchedule,
-} from "../services/scheduleService";
-import ScheduleForm from "../components/Schedule/ScheduleForm";
-import ScheduleTable from "../components/Schedule/ScheduleTable";
-import ScheduleSearchBar from "../components/Schedule/ScheduleSearchBar";
-import ScheduleExportButtons from "../components/Schedule/ScheduleExportButtons";
+  getPaginatedAttendances,
+  createAttendance,
+  updateAttendance,
+  deleteAttendance,
+} from "../services/attendanceService";
 
-export default function Schedules() {
-  const [schedules, setSchedules] = useState([]);
+export default function Attendances() {
+  const [attendances, setAttendances] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState("");
-  const [editSchedule, setEditSchedule] = useState(null);
+  const [editAttendance, setEditAttendance] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
   const [page, setPage] = useState(0);
@@ -37,73 +37,72 @@ export default function Schedules() {
   const [searchInput, setSearchInput] = useState("");
 
   useEffect(() => {
-    fetchSchedules();
+    fetchAttendances();
     // eslint-disable-next-line
   }, [page, rowsPerPage, search]);
 
-  const fetchSchedules = async () => {
+  const fetchAttendances = async () => {
     setLoading(true);
     try {
-      const data = await getPaginatedSchedules({
+      const data = await getPaginatedAttendances({
         search,
         page: page + 1,
         limit: rowsPerPage,
       });
-      setSchedules(data.schedules);
+      setAttendances(data.data);
+      //console.log("Data Attendances useEffect: ", data);
       setTotal(data.total);
     } catch (err) {
-      setError("Error al cargar horarios");
+      setError("Error al cargar asistencias");
     } finally {
       setLoading(false);
     }
   };
 
   const handleRegister = async (data) => {
-    console.log(data);
     setFormError("");
     try {
-      if (editSchedule) {
-        await updateSchedule(editSchedule._id, data);
+      if (editAttendance) {
+        await updateAttendance(editAttendance._id, data);
       } else {
-        const response = await createSchedule(data);
-        console.log("Respuesta backend: ", response);
+        await createAttendance(data);
       }
       setOpen(false);
-      setEditSchedule(null);
-      fetchSchedules();
+      setEditAttendance(null);
+      fetchAttendances();
     } catch (err) {
       setFormError(
-        err.response?.data?.message || "Error al guardar el horario"
+        err.response?.data?.message || "Error al guardar asistencia"
       );
     }
   };
 
-  const handleEdit = (schedule) => {
-    setEditSchedule(schedule);
+  const handleEdit = (attendance) => {
+    setEditAttendance(attendance);
     setOpen(true);
   };
 
-  const handleDelete = (scheduleId) => {
-    setDeleteId(scheduleId);
+  const handleDelete = (attendanceId) => {
+    setDeleteId(attendanceId);
     setDeleteError("");
   };
 
   const confirmDelete = async () => {
     setDeleteError("");
     try {
-      await deleteSchedule(deleteId);
+      await deleteAttendance(deleteId);
       setDeleteId(null);
-      fetchSchedules();
+      fetchAttendances();
     } catch (err) {
       setDeleteError(
-        err.response?.data?.message || "Error al eliminar el horario"
+        err.response?.data?.message || "Error al eliminar asistencia"
       );
     }
   };
 
   const handleClose = () => {
     setOpen(false);
-    setEditSchedule(null);
+    setEditAttendance(null);
     setFormError("");
   };
 
@@ -115,6 +114,7 @@ export default function Schedules() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+
   const handleSearch = (e) => {
     e.preventDefault();
     setPage(0);
@@ -127,20 +127,20 @@ export default function Schedules() {
   return (
     <>
       <Typography variant="h5" gutterBottom>
-        Gestión de Horarios
+        Gestión de Asistencias
       </Typography>
-      <ScheduleSearchBar
+      <AttendanceSearchBar
         searchInput={searchInput}
         setSearchInput={setSearchInput}
         onSearch={handleSearch}
         onAdd={() => {
           setOpen(true);
-          setEditSchedule(null);
+          setEditAttendance(null);
         }}
       />
-      <ScheduleExportButtons schedules={schedules} />
-      <ScheduleTable
-        schedules={schedules}
+      <AttendanceExportButtons attendances={attendances} />
+      <AttendanceTable
+        attendances={attendances}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
@@ -155,7 +155,7 @@ export default function Schedules() {
       />
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>
-          {editSchedule ? "Editar Horario" : "Registrar Horario"}
+          {editAttendance ? "Editar Asistencia" : "Registrar Asistencia"}
         </DialogTitle>
         <DialogContent>
           {formError && (
@@ -163,19 +163,15 @@ export default function Schedules() {
               {formError}
             </Alert>
           )}
-          <ScheduleForm
+          <AttendanceForm
             onSubmit={handleRegister}
-            defaultValues={editSchedule || {}}
+            defaultValues={editAttendance || {}}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button
-            type="submit"
-            form="schedule-form"
-            variant="contained"
-          >
-            {editSchedule ? "Guardar Cambios" : "Registrar"}
+          <Button type="submit" form="attendance-form" variant="contained">
+            {editAttendance ? "Guardar Cambios" : "Registrar"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -187,9 +183,7 @@ export default function Schedules() {
               {deleteError}
             </Alert>
           )}
-          <Typography>
-            ¿Estás seguro de que deseas eliminar este horario?
-          </Typography>
+          ¿Estás seguro de que deseas eliminar este asistencia?
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteId(null)}>Cancelar</Button>

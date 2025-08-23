@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button, Stack } from '@mui/material';
 import { Download as DownloadIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
 import ExcelJS from 'exceljs';

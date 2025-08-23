@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import Login from "./pages/Login";
@@ -12,11 +12,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { CssBaseline } from "@mui/material";
 import theme from "./themes";
 import Fingerprint from "./pages/Fingerprints";
-
-
-function Attendances() {
-  return <h2>Gestión de Asistencias</h2>;
-}
+import Attendances from "./pages/Attendances";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
