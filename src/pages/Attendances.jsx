@@ -24,6 +24,7 @@ import {
 } from "../services/attendanceService";
 import FilterButton from "../components/Attendance/FilterButton";
 import { Add as AddIcon } from "@mui/icons-material";
+import DateRangeFilter from "../components/Attendance/DateRangeFilter";
 
 export default function Attendances() {
   const [attendances, setAttendances] = useState([]);
@@ -35,35 +36,46 @@ export default function Attendances() {
   const [editAttendance, setEditAttendance] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [filters, setFilters] = useState({
+    search: "",
+    status: "todos",
+    startDate: null,
+    endDate: null,
+    page: 0,
+    limit: 10,
+  });
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [loadingData, setLoadingData] = useState(false); //Controla la data de los select Usuario y Device
-  const [statusFilter, setStatusFilter] = useState("todos");
 
   useEffect(() => {
     fetchAttendances();
-  }, [page, rowsPerPage, search, statusFilter]);
+  }, [filters]);
+
+  // Helper: resetea page=0 solo cuando NO cambias la página explícitamente
+  const updateFilters = (patch, { resetPage = true } = {}) => {
+    setFilters((prev) => ({
+      ...prev,
+      ...patch,
+      ...(resetPage && !("page" in patch) ? { page: 0 } : {}),
+    }));
+  };
 
   const fetchAttendances = async () => {
-    //setLoading(true);
     try {
       setLoading(true);
       const data = await getPaginatedAttendances({
-        page: page + 1,
-        limit: rowsPerPage,
-        status: statusFilter || undefined,
-        search: search || undefined,
+        page: filters.page + 1,
+        limit: filters.limit,
+        search: filters.search || undefined,
+        status: filters.status !== "todos" ? filters.status : undefined,
+        startDate: filters.startDate
+          ? filters.startDate.toISOString()
+          : undefined,
+        endDate: filters.endDate ? filters.endDate.toISOString() : undefined,
         sortField: "createdAt",
         sortOrder: "desc",
       });
-      /*const data = await getPaginatedAttendances({
-        search,
-        page: page + 1,
-        limit: rowsPerPage,
-      });*/
       setAttendances(data.data);
       setTotal(data.total);
     } catch (err) {
@@ -72,6 +84,12 @@ export default function Attendances() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handlers UI
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    updateFilters({ search: searchInput }); // resetea page a 0 implícito
   };
 
   const handleRegister = async (data) => {
@@ -145,21 +163,6 @@ export default function Attendances() {
     setFormError("");
   };
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setPage(0);
-    setSearch(searchInput);
-  };
-
   if (loading) return <CircularProgress sx={{ mt: 4 }} />;
   if (error) return <Alert severity="error">{error}</Alert>;
 
@@ -170,21 +173,48 @@ export default function Attendances() {
         gutterBottom
         align="center"
         sx={{
-          mb:4
+          mb: 4,
         }}
       >
         Gestión de Asistencias
       </Typography>
       <Box display="flex" justifyContent="space-between" alignItems="center">
-        <AttendanceSearchBar
-          searchInput={searchInput}
-          setSearchInput={setSearchInput}
-          onSearch={handleSearch}
-          /* onAdd={() => {
-            setOpen(true);
-            setEditAttendance(null);
-          }}*/
-        />
+        {/*Lado izquierdo */}
+        <Box>
+          {/* Barra de búsqueda */}
+          <AttendanceSearchBar
+            searchInput={searchInput}
+            setSearchInput={setSearchInput}
+            onSearch={handleSearchSubmit}
+            onAdd={() => setOpen(true)}
+          />
+
+          {/* Filtro de rango de fechas */}
+          {/* <DateRangeFilter
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            onChange={({ startDate, endDate }) =>
+              updateFilters({ startDate, endDate })
+            }
+          /> */}
+          <DateRangeFilter
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            allowSingle={false} // o true si quieres permitir filtrar solo por desde/hasta
+            onApply={({ startDate, endDate }) =>
+              setFilters((prev) => ({ ...prev, startDate, endDate, page: 0 }))
+            }
+            onClear={() =>
+              setFilters((prev) => ({
+                ...prev,
+                startDate: null,
+                endDate: null,
+                page: 0,
+              }))
+            }
+          />
+        </Box>
+
         <Stack direction="row" spacing={2} mb={2}>
           <Button
             variant="contained"
@@ -197,11 +227,13 @@ export default function Attendances() {
             Nuevo
           </Button>
 
+          {/* Botones de exportación */}
           <AttendanceExportButtons attendances={attendances} />
 
+          {/* Botón de filtro por estado */}
           <FilterButton
-            statusFilter={statusFilter}
-            onFilterChange={setStatusFilter}
+            statusFilter={filters.status}
+            onFilterChange={(val) => updateFilters({ status: val })}
           />
         </Stack>
       </Box>
@@ -211,13 +243,21 @@ export default function Attendances() {
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
+      {/**Paginacion */}
       <TablePagination
         component="div"
         count={total}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
+        page={filters.page}
+        onPageChange={(e, newPage) =>
+          updateFilters({ page: newPage }, { resetPage: false })
+        }
+        rowsPerPage={filters.limit}
+        onRowsPerPageChange={(e) =>
+          updateFilters(
+            { limit: parseInt(e.target.value, 10), page: 0 },
+            { resetPage: false }
+          )
+        }
         labelRowsPerPage="Filas por página"
       />
 
