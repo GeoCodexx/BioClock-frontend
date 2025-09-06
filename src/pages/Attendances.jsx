@@ -9,6 +9,8 @@ import {
   DialogActions,
   TablePagination,
   Button,
+  Stack,
+  Box,
 } from "@mui/material";
 import AttendanceForm from "../components/Attendance/AttendanceForm";
 import AttendanceTable from "../components/Attendance/AttendanceTable";
@@ -20,11 +22,13 @@ import {
   updateAttendance,
   deleteAttendance,
 } from "../services/attendanceService";
+import FilterButton from "../components/Attendance/FilterButton";
+import { Add as AddIcon } from "@mui/icons-material";
 
 export default function Attendances() {
   const [attendances, setAttendances] = useState([]);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); //fetchData in useEffect
   const [error, setError] = useState("");
   const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState("");
@@ -35,24 +39,35 @@ export default function Attendances() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [loadingData, setLoadingData] = useState(false); //Controla la data de los select Usuario y Device
+  const [statusFilter, setStatusFilter] = useState("todos");
 
   useEffect(() => {
     fetchAttendances();
-    // eslint-disable-next-line
-  }, [page, rowsPerPage, search]);
+  }, [page, rowsPerPage, search, statusFilter]);
 
   const fetchAttendances = async () => {
-    setLoading(true);
+    //setLoading(true);
     try {
+      setLoading(true);
       const data = await getPaginatedAttendances({
+        page: page + 1,
+        limit: rowsPerPage,
+        status: statusFilter || undefined,
+        search: search || undefined,
+        sortField: "createdAt",
+        sortOrder: "desc",
+      });
+      /*const data = await getPaginatedAttendances({
         search,
         page: page + 1,
         limit: rowsPerPage,
-      });
+      });*/
       setAttendances(data.data);
-      //console.log("Data Attendances useEffect: ", data);
       setTotal(data.total);
     } catch (err) {
+      console.error(err);
       setError("Error al cargar asistencias");
     } finally {
       setLoading(false);
@@ -60,20 +75,44 @@ export default function Attendances() {
   };
 
   const handleRegister = async (data) => {
+    console.log(data);
     setFormError("");
+    setLoadingSubmit(true);
     try {
+      const { timestamp, ...rest } = data;
+      const formattedData = {
+        ...rest,
+        timestamp: data.timestamp?.toISOString(),
+      };
+
+      let resp;
+
       if (editAttendance) {
-        await updateAttendance(editAttendance._id, data);
+        resp = await updateAttendance(editAttendance._id, formattedData);
       } else {
-        await createAttendance(data);
+        resp = await createAttendance(formattedData);
+        console.log(resp);
       }
+
+      // Si la respuesta indica que la asistencia NO es válida
+      if (resp?.isValid === false && resp?.reason) {
+        setFormError(resp.reason); // Mostramos el motivo exacto
+        return; // No cerrar el diálogo todavía
+      }
+
       setOpen(false);
       setEditAttendance(null);
       fetchAttendances();
     } catch (err) {
-      setFormError(
+      // Si el backend responde con reason, lo mostramos
+      const backendMsg =
+        err?.reason || err?.message || "Error al guardar asistencia";
+      setFormError(backendMsg);
+      /*setFormError(
         err.response?.data?.message || "Error al guardar asistencia"
-      );
+      );*/
+    } finally {
+      setLoadingSubmit(false);
     }
   };
 
@@ -126,19 +165,47 @@ export default function Attendances() {
 
   return (
     <>
-      <Typography variant="h5" gutterBottom>
+      <Typography
+        variant="h5"
+        gutterBottom
+        align="center"
+        sx={{
+          mb:4
+        }}
+      >
         Gestión de Asistencias
       </Typography>
-      <AttendanceSearchBar
-        searchInput={searchInput}
-        setSearchInput={setSearchInput}
-        onSearch={handleSearch}
-        onAdd={() => {
-          setOpen(true);
-          setEditAttendance(null);
-        }}
-      />
-      <AttendanceExportButtons attendances={attendances} />
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <AttendanceSearchBar
+          searchInput={searchInput}
+          setSearchInput={setSearchInput}
+          onSearch={handleSearch}
+          /* onAdd={() => {
+            setOpen(true);
+            setEditAttendance(null);
+          }}*/
+        />
+        <Stack direction="row" spacing={2} mb={2}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setOpen(true);
+              setEditAttendance(null);
+            }}
+          >
+            Nuevo
+          </Button>
+
+          <AttendanceExportButtons attendances={attendances} />
+
+          <FilterButton
+            statusFilter={statusFilter}
+            onFilterChange={setStatusFilter}
+          />
+        </Stack>
+      </Box>
+
       <AttendanceTable
         attendances={attendances}
         onEdit={handleEdit}
@@ -153,28 +220,58 @@ export default function Attendances() {
         onRowsPerPageChange={handleChangeRowsPerPage}
         labelRowsPerPage="Filas por página"
       />
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>
-          {editAttendance ? "Editar Asistencia" : "Registrar Asistencia"}
-        </DialogTitle>
-        <DialogContent>
-          {formError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {formError}
-            </Alert>
-          )}
-          <AttendanceForm
-            onSubmit={handleRegister}
-            defaultValues={editAttendance || {}}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button type="submit" form="attendance-form" variant="contained">
-            {editAttendance ? "Guardar Cambios" : "Registrar"}
-          </Button>
-        </DialogActions>
+
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="sm"
+        slotProps={{
+          paper: {
+            sx: {
+              minWidth: 320, // Tamaño mínimo fijo
+              maxWidth: 500, // Tamaño máximo fijo
+              transition: "height 0.3s ease", // Suaviza el cambio de altura
+            },
+          },
+        }}
+      >
+        {loadingData ? (
+          <CircularProgress />
+        ) : (
+          <>
+            <DialogTitle>
+              {editAttendance ? "Editar Asistencia" : "Registrar Asistencia"}
+            </DialogTitle>
+            <DialogContent>
+              {formError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {formError}
+                </Alert>
+              )}
+              <AttendanceForm
+                onSubmit={handleRegister}
+                defaultValues={editAttendance || {}}
+                loading={loadingSubmit}
+                setLoadingData={() => setLoadingData}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose}>Cancelar</Button>
+              <Button
+                type="submit"
+                form="attendance-form"
+                variant="contained"
+                disabled={loadingSubmit}
+                startIcon={loadingSubmit && <CircularProgress size={20} />}
+              >
+                {editAttendance ? "Guardar Cambios" : "Registrar"}
+              </Button>
+            </DialogActions>
+          </>
+        )}
       </Dialog>
+
       <Dialog open={!!deleteId} onClose={() => setDeleteId(null)}>
         <DialogTitle>Confirmar eliminación</DialogTitle>
         <DialogContent>

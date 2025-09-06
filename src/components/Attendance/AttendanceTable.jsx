@@ -37,7 +37,7 @@ export default function AttendanceTable({ attendances, onEdit, onDelete }) {
                 attendance?.userId?.firstSurname || "—"
               } ${attendance?.userId?.secondSurname || "—"}`}</TableCell>
               <TableCell>{attendance?.deviceId?.name || "—"}</TableCell>
-              <TableCell>{format(new Date(attendance?.timestamp), "dd/mm/yyyy HH:mm:ss")}</TableCell>
+              <TableCell>{format(new Date(attendance?.timestamp), "dd/MM/yyyy HH:mm:ss")}</TableCell>
               <TableCell>
                 {attendance?.type === "IN"
                   ? "Entrada"
@@ -73,14 +73,14 @@ export default function AttendanceTable({ attendances, onEdit, onDelete }) {
                 <IconButton
                   color="primary"
                   size="small"
-                  onClick={() => onEdit && onEdit(user)}
+                  onClick={() => onEdit && onEdit(attendance)}
                 >
                   <EditIcon />
                 </IconButton>
                 <IconButton
                   color="error"
                   size="small"
-                  onClick={() => onDelete && onDelete(user._id)}
+                  onClick={() => onDelete && onDelete(attendance._id)}
                 >
                   <DeleteIcon />
                 </IconButton>

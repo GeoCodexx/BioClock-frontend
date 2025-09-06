@@ -77,6 +77,7 @@ export default function Fingerprint() {
           size="small"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
+          sx={{ width: "190px" }}
         >
           <MenuItem value="">Todos</MenuItem>
           <MenuItem value="pending">Pendiente</MenuItem>

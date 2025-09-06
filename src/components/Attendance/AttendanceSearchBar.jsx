@@ -1,19 +1,37 @@
-import { Box, TextField, Button } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Box, TextField, Button, InputAdornment } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+//import { Add as AddIcon } from '@mui/icons-material';
 
-export default function AttendanceSearchBar({ searchInput, setSearchInput, onSearch, onAdd }) {
+export default function AttendanceSearchBar({
+  searchInput,
+  setSearchInput,
+  onSearch,
+}) {
   return (
-    <Box component="form" onSubmit={onSearch} sx={{ display: 'flex', gap: 2, mb: 2 }}>
+    <Box
+      component="form"
+      onSubmit={onSearch}
+      sx={{ display: "flex", gap: 2, mb: 2 }}
+    >
       <TextField
         label="Buscar asistencia"
+        placeholder="Nombres o Apellidos..."
         value={searchInput}
-        onChange={e => setSearchInput(e.target.value)}
+        onChange={(e) => setSearchInput(e.target.value)}
         size="small"
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          },
+        }}
       />
-      <Button type="submit" variant="outlined">Buscar</Button>
-      <Button variant="contained" startIcon={<AddIcon />} onClick={onAdd}>
-        Registrar Asistencia
-      </Button>
+      {/* <Button type="submit" variant="outlined">
+        Buscar
+      </Button> */}
     </Box>
   );
-} 
+}

@@ -14,7 +14,6 @@ export const filterFingerprintsByStatus = async (status, page = 1, pageSize = 10
     const response = await api.get(`/fingerprints?status=${status}&page=${page}&pageSize=${pageSize}`);
     return response.data;
 };*/
-
 //const API_URL = `${import.meta.env.VITE_API_URL}/biometric-templates`;
 
 export const getFingerprintTemplates = async (params) => {

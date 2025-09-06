@@ -1,4 +1,4 @@
-import api from '../api';
+import api from './api';
 
 export const getPaginatedDevices = async ({ search = '', page = 1, limit = 10 } = {}) => {
     const res = await api.get('/devices/paginated', { params: { search, page, limit } });

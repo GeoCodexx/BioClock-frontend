@@ -1,6 +1,6 @@
 import api from "./api";
 
-export const getPaginatedAttendances = async ({
+/*export const getPaginatedAttendances = async ({
   search = "",
   page = 1,
   limit = 10,
@@ -9,11 +9,21 @@ export const getPaginatedAttendances = async ({
     params: { search, page, limit },
   });
   return res.data;
+};*/
+
+export const getPaginatedAttendances = async (params) => {
+  const response = await api.get("/attendances/paginated", { params });
+  return response.data;
 };
 
 export const createAttendance = async (attendanceData) => {
-  const res = await api.post("/attendances", attendanceData);
-  return res.data;
+  try {
+    const res = await api.post("/attendances/create", attendanceData);
+    console.log(res);
+    return res.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Error validando horario" };
+  }
 };
 
 export const updateAttendance = async (id, attendanceData) => {
