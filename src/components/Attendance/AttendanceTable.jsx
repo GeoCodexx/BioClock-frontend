@@ -10,8 +10,9 @@ import {
 } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { format } from "date-fns";
+import { memo } from "react";
 
-export default function AttendanceTable({ attendances, onEdit, onDelete }) {
+const AttendanceTable = memo(({ attendances, onEdit, onDelete }) => {
   return (
     <TableContainer component={Paper}>
       <Table>
@@ -37,7 +38,9 @@ export default function AttendanceTable({ attendances, onEdit, onDelete }) {
                 attendance?.userId?.firstSurname || "—"
               } ${attendance?.userId?.secondSurname || "—"}`}</TableCell>
               <TableCell>{attendance?.deviceId?.name || "—"}</TableCell>
-              <TableCell>{format(new Date(attendance?.timestamp), "dd/MM/yyyy HH:mm:ss")}</TableCell>
+              <TableCell>
+                {format(new Date(attendance?.timestamp), "dd/MM/yyyy HH:mm:ss")}
+              </TableCell>
               <TableCell>
                 {attendance?.type === "IN"
                   ? "Entrada"
@@ -91,4 +94,6 @@ export default function AttendanceTable({ attendances, onEdit, onDelete }) {
       </Table>
     </TableContainer>
   );
-}
+});
+
+export default AttendanceTable;
