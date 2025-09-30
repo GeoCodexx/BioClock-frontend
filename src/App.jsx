@@ -13,6 +13,9 @@ import { CssBaseline } from "@mui/material";
 import theme from "./themes";
 import Fingerprint from "./pages/Fingerprints";
 import Attendances from "./pages/Attendances";
+import DailyReport from "./pages/DailyReport";
+import MonthlyReport from "./pages/MonthlyReport";
+import UserHistoryReport from "./pages/UserHistoryReport";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -40,11 +43,16 @@ export default function App() {
             <Route path="users" element={<Users />} />
             <Route path="fingerprints" element={<Fingerprint />} />
             <Route path="roles" element={<Roles />} />
-            <Route path="permisos" element={<Permissions />} />
+            <Route path="permissions" element={<Permissions />} />
             <Route path="departments" element={<Departments />} />
             <Route path="schedules" element={<Schedules />} />
             <Route path="attendances" element={<Attendances />} />
+            <Route path="reports/daily" element={<DailyReport />} />
+            <Route path="reports/monthly" element={<MonthlyReport />} />
+            <Route path="reports/user-history" element={<UserHistoryReport />} />
           </Route>
+
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

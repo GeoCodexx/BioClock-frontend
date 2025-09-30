@@ -19,7 +19,7 @@ export const getPaginatedAttendances = async (params) => {
 export const createAttendance = async (attendanceData) => {
   try {
     const res = await api.post("/attendances/create", attendanceData);
-    console.log(res);
+    //console.log(res);
     return res.data;
   } catch (error) {
     throw error.response?.data || { message: "Error validando horario" };

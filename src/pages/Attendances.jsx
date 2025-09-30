@@ -201,7 +201,7 @@ export default function Attendances() {
 
   //if (loading) return <CircularProgress sx={{ mt: 4 }} />;
   if (error) return <Alert severity="error">{error}</Alert>;
-  console.log("🏁 Attendances render");
+  //console.log("🏁 Attendances render");
   return (
     <>
       <Grid container spacing={2}>
