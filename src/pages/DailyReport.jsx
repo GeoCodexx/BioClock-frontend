@@ -26,6 +26,7 @@ import { getDailyReport } from "../services/reportService";
 import { getSchedules } from "../services/scheduleService";
 import SummaryCards from "../components/Reports/DailyReport/SummaryCards";
 import DailyReportExportButtons from "../components/Reports/DailyReport/DailyReportExportButtons";
+//import useTimezoneStore from "../store/useTimezoneStore";
 
 // Opciones de estado para el filtro
 const STATUS_OPTIONS = [
@@ -42,6 +43,9 @@ const STATUS_OPTIONS = [
 
 // Componente principal
 export default function DailyReportPage() {
+  // Acceder al estado y a la función de la tienda
+  //const { formatDate } = useTimezoneStore();
+
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [data, setData] = useState({
     records: [],
@@ -154,6 +158,7 @@ export default function DailyReportPage() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+  console.log(data.date);
 
   return (
     <>
@@ -165,9 +170,13 @@ export default function DailyReportPage() {
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {data.date &&
-              `Fecha: ${format(new Date(data.date), "d 'de' MMMM 'de' yyyy", {
-                locale: es,
-              })}`}
+              `Fecha: ${format(
+                new Date(data.date + "T00:00:00"),
+                "d 'de' MMMM 'de' yyyy",
+                {
+                  locale: es,
+                }
+              )}`}
           </Typography>
         </Box>
 
@@ -186,6 +195,7 @@ export default function DailyReportPage() {
                   size="small"
                   placeholder="Nombre, apellido o DNI"
                   value={search}
+                  disabled={!data.records || data.records.length === 0}
                   onChange={handleSearchChange}
                   slotProps={{
                     input: {
@@ -201,12 +211,16 @@ export default function DailyReportPage() {
 
               {/* Filtro por turno */}
               <Grid size={{ xs: 12, md: 3 }}>
-                <FormControl fullWidth>
+                <FormControl fullWidth size="small">
                   <InputLabel>Turno</InputLabel>
                   <Select
                     value={scheduleId}
                     label="Turno"
-                    size="small"
+                    disabled={
+                      schedules.length === 0 ||
+                      !data.records ||
+                      data.records.length === 0
+                    }
                     onChange={handleScheduleChange}
                   >
                     <MenuItem value="">Todos los turnos</MenuItem>
@@ -221,12 +235,12 @@ export default function DailyReportPage() {
 
               {/* Filtro por estado */}
               <Grid size={{ xs: 12, md: 3 }}>
-                <FormControl fullWidth>
+                <FormControl fullWidth size="small">
                   <InputLabel>Estado</InputLabel>
                   <Select
                     value={status}
                     label="Estado"
-                    size="small"
+                    disabled={!data.records || data.records.length === 0}
                     onChange={handleStatusChange}
                   >
                     {STATUS_OPTIONS.map((option) => (

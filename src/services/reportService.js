@@ -5,12 +5,17 @@ export const getDailyReport = async (params) => {
   return res.data;
 };
 
-export const getUserHistoryReport = async (userId, startDate, endDate) => {
+export const getUserHistoryReport = async (params) => {
+  const res = await api.get(`/reports/user-report`, { params });
+  return res.data;
+};
+
+/*export const getUserHistoryReport = async (userId, startDate, endDate) => {
   const res = await api.get(`/reports/daily/${userId}`, {
     params: { startDate, endDate },
   });
   return res.data;
-};
+};*/
 
 export const getMonthlyReport = async (month, year) => {
   const res = await api.get("reports/monthly", { params: { month, year } });
