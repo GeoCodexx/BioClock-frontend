@@ -19,18 +19,26 @@ import {
   DialogContent,
   Button,
   ButtonGroup,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Search as SearchIcon, FilterListOff } from "@mui/icons-material";
+import {
+  Search as SearchIcon,
+  FilterListOff,
+  CalendarMonth,
+  TableChart,
+} from "@mui/icons-material";
 import { getUserHistoryReport } from "../services/reportService";
 import { getSchedules } from "../services/scheduleService";
 import UserReportTable from "../components/Reports/UserReport/UserReportTable";
 import SummaryCards from "../components/Reports/DailyReport/SummaryCards";
 import UserReportExportButtons from "../components/Reports/UserReport/UserReportExportButtons";
+import AttendanceCalendarView from "../components/Reports/UserReport/AttendanceCalendarView";
 
 // Opciones de estado para el filtro
 const STATUS_OPTIONS = [
@@ -70,6 +78,9 @@ export default function UserHistoryReport() {
   const [endDate, setEndDate] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // Estado para vista (calendario o tabla)
+  const [viewMode, setViewMode] = useState('calendar'); // 'calendar' o 'table'
 
   // Estados para los turnos disponibles
   const [schedules, setSchedules] = useState([]);
@@ -164,6 +175,12 @@ export default function UserHistoryReport() {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const handleViewModeChange = (event, newMode) => {
+    if (newMode !== null) {
+      setViewMode(newMode);
+    }
   };
 
   const handleClearFilters = () => {
@@ -335,8 +352,8 @@ export default function UserHistoryReport() {
               </Grid>
 
               <Grid container spacing={2}>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  {/* Resumen de registros */}
+                {/* <Grid size={{ xs: 12, md: 6 }}>
+                  {// Resumen de registros}
                   <Box sx={{ mt: 2 }}>
                     <Typography variant="body2" color="text.secondary">
                       {loading
@@ -344,7 +361,39 @@ export default function UserHistoryReport() {
                         : `Mostrando ${data.records.length} de ${data.pagination.totalRecords} registros`}
                     </Typography>
                   </Box>
-                </Grid>
+                </Grid> */}
+                {/* Controles adicionales */}
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    {loading
+                      ? "Cargando..."
+                      : `Mostrando ${data.records.length} de ${data.pagination.totalRecords} registros`}
+                  </Typography>
+
+                  {/* Toggle entre vista calendario y tabla */}
+                  <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={handleViewModeChange}
+                    size="small"
+                  >
+                    <ToggleButton value="calendar">
+                      <CalendarMonth sx={{ mr: 1 }} />
+                      Calendario
+                    </ToggleButton>
+                    <ToggleButton value="table">
+                      <TableChart sx={{ mr: 1 }} />
+                      Tabla
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
                 <Grid
                   size={{ xs: 12, md: 6 }}
                   sx={{
@@ -378,6 +427,7 @@ export default function UserHistoryReport() {
             </Alert>
           )}
 
+          {/* Contenido según vista seleccionada */}
           {/* Tabla */}
           {loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
@@ -385,26 +435,37 @@ export default function UserHistoryReport() {
             </Box>
           ) : (
             <>
-              {/* Tabla de asistencias por usuario*/}
-              <UserReportTable
-                attendances={data.records}
-                setSelectedRecord={setSelectedRecord}
-              />
+              {/* Vista de Calendario */}
+              {viewMode === "calendar" && (
+                <AttendanceCalendarView records={data.records} />
+              )}
 
-              {/* Paginación */}
-              <TablePagination
-                component="div"
-                count={data.pagination.totalRecords}
-                page={page}
-                onPageChange={handleChangePage}
-                rowsPerPage={rowsPerPage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                rowsPerPageOptions={[5, 10, 25, 50, 100]}
-                labelRowsPerPage="Filas por página:"
-                labelDisplayedRows={({ from, to, count }) =>
-                  `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
-                }
-              />
+              {/* Vista de Tabla */}
+              {viewMode === "table" && (
+                <>
+                  <UserReportTable
+                    attendances={data.records}
+                    setSelectedRecord={setSelectedRecord}
+                  />
+
+                  {/* Paginación */}
+                  <TablePagination
+                    component="div"
+                    count={data.pagination.totalRecords}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    rowsPerPageOptions={[5, 10, 25, 50, 100]}
+                    labelRowsPerPage="Filas por página:"
+                    labelDisplayedRows={({ from, to, count }) =>
+                      `${from}-${to} de ${
+                        count !== -1 ? count : `más de ${to}`
+                      }`
+                    }
+                  />
+                </>
+              )}
             </>
           )}
         </Box>
