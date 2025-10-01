@@ -115,7 +115,7 @@ const TimeDisplay = ({ timestamp, showStatus, status }) => {
   );
 };
 
-const DailyReportTable = memo(({ attendances }) => {
+const DailyReportTable = memo(({ attendances, setSelectedRecord }) => {
   // Si no hay registros
   if (!attendances || attendances.length === 0) {
     return (
@@ -151,7 +151,12 @@ const DailyReportTable = memo(({ attendances }) => {
             }`;
 
             return (
-              <TableRow key={key} hover>
+              <TableRow
+                key={key}
+                hover
+                onClick={() => setSelectedRecord(record)}
+                sx={{ cursor: "pointer" }}
+              >
                 {/* DNI */}
                 <TableCell>
                   <Typography variant="body2" fontWeight="medium">
