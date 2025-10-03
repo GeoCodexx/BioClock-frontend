@@ -293,9 +293,10 @@ export default function UserReportExportButtons({ records, dateRange }) {
   };
 
   return (
-    <Stack direction="row" spacing={2}>
+    <Stack direction="row" spacing={1}>
       <Button
         variant="outlined"
+        size="small"
         startIcon={<DownloadIcon />}
         onClick={handleExportExcel}
         disabled={!records || records.length === 0 || exportingExcel}
@@ -304,6 +305,7 @@ export default function UserReportExportButtons({ records, dateRange }) {
       </Button>
       <Button
         variant="outlined"
+        size="small"
         color="error"
         startIcon={<PictureAsPdfIcon />}
         onClick={handleExportPDF}

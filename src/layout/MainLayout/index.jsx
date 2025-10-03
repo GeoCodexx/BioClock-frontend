@@ -30,7 +30,7 @@ const MainLayout = () => {
         isDrawerOpen={isDrawerOpen}
         handleDrawerToggle={handleDrawerToggle}
       />
-      <Sidebar isOpen={isDrawerOpen} />
+      <Sidebar isOpen={isDrawerOpen} handleDrawerToggle={handleDrawerToggle} />
       <Box
         component="main"
         sx={{
@@ -46,7 +46,8 @@ const MainLayout = () => {
           marginLeft: 0,
           padding: "20px",
           borderRadius: "8px 8px 0 0",
-          transition: "all 400ms cubic-bezier(0, 0, 0.2, 1)",
+          /*transition: "all 400ms cubic-bezier(0.5, 0.4, 0.8, 1)"*/
+          transition: "all 0.5s ease-in-out",
         }}
       >
         <Container maxWidth="lg">

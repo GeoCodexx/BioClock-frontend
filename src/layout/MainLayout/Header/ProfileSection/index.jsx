@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   ButtonBase,
@@ -13,16 +13,21 @@ import {
   Paper,
   Popper,
   Typography,
-  useTheme
-} from '@mui/material';
+  useTheme,
+  Fade,
+  alpha,
+} from "@mui/material";
 
 // icons
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import SettingsIcon from '@mui/icons-material/Settings';
-import LogoutIcon from '@mui/icons-material/Logout';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import SettingsIcon from "@mui/icons-material/Settings";
+import LogoutIcon from "@mui/icons-material/Logout";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import useAuthStore from "../../../../store/useAuthStore";
 
 const ProfileSection = () => {
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const theme = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -31,8 +36,8 @@ const ProfileSection = () => {
   const handleLogout = async () => {
     try {
       // Implementar lógica de logout
-      localStorage.removeItem('token');
-      navigate('/login');
+      localStorage.removeItem("token");
+      navigate("/login");
     } catch (err) {
       console.error(err);
     }
@@ -49,46 +54,70 @@ const ProfileSection = () => {
     setOpen((prevOpen) => !prevOpen);
   };
 
+  const handleMenuItemClick = (path) => {
+    setOpen(false);
+    navigate(path);
+  };
+
   return (
     <Box sx={{ flexShrink: 0, ml: 0.75 }}>
       <ButtonBase
         sx={{
           p: 0.25,
-          bgcolor: open ? 'rgba(0,0,0,0.1)' : 'transparent',
-          borderRadius: 1,
-          '&:hover': { bgcolor: 'rgba(0,0,0,0.1)' },
+          bgcolor: open
+            ? alpha(theme.palette.primary.main, 0.08)
+            : "transparent",
+          borderRadius: 2,
+          transition: "all 0.2s ease-in-out",
+          "&:hover": {
+            bgcolor: alpha(theme.palette.primary.main, 0.08),
+            transform: "translateY(-1px)",
+          },
         }}
         aria-label="open profile"
         ref={anchorRef}
-        aria-controls={open ? 'profile-grow' : undefined}
+        aria-controls={open ? "profile-grow" : undefined}
         aria-haspopup="true"
         onClick={handleToggle}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 0.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 0.5 }}>
           <Avatar
             src="/static/images/avatar.jpg"
             sx={{
-              width: 32,
-              height: 32,
+              width: 36,
+              height: 36,
               bgcolor: theme.palette.primary.main,
               color: theme.palette.primary.contrastText,
-              '&:hover': {
-                bgcolor: theme.palette.primary.dark,
+              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "scale(1.05)",
+                boxShadow: `0 0 0 4px ${alpha(
+                  theme.palette.primary.main,
+                  0.1
+                )}`,
               },
             }}
           >
-            A
+            {isAuthenticated && user ? user.name.charAt(0) : ""}
           </Avatar>
-          <Typography variant="subtitle1">
-            Admin
-          </Typography>
-          <KeyboardArrowDownIcon 
-            sx={{ 
-              fontSize: '1rem',
-              transform: open ? 'rotate(-180deg)' : 'rotate(0)',
-              transition: 'transform 0.3s ease-in-out'
-            }} 
-          />
+          {/* <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 500,
+              display: { xs: "none", sm: "block" },
+            }}
+          >
+            {isAuthenticated && user ? user.name : "Jhon Doe"}
+          </Typography> */}
+          {/* <KeyboardArrowDownIcon
+            sx={{
+              fontSize: "1.2rem",
+              transform: open ? "rotate(-180deg)" : "rotate(0)",
+              transition: "transform 0.3s ease-in-out",
+              color: theme.palette.text.secondary,
+            }}
+          /> */}
         </Box>
       </ButtonBase>
       <Popper
@@ -97,76 +126,196 @@ const ProfileSection = () => {
         anchorEl={anchorRef.current}
         role={undefined}
         transition
-        disablePortal
-        popperOptions={{
-          modifiers: [
-            {
-              name: 'offset',
-              options: {
-                offset: [0, 9]
-              }
-            }
-          ]
-        }}
+        disablePortal={false}
+        modifiers={[
+          {
+            name: "offset",
+            options: {
+              offset: [0, 12],
+            },
+          },
+          {
+            name: "preventOverflow",
+            enabled: true,
+            options: {
+              boundary: "viewport",
+            },
+          },
+        ]}
+        sx={{ zIndex: theme.zIndex.modal }}
       >
-        <Paper
-          sx={{
-            boxShadow: theme.shadows[8],
-            borderRadius: 2,
-            width: 290,
-            minWidth: 290,
-            maxWidth: 290,
-          }}
-        >
-          <ClickAwayListener onClickAway={handleClose}>
-            <Box>
-              <Box sx={{ p: 2, pt: 1.5 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar
-                    src="/static/images/avatar.jpg"
+        {({ TransitionProps }) => (
+          <Fade {...TransitionProps} timeout={250}>
+            <Paper
+              elevation={8}
+              sx={{
+                boxShadow: `0 8px 32px ${alpha(
+                  theme.palette.common.black,
+                  0.12
+                )}`,
+                borderRadius: 3,
+                width: 300,
+                overflow: "hidden",
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                mt: 0.5,
+              }}
+            >
+              <ClickAwayListener onClickAway={handleClose}>
+                <Box>
+                  {/* Header Section */}
+                  <Box
                     sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: theme.palette.primary.main,
-                      color: theme.palette.primary.contrastText
+                      p: 2.5,
+                      background: `linear-gradient(135deg, ${alpha(
+                        theme.palette.primary.main,
+                        0.08
+                      )} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
+                      borderBottom: `1px solid ${alpha(
+                        theme.palette.divider,
+                        0.08
+                      )}`,
                     }}
                   >
-                    A
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h6">John Doe</Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      Administrador
-                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <Avatar
+                        src="/static/images/avatar.jpg"
+                        sx={{
+                          width: 52,
+                          height: 52,
+                          bgcolor: theme.palette.primary.main,
+                          color: theme.palette.primary.contrastText,
+                         /* boxShadow: `0 4px 14px ${alpha(
+                            theme.palette.primary.main,
+                            0.3
+                          )}`,*/
+                          border: `3px solid ${theme.palette.background.paper}`,
+                        }}
+                      >
+                        {isAuthenticated && user ? user.name.charAt(0) : ""}
+                      </Avatar>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
+                            fontSize: "1rem",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {isAuthenticated && user
+                            ? `${user.name} ${user.firstSurname}`
+                            : "Jhon Doe"}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: theme.palette.text.secondary,
+                            fontSize: "0.813rem",
+                          }}
+                        >
+                          {isAuthenticated && user
+                            ? user.role
+                            : "Administrador"}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  {/* Menu Items */}
+                  <Box sx={{ p: 1 }}>
+                    <List
+                      component="nav"
+                      sx={{
+                        p: 0,
+                        "& .MuiListItemButton-root": {
+                          borderRadius: 2,
+                          mb: 0.5,
+                          transition: "all 0.2s ease",
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.primary.main, 0.08),
+                            transform: "translateX(4px)",
+                            "& .MuiListItemIcon-root": {
+                              color: theme.palette.primary.main,
+                            },
+                          },
+                          "&:last-child": {
+                            mb: 0,
+                          },
+                        },
+                        "& .MuiListItemIcon-root": {
+                          minWidth: 40,
+                          color: theme.palette.text.secondary,
+                          transition: "color 0.2s ease",
+                        },
+                      }}
+                    >
+                      <ListItemButton
+                        onClick={() => handleMenuItemClick("/profile")}
+                      >
+                        <ListItemIcon>
+                          <PersonOutlineIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Mi Perfil"
+                          primaryTypographyProps={{
+                            fontSize: "0.875rem",
+                            fontWeight: 500,
+                          }}
+                        />
+                      </ListItemButton>
+
+                      <ListItemButton
+                        onClick={() => handleMenuItemClick("/settings")}
+                      >
+                        <ListItemIcon>
+                          <SettingsIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Configuración"
+                          primaryTypographyProps={{
+                            fontSize: "0.875rem",
+                            fontWeight: 500,
+                          }}
+                        />
+                      </ListItemButton>
+
+                      <Divider sx={{ my: 1 }} />
+
+                      <ListItemButton
+                        onClick={handleLogout}
+                        sx={{
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.error.main, 0.08),
+                            transform: "translateX(4px)",
+                            "& .MuiListItemIcon-root": {
+                              color: theme.palette.error.main,
+                            },
+                            "& .MuiListItemText-primary": {
+                              color: theme.palette.error.main,
+                            },
+                          },
+                        }}
+                      >
+                        <ListItemIcon>
+                          <LogoutIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Cerrar Sesión"
+                          primaryTypographyProps={{
+                            fontSize: "0.875rem",
+                            fontWeight: 500,
+                          }}
+                        />
+                      </ListItemButton>
+                    </List>
                   </Box>
                 </Box>
-              </Box>
-              <Divider />
-              <Box sx={{ p: 1 }}>
-                <List component="nav" sx={{ p: 0, '& .MuiListItemIcon-root': { minWidth: 32 } }}>
-                  <ListItemButton onClick={() => { handleClose({}); navigate('/profile'); }}>
-                    <ListItemIcon>
-                      <PersonOutlineIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Mi Perfil" />
-                  </ListItemButton>
-                  <ListItemButton onClick={() => { handleClose({}); navigate('/settings'); }}>
-                    <ListItemIcon>
-                      <SettingsIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Configuración" />
-                  </ListItemButton>
-                  <ListItemButton onClick={handleLogout}>
-                    <ListItemIcon>
-                      <LogoutIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Cerrar Sesión" />
-                  </ListItemButton>
-                </List>
-              </Box>
-            </Box>
-          </ClickAwayListener>
-        </Paper>
+              </ClickAwayListener>
+            </Paper>
+          </Fade>
+        )}
       </Popper>
     </Box>
   );

@@ -13,6 +13,8 @@ import {
   Avatar,
   Divider,
   Collapse,
+  IconButton,
+  alpha,
 } from "@mui/material";
 
 // Iconos
@@ -25,7 +27,9 @@ import FingerprintIcon from "@mui/icons-material/Fingerprint";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import { useState } from "react";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import MenuIcon from "@mui/icons-material/Menu";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight"; // Para submenús
+import LogoBitel from "../../../assets/images/bitel_logo.png";
 
 const drawerWidth = 260;
 const collapsedWidth = 80;
@@ -53,20 +57,15 @@ const menuItems = [
         icon: <ChevronRightIcon />,
       },
       {
-        text: "Por usuario",
-        path: "/reports/user-history",
-        icon: <ChevronRightIcon />,
-      },
-      {
         text: "General",
-        path: "/reports/monthly",
+        path: "/reports/general",
         icon: <ChevronRightIcon />,
       },
     ],
   },
 ];
 
-const Sidebar = ({ isOpen }) => {
+const Sidebar = ({ isOpen, handleDrawerToggle }) => {
   const theme = useTheme();
   const location = useLocation();
   // Estado: menú abierto (solo uno a la vez)
@@ -101,65 +100,100 @@ const Sidebar = ({ isOpen }) => {
   };
 
   const renderMenuItems = (items, isSubmenu = false) =>
-    items.map((item) => (
-      <Box key={item.text}>
-        <ListItem disablePadding sx={{ mb: 0.5 }}>
-          <Tooltip title={!isOpen ? item.text : ""} placement="right">
-            <ListItemButton
-              component={item.path ? Link : "button"}
-              to={item.path}
-              onClick={
-                item.children ? () => handleToggle(item.text) : undefined
-              }
-              //selected={item.path && activeRoute(item.path)}
-              selected={
-                (item.path && activeRoute(item.path)) ||
-                item.children?.some((child) => activeRoute(child.path))
-              }
-              sx={{
-                borderRadius: 1,
-                minHeight: 48,
-                justifyContent: isOpen ? "initial" : "center",
-                pl: isSubmenu ? 6 : 2, // indentación si es submenú
-                "&.Mui-selected": {
-                  bgcolor: `${theme.palette.primary.main}15`,
+    items.map((item) => {
+      // Determina si este item o alguno de sus hijos está activo
+      const isActive =
+        (item.path && activeRoute(item.path)) ||
+        item.children?.some((child) => activeRoute(child.path));
+      return (
+        <Box key={item.text}>
+          <ListItem
+            disablePadding
+            sx={{
+              mb: 0.5,
+              transition: "all 0.2s ease",
+              "&:hover": {
+                //bgcolor: `${theme.palette.primary.main}15`,
+                transform: "translateX(4px)",
+                "& .MuiListItemIcon-root": {
                   color: theme.palette.primary.main,
-                  "& .MuiListItemIcon-root": {
-                    color: theme.palette.primary.main,
-                  },
                 },
-              }}
-            >
-              <ListItemIcon
+              },
+            }}
+          >
+            <Tooltip title={!isOpen ? item.text : ""} placement="right">
+              <ListItemButton
+                component={item.path ? Link : "button"}
+                to={item.path}
+                onClick={
+                  item.children ? () => handleToggle(item.text) : undefined
+                }
+                selected={!isSubmenu && isActive}
                 sx={{
-                  minWidth: 36,
-                  mr: isOpen ? 3 : "auto",
-                  justifyContent: "center",
-                  color: activeRoute(item.path)
-                    ? theme.palette.primary.main
-                    : "inherit",
+                  borderRadius: 1,
+                  minHeight: 48,
+                  justifyContent: isOpen ? "initial" : "center",
+                  //pl: isSubmenu ? 6 : 2,
+                  // Fondo solo para items principales seleccionados
+                  ...(isActive &&
+                    !isSubmenu && {
+                      bgcolor: `${theme.palette.primary.main}15`,
+                      color: theme.palette.primary.main,
+                      "& .MuiListItemIcon-root": {
+                        color: theme.palette.primary.main,
+                      },
+                    }),
+                  // Hijos activos: solo negrita, sin fondo
+                  ...(isActive &&
+                    isSubmenu && {
+                      //bgcolor: `${theme.palette.primary.main}15`,
+                      //fontWeight: "normal",
+                      color: theme.palette.primary.main,
+                      "& .MuiListItemIcon-root": {
+                        color: theme.palette.primary.main,
+                      },
+                    }), 
                 }}
               >
-                {isSubmenu ? <ChevronRightIcon /> : item.icon}
-              </ListItemIcon>
-              {isOpen && <ListItemText primary={item.text} />}
-              {item.children &&
-                isOpen &&
-                (openMenu === item.text ? <ExpandLess /> : <ExpandMore />)}
-            </ListItemButton>
-          </Tooltip>
-        </ListItem>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 36,
+                    mr: isOpen ? 3 : "auto",
+                    justifyContent: "center",
+                    color:
+                      isActive && (isSubmenu || item.path)
+                        ? theme.palette.primary.main
+                        : "inherit",
+                  }}
+                >
+                  {isSubmenu ? <ChevronRightIcon /> : item.icon}
+                </ListItemIcon>
+                {isOpen && (
+                  <ListItemText
+                    primary={item.text}
+                   /* primaryTypographyProps={{
+                      fontWeight: isActive && isSubmenu ? "bold" : "normal",
+                    }}*/
+                  />
+                )}
+                {item.children &&
+                  isOpen &&
+                  (openMenu === item.text ? <ExpandLess /> : <ExpandMore />)}
+              </ListItemButton>
+            </Tooltip>
+          </ListItem>
 
-        {/* Submenús */}
-        {item.children && (
-          <Collapse in={openMenu === item.text} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-              {renderMenuItems(item.children, true)}
-            </List>
-          </Collapse>
-        )}
-      </Box>
-    ));
+          {/* Submenús */}
+          {item.children && (
+            <Collapse in={openMenu === item.text} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {renderMenuItems(item.children, true)}
+              </List>
+            </Collapse>
+          )}
+        </Box>
+      );
+    });
 
   // const drawer = (
   //   <>
@@ -272,18 +306,45 @@ const Sidebar = ({ isOpen }) => {
         [`& .MuiDrawer-paper`]: {
           width: isOpen ? drawerWidth : collapsedWidth,
           boxSizing: "border-box",
+          border: "none",
         },
       }}
     >
-      <Box sx={{ px: 2.5, py: 3 }}>
+      <Box
+        sx={{
+          px: 2.5,
+          py: 2,
+          display: "flex",
+          justifyContent: isOpen ? "space-between" : "center",
+          alignItems: "center",
+        }}
+      >
         {isOpen && (
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Avatar sx={{ width: 40, height: 40, mr: 2 }}>A</Avatar>
-            <Typography variant="h6">Attendance</Typography>
+            {/* <Avatar sx={{ width: 40, height: 40, mr: 2 }}>A</Avatar>
+            <Typography variant="h6">Attendance</Typography> */}
+            <img src={LogoBitel} alt="logo" width={"100px"} />
           </Box>
         )}
+        <Box>
+          <Tooltip title={isOpen ? "Contraer" : "Expandir"} placement="right">
+            <IconButton
+              color="inherit"
+              aria-label="toggle drawer"
+              onClick={handleDrawerToggle}
+              //edge="start"
+              sx={{
+                //marginRight: 2,
+                transition: "transform 400ms cubic-bezier(0, 0, 0.2, 1)",
+                transform: isOpen ? "rotate(0deg)" : "rotate(270deg)",
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
-      <Divider />
+      {/* <Divider /> */}
       <List component="nav" sx={{ px: 2 }}>
         {renderMenuItems(menuItems)}
       </List>

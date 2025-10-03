@@ -80,7 +80,7 @@ export default function UserHistoryReport() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Estado para vista (calendario o tabla)
-  const [viewMode, setViewMode] = useState('calendar'); // 'calendar' o 'table'
+  const [viewMode, setViewMode] = useState("calendar"); // 'calendar' o 'table'
 
   // Estados para los turnos disponibles
   const [schedules, setSchedules] = useState([]);
@@ -194,7 +194,7 @@ export default function UserHistoryReport() {
 
   const setDatePreset = (preset) => {
     const today = new Date();
-    const end = new Date(today);
+    //const end = new Date(today);
 
     switch (preset) {
       case "today":
@@ -237,21 +237,49 @@ export default function UserHistoryReport() {
           </Box>
 
           {/* Resumen */}
-          <SummaryCards data={data} />
+          {/* <SummaryCards data={data} /> */}
 
           {/* Filtros */}
           <Card sx={{ mb: 3 }}>
             <CardContent>
               <Grid container spacing={2} sx={{ mb: 2 }}>
-                <ButtonGroup size="small" sx={{ mb: 1 }} color="secondary">
-                  <Button onClick={() => setDatePreset("today")}>Hoy</Button>
-                  <Button onClick={() => setDatePreset("week")}>
-                    Última semana
-                  </Button>
-                  <Button onClick={() => setDatePreset("month")}>
-                    Este mes
-                  </Button>
-                </ButtonGroup>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  {viewMode === "table" && (
+                    <ButtonGroup size="small" sx={{ mb: 1 }} color="secondary">
+                      <Button onClick={() => setDatePreset("today")}>
+                        Hoy
+                      </Button>
+                      <Button onClick={() => setDatePreset("week")}>
+                        Última semana
+                      </Button>
+                      <Button onClick={() => setDatePreset("month")}>
+                        Este mes
+                      </Button>
+                    </ButtonGroup>
+                  )}
+                </Grid>
+                <Grid
+                  size={{ xs: 12, md: 6 }}
+                  sx={{ display: "flex", justifyContent: "end" }}
+                >
+                  {/* Toggle entre vista calendario y tabla */}
+                  <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={handleViewModeChange}
+                    size="small"
+                    color="secondary"
+                  >
+                    <ToggleButton value="calendar">
+                      <CalendarMonth sx={{ mr: 1 }} />
+                      Calendario
+                    </ToggleButton>
+                    <ToggleButton value="table">
+                      <TableChart sx={{ mr: 1 }} />
+                      Tabla
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Grid>
               </Grid>
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 {/* Búsqueda */}
@@ -352,18 +380,25 @@ export default function UserHistoryReport() {
               </Grid>
 
               <Grid container spacing={2}>
-                {/* <Grid size={{ xs: 12, md: 6 }}>
-                  {// Resumen de registros}
-                  <Box sx={{ mt: 2 }}>
+                <Grid
+                  size={{ xs: 12, md: 6 }}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "start",
+                    alignItems: "center",
+                  }}
+                >
+                  {/* Resumen de registros */}
+                  <Box>
                     <Typography variant="body2" color="text.secondary">
                       {loading
                         ? "Cargando..."
                         : `Mostrando ${data.records.length} de ${data.pagination.totalRecords} registros`}
                     </Typography>
                   </Box>
-                </Grid> */}
+                </Grid>
                 {/* Controles adicionales */}
-                <Box
+                {/* <Box
                   sx={{
                     mt: 2,
                     display: "flex",
@@ -376,24 +411,7 @@ export default function UserHistoryReport() {
                       ? "Cargando..."
                       : `Mostrando ${data.records.length} de ${data.pagination.totalRecords} registros`}
                   </Typography>
-
-                  {/* Toggle entre vista calendario y tabla */}
-                  <ToggleButtonGroup
-                    value={viewMode}
-                    exclusive
-                    onChange={handleViewModeChange}
-                    size="small"
-                  >
-                    <ToggleButton value="calendar">
-                      <CalendarMonth sx={{ mr: 1 }} />
-                      Calendario
-                    </ToggleButton>
-                    <ToggleButton value="table">
-                      <TableChart sx={{ mr: 1 }} />
-                      Tabla
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                </Box>
+                </Box> */}
                 <Grid
                   size={{ xs: 12, md: 6 }}
                   sx={{
@@ -405,8 +423,9 @@ export default function UserHistoryReport() {
                   <Button
                     variant="outlined"
                     startIcon={<FilterListOff />}
+                    size="small"
                     onClick={handleClearFilters}
-                    sx={{ mr: 2 }}
+                    sx={{ mr: 1 }}
                   >
                     Limpiar Filtros
                   </Button>

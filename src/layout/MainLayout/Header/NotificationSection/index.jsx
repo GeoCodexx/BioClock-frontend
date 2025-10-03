@@ -60,11 +60,13 @@ const NotificationSection = () => {
     <Box sx={{ flexShrink: 0, ml: 0.75 }}>
       <ButtonBase
         sx={{
-          p: 0.25,
-          bgcolor: open ? 'rgba(0,0,0,0.1)' : 'transparent',
+          //p: 0.25,
+          //bgcolor: open ? 'rgba(0,0,0,0.1)' : 'transparent',
+          p:1,
+          bgcolor: open ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.05)',
           borderRadius: '50%',
           '&:hover': { bgcolor: 'rgba(0,0,0,0.1)' },
-        }}
+        }}  
         aria-label="open notifications"
         ref={anchorRef}
         aria-controls={open ? 'notification-grow' : undefined}
@@ -80,18 +82,23 @@ const NotificationSection = () => {
         open={open}
         anchorEl={anchorRef.current}
         role={undefined}
-        transition
-        disablePortal
-        popperOptions={{
-          modifiers: [
-            {
-              name: 'offset',
-              options: {
-                offset: [0, 9]
-              }
+        disablePortal={false}
+        modifiers={[
+          {
+            name: 'offset',
+            options: {
+              offset: [0, 9]
             }
-          ]
-        }}
+          },
+          {
+            name: 'preventOverflow',
+            enabled: true,
+            options: {
+              boundary: 'viewport'
+            }
+          }
+        ]}
+        sx={{ zIndex: theme.zIndex.modal }}
       >
         <Paper
           sx={{
@@ -100,6 +107,7 @@ const NotificationSection = () => {
             width: 360,
             minWidth: 290,
             maxWidth: 360,
+            mt: 1
           }}
         >
           <ClickAwayListener onClickAway={handleClose}>

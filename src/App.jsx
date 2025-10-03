@@ -48,8 +48,7 @@ export default function App() {
             <Route path="schedules" element={<Schedules />} />
             <Route path="attendances" element={<Attendances />} />
             <Route path="reports/daily" element={<DailyReport />} />
-            <Route path="reports/monthly" element={<MonthlyReport />} />
-            <Route path="reports/user-history" element={<UserHistoryReport />} />
+            <Route path="reports/general" element={<UserHistoryReport />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" />} />

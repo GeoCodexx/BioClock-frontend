@@ -94,23 +94,24 @@ const CalendarLegend = () => {
             label={config.label}
             size="small"
             sx={{
-              bgcolor: config.color,
-              color: [
+              bgcolor: "transparent",
+              /*color: [
                 "complete",
                 "incomplete_no_entry",
                 "incomplete_no_exit",
                 "justified",
               ].includes(key)
                 ? "white"
-                : "text.primary",
+                : "text.primary",*/
               "& .MuiChip-icon": {
                 color: [
                   "complete",
+                  "late",
                   "incomplete_no_entry",
                   "incomplete_no_exit",
                   "justified",
                 ].includes(key)
-                  ? "white"
+                  ? config.color
                   : "text.primary",
               },
             }}
