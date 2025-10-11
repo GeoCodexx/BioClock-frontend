@@ -27,7 +27,7 @@ import { ExpandLess, ExpandMore, ReadMore } from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LogoBitel from "../../../assets/images/bitel_logo.png";
-import ReadMoreIcon from "@mui/icons-material/ReadMore";
+//import ReadMoreIcon from "@mui/icons-material/ReadMore";
 
 const drawerWidth = 260;
 const collapsedWidth = 80;

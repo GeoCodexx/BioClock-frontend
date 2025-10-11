@@ -1,82 +1,340 @@
-import { Button, Stack } from "@mui/material";
+// ScheduleExportButtons.jsx - Versión optimizada y responsive
+import { 
+  Button, 
+  Stack, 
+  IconButton, 
+  Menu, 
+  MenuItem, 
+  ListItemIcon, 
+  ListItemText,
+  useTheme,
+  useMediaQuery,
+  Tooltip,
+} from "@mui/material";
 import {
   Download as DownloadIcon,
   PictureAsPdf as PictureAsPdfIcon,
+  MoreVert as MoreVertIcon,
+  Description as DescriptionIcon,
 } from "@mui/icons-material";
+import { useState } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
 export default function ScheduleExportButtons({ schedules }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  // Mapa de traducción de días
+  const dayTranslations = {
+    monday: "Lun",
+    tuesday: "Mar",
+    wednesday: "Mié",
+    thursday: "Jue",
+    friday: "Vie",
+    saturday: "Sáb",
+    sunday: "Dom",
+  };
+
+  // Función para formatear días
+  const formatDays = (days = []) =>
+    days.map((day) => dayTranslations[day] || day).join(", ");
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   // Exportar a Excel
   const handleExportExcel = async () => {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Schedules");
-    worksheet.columns = [
-      { header: "Nombre", key: "name", width: 30 },
-      { header: "Días", key: "days", width: 30 },
-      { header: "Hora de inicio", key: "startTime", width: 30 },
-      { header: "Hora de fin", key: "endTime", width: 30 },
-      { header: "Tolerancia (minutos)", key: "toleranceMinutes", width: 30 },
-    ];
-    schedules.forEach((schedule) => {
-      worksheet.addRow({
-        name: schedule.name,
-        days: schedule.days.join(", "),
-        startTime: schedule.startTime,
-        endTime: schedule.endTime,
-        toleranceMinutes: schedule.toleranceMinutes,
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Horarios");
+
+      // Configurar columnas
+      worksheet.columns = [
+        { header: "Nombre", key: "name", width: 30 },
+        { header: "Días Laborales", key: "days", width: 30 },
+        { header: "Hora de Entrada", key: "startTime", width: 20 },
+        { header: "Hora de Salida", key: "endTime", width: 20 },
+        { header: "Tolerancia (min)", key: "toleranceMinutes", width: 20 },
+        { header: "Estado", key: "status", width: 15 },
+      ];
+
+      // Agregar datos
+      schedules.forEach((schedule) => {
+        worksheet.addRow({
+          name: schedule.name,
+          days: formatDays(schedule.days),
+          startTime: schedule.startTime,
+          endTime: schedule.endTime,
+          toleranceMinutes: schedule.toleranceMinutes,
+          status: schedule.status === "active" ? "Activo" : "Inactivo",
+        });
       });
-    });
-    const buffer = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buffer]), "schedules.xlsx");
+
+      // Estilo de la cabecera
+      worksheet.getRow(1).font = { bold: true, size: 12 };
+      worksheet.getRow(1).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF1976D2" }, // Azul primary de MUI
+      };
+      worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
+      worksheet.getRow(1).alignment = { vertical: "middle", horizontal: "center" };
+      worksheet.getRow(1).height = 25;
+
+      // Bordes y alineación para todas las celdas
+      worksheet.eachRow((row, rowNumber) => {
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+          };
+          if (rowNumber > 1) {
+            cell.alignment = { vertical: "middle", horizontal: "left" };
+          }
+        });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(blob, `horarios_${new Date().toISOString().split("T")[0]}.xlsx`);
+      handleClose();
+    } catch (error) {
+      console.error("Error al exportar Excel:", error);
+    }
   };
 
   // Exportar a PDF
   const handleExportPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Schedules", 14, 16);
+    try {
+      const doc = new jsPDF();
+      
+      // Título
+      doc.setFontSize(18);
+      doc.setTextColor(25, 118, 210); // Color primary de MUI
+      doc.text("Listado de Horarios", 14, 20);
+      
+      // Fecha de generación
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(
+        `Generado: ${new Date().toLocaleDateString("es-ES", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}`,
+        14,
+        28
+      );
 
-    doc.autoTable({
-      startY: 22,
-      head: [
-        [
-          "Nombre",
-          "Días",
-          "Hora de inicio",
-          "Hora de fin",
-          "Tolerancia (minutos)",
+      // Tabla
+      doc.autoTable({
+        startY: 35,
+        head: [
+          [
+            "Nombre",
+            "Días",
+            "Entrada",
+            "Salida",
+            "Tolerancia",
+            "Estado",
+          ],
         ],
-      ],
-      body: schedules.map((schedule) => [
-        schedule.name,
-        schedule.days.join(", "),
-        schedule.startTime,
-        schedule.endTime,
-        schedule.toleranceMinutes,
-      ]),
-    });
+        body: schedules.map((schedule) => [
+          schedule.name,
+          formatDays(schedule.days),
+          schedule.startTime,
+          schedule.endTime,
+          `${schedule.toleranceMinutes} min`,
+          schedule.status === "active" ? "Activo" : "Inactivo",
+        ]),
+        styles: {
+          fontSize: 9,
+          cellPadding: 3,
+        },
+        headStyles: {
+          fillColor: [25, 118, 210], // Azul primary de MUI
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          halign: "center",
+        },
+        alternateRowStyles: {
+          fillColor: [245, 247, 250],
+        },
+        margin: { top: 35 },
+      });
 
-    doc.save("schedules.pdf");
+      // Footer con número de página
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(
+          `Página ${i} de ${pageCount}`,
+          doc.internal.pageSize.getWidth() / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: "center" }
+        );
+      }
+
+      doc.save(`horarios_${new Date().toISOString().split("T")[0]}.pdf`);
+      handleClose();
+    } catch (error) {
+      console.error("Error al exportar PDF:", error);
+    }
   };
 
+  // Si no hay horarios, deshabilitar botones
+  const isDisabled = !schedules || schedules.length === 0;
+
+  // Versión mobile: Menú con tres puntos
+  if (isMobile) {
+    return (
+      <>
+        <Tooltip title="Exportar">
+          <span>
+            <IconButton
+              onClick={handleClick}
+              disabled={isDisabled}
+              sx={{
+                bgcolor: theme.palette.background.paper,
+                border: `1px solid ${theme.palette.divider}`,
+                "&:hover": {
+                  bgcolor: theme.palette.action.hover,
+                },
+              }}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          transformOrigin={{ horizontal: "right", vertical: "top" }}
+          anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+          PaperProps={{
+            sx: {
+              mt: 1,
+              minWidth: 200,
+            },
+          }}
+        >
+          <MenuItem onClick={handleExportExcel}>
+            <ListItemIcon>
+              <DescriptionIcon fontSize="small" color="success" />
+            </ListItemIcon>
+            <ListItemText>Exportar Excel</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={handleExportPDF}>
+            <ListItemIcon>
+              <PictureAsPdfIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>Exportar PDF</ListItemText>
+          </MenuItem>
+        </Menu>
+      </>
+    );
+  }
+
+  // Versión tablet: Solo íconos
+  if (isTablet) {
+    return (
+      <Stack direction="row" spacing={1}>
+        <Tooltip title="Exportar a Excel" arrow>
+          <span>
+            <IconButton
+              onClick={handleExportExcel}
+              disabled={isDisabled}
+              sx={{
+                bgcolor: theme.palette.success.light + "20",
+                color: theme.palette.success.main,
+                border: `1px solid ${theme.palette.success.light}`,
+                "&:hover": {
+                  bgcolor: theme.palette.success.light + "40",
+                },
+                "&:disabled": {
+                  bgcolor: theme.palette.action.disabledBackground,
+                },
+              }}
+            >
+              <DescriptionIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title="Exportar a PDF" arrow>
+          <span>
+            <IconButton
+              onClick={handleExportPDF}
+              disabled={isDisabled}
+              sx={{
+                bgcolor: theme.palette.error.light + "20",
+                color: theme.palette.error.main,
+                border: `1px solid ${theme.palette.error.light}`,
+                "&:hover": {
+                  bgcolor: theme.palette.error.light + "40",
+                },
+                "&:disabled": {
+                  bgcolor: theme.palette.action.disabledBackground,
+                },
+              }}
+            >
+              <PictureAsPdfIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Stack>
+    );
+  }
+
+  // Versión desktop: Botones completos
   return (
     <Stack direction="row" spacing={1}>
       <Button
         variant="outlined"
-        startIcon={<DownloadIcon />}
+        color="success"
+        startIcon={<DescriptionIcon />}
         onClick={handleExportExcel}
+        disabled={isDisabled}
+        sx={{
+          minWidth: 140,
+          borderColor: theme.palette.success.main,
+          color: theme.palette.success.main,
+          "&:hover": {
+            borderColor: theme.palette.success.dark,
+            bgcolor: theme.palette.success.light + "20",
+          },
+        }}
       >
-        Exportar Excel
+        Excel
       </Button>
       <Button
         variant="outlined"
         color="error"
         startIcon={<PictureAsPdfIcon />}
         onClick={handleExportPDF}
+        disabled={isDisabled}
+        sx={{
+          minWidth: 140,
+        }}
       >
-        Exportar PDF
+        PDF
       </Button>
     </Stack>
   );

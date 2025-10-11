@@ -10,7 +10,7 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-import LogoBitel from "../../../assets/images/bitel_logo.png";
+//import LogoBitel from "../../../assets/images/bitel_logo.png";
 
 // Componentes personalizados
 import NotificationSection from "./NotificationSection";

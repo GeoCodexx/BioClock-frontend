@@ -35,8 +35,8 @@ const MainLayout = () => {
         isDarkMode={isDarkMode}
         handleDrawerToggle={handleDrawerToggle}
       />
-      <Sidebar 
-        isOpen={isDrawerOpen} 
+      <Sidebar
+        isOpen={isDrawerOpen}
         handleDrawerToggle={handleDrawerToggle}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
@@ -46,14 +46,14 @@ const MainLayout = () => {
         sx={{
           backgroundColor: "rgb(238, 242, 246)",
           minWidth: "1%",
-          width: isMobile 
-            ? "100%" 
+          width: isMobile
+            ? "100%"
             : isDrawerOpen
             ? `calc(100% - ${drawerWidth}px)`
             : `calc(100% - ${collapsedWidth}px)`,
           minHeight: "calc(100vh - 88px)",
           flexGrow: 1,
-          marginTop: "88px",
+          marginTop: isMobile ? "56px" : "88px",
           marginRight: isMobile ? 0 : "20px",
           marginLeft: 0,
           padding: isMobile ? "16px" : "20px",

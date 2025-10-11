@@ -1,18 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Typography,
   CircularProgress,
   Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TablePagination,
   Button,
-  Grid,
+  Box,
   Breadcrumbs,
   Card,
-  CardContent,
+  IconButton,
+  Link,
+  Stack,
+  useTheme,
+  useMediaQuery,
+  Divider,
 } from "@mui/material";
 import {
   createSchedule,
@@ -20,16 +21,23 @@ import {
   updateSchedule,
   deleteSchedule,
 } from "../services/scheduleService";
-import ScheduleForm from "../components/Schedule/ScheduleForm";
 import ScheduleTable from "../components/Schedule/ScheduleTable";
 import ScheduleSearchBar from "../components/Schedule/ScheduleSearchBar";
 import ScheduleExportButtons from "../components/Schedule/ScheduleExportButtons";
-import { Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { Add as AddIcon } from "@mui/icons-material";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import ScheduleDialog from "../components/Schedule/ScheduleDialog";
+import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
+import FloatingAddButton from "../components/common/FloatingAddButton";
 
 export default function Schedules() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+
   const [schedules, setSchedules] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -44,36 +52,49 @@ export default function Schedules() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
-  useEffect(() => {
-    fetchSchedules();
-  }, [page, rowsPerPage, search]);
-
-  const fetchSchedules = async () => {
+  // Función para obtener los datos
+  const fetchSchedules = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const data = await getPaginatedSchedules({
         search,
-        page: page + 1,
-        limit: rowsPerPage,
+        page: (page + 1).toString(),
+        limit: rowsPerPage.toString(),
       });
       setSchedules(data.schedules);
       setTotal(data.total);
     } catch (err) {
-      setError("Error al cargar horarios");
+      setError(err.response?.data?.message || "Error al cargar horarios");
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, page, rowsPerPage]);
+
+  // Llamada normal cuando cambian paginación
+  useEffect(() => {
+    fetchSchedules();
+  }, [page, rowsPerPage, search, fetchSchedules]);
+
+  // Debounce solo para búsqueda
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchInput !== search) {
+        setSearch(searchInput);
+        setPage(0); // Reset page on search
+      }
+    }, 600);
+
+    return () => clearTimeout(handler);
+  }, [searchInput, search]);
 
   const handleRegister = async (data) => {
-    console.log(data);
     setFormError("");
     try {
       if (editSchedule) {
         await updateSchedule(editSchedule._id, data);
       } else {
-        const response = await createSchedule(data);
-        console.log("Respuesta backend: ", response);
+        await createSchedule(data);
       }
       setOpen(false);
       setEditSchedule(null);
@@ -122,119 +143,272 @@ export default function Schedules() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
+
   const handleSearch = (e) => {
     e.preventDefault();
     setPage(0);
     setSearch(searchInput);
   };
 
-  if (loading) return <CircularProgress sx={{ mt: 4 }} />;
-  if (error) return <Alert severity="error">{error}</Alert>;
+  // Estado de carga
+  if (loading && schedules.length === 0) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+          gap: 2,
+        }}
+      >
+        <CircularProgress size={48} />
+        <Typography variant="body1" color="text.secondary">
+          Cargando horarios...
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
-    <>
-      <Card sx={{ borderRadius: 3 }}>
-        {/* <CardContent> */}
-        <Grid
-          container
-          spacing={1}
+    <Box sx={{ width: "100%" }}>
+      {/* HEADER CARD - Título y Breadcrumbs */}
+      <Card
+        sx={{
+          borderRadius: isMobile ? 2 : 3,
+          mb: 2,
+          boxShadow: theme.shadows[1],
+        }}
+      >
+        <Box
           sx={{
-            px: 3,
-            py: 1,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            px: isMobile ? 2 : 3,
+            py: isMobile ? 1.5 : 2,
           }}
         >
-          <Grid>
-            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-              Gestión de Horarios
-            </Typography>
-          </Grid>
-          <Grid>
-            <Breadcrumbs
-              aria-label="breadcrumb"
-              separator={<NavigateNextIcon fontSize="small" />}
-            >
-              <Link
-                underline="hover"
-                sx={{ display: "flex", alignItems: "center" }}
-                color="inherit"
-                href="/"
-              >
-                <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
-              </Link>
-              {/* <Link
-                underline="hover"
-                sx={{ display: "flex", alignItems: "center" }}
-                color="inherit"
-                href="/material-ui/getting-started/installation/"
-              >
-                Core
-              </Link> */}
-              <Typography
+          {/* Mobile: Stack vertical */}
+          {isMobile ? (
+            <Stack spacing={1.5}>
+              <Box
                 sx={{
-                  color: "text.primary",
                   display: "flex",
+                  justifyContent: "space-between",
                   alignItems: "center",
+                  gap: 1,
                 }}
-                variant="body2"
               >
-                Horarios
-              </Typography>
-            </Breadcrumbs>
-          </Grid>
-        </Grid>
-        {/* </CardContent> */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  {/* <AccessTimeIcon color="primary" /> */}
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    Gestión de Horarios
+                  </Typography>
+                </Box>
+
+                <ScheduleExportButtons schedules={schedules} />
+              </Box>
+              <Breadcrumbs
+                aria-label="breadcrumb"
+                separator={<NavigateNextIcon fontSize="small" />}
+                sx={{ fontSize: "0.875rem" }}
+              >
+                <Link
+                  component={RouterLink}
+                  to="/"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    color: "inherit",
+                    textDecoration: "none",
+                    "&:hover": { color: "primary.main" },
+                  }}
+                >
+                  <HomeIcon fontSize="small" />
+                </Link>
+                <Typography variant="body2" color="text.primary">
+                  Horarios
+                </Typography>
+              </Breadcrumbs>
+            </Stack>
+          ) : (
+            // Desktop: Horizontal con espacio entre
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <AccessTimeIcon color="primary" sx={{ fontSize: 28 }} />
+                <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                  Gestión de Horarios
+                </Typography>
+              </Box>
+              <Breadcrumbs
+                aria-label="breadcrumb"
+                separator={<NavigateNextIcon fontSize="small" />}
+              >
+                <Link
+                  component={RouterLink}
+                  to="/"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    color: "inherit",
+                    textDecoration: "none",
+                    "&:hover": { color: "primary.main" },
+                  }}
+                >
+                  <HomeIcon fontSize="small" />
+                </Link>
+                <Typography variant="body2" color="text.primary">
+                  Horarios
+                </Typography>
+              </Breadcrumbs>
+            </Stack>
+          )}
+        </Box>
       </Card>
-      <Card sx={{ my: 2, py: 2, borderRadius: 3 }}>
-        <Grid
-          container
-          spacing={1}
+
+      {/* TOOLBAR CARD - Búsqueda y Acciones */}
+      <Card
+        sx={{
+          borderRadius: isMobile ? 2 : 3,
+          mb: 2,
+          boxShadow: theme.shadows[1],
+        }}
+      >
+        <Box
           sx={{
-            px: 3,
-            py: 1,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            px: isMobile ? 2 : 3,
+            py: isMobile ? 1.5 : 2,
           }}
         >
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ScheduleSearchBar
-              searchInput={searchInput}
-              setSearchInput={setSearchInput}
-              onSearch={handleSearch}
-            />
-          </Grid>
-          <Grid
-            size={{ xs: 12, md: 6 }}
-            sx={{
-              display: "flex",
-              justifyContent: "end",
-              alignItems: "center",
-            }}
-          >
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => {
-                setOpen(true);
-                setEditSchedule(null);
-              }}
-              sx={{ mr: 1 }}
+          {/* Mobile: Stack vertical */}
+          {isTablet ? (
+            <Stack spacing={2}>
+              {/* Botones de acción */}
+              <Stack
+                direction={isMobile ? "column" : "row"}
+                spacing={1}
+                sx={{ width: "100%" }}
+              >
+                <FloatingAddButton
+                  onClick={() => {
+                    setOpen(true);
+                    setEditSchedule(null);
+                  }}
+                />
+                {/* <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    setOpen(true);
+                    setEditSchedule(null);
+                  }}
+                  fullWidth={isMobile}
+                  sx={{
+                    flex: isMobile ? 1 : "none",
+                    minWidth: isMobile ? "auto" : 140,
+                  }}
+                >
+                  Nuevo Horario
+                </Button> */}
+                {/* <ScheduleExportButtons schedules={schedules} /> */}
+              </Stack>
+              {/* Barra de búsqueda */}
+              <ScheduleSearchBar
+                searchInput={searchInput}
+                setSearchInput={setSearchInput}
+                onSearch={handleSearch}
+              />
+            </Stack>
+          ) : (
+            // Desktop: Horizontal
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              spacing={2}
             >
-              Nuevo
-            </Button>
-            <ScheduleExportButtons schedules={schedules} />
-          </Grid>
-        </Grid>
+              <Box sx={{ flex: 1, maxWidth: 400 }}>
+                <ScheduleSearchBar
+                  searchInput={searchInput}
+                  setSearchInput={setSearchInput}
+                  onSearch={handleSearch}
+                />
+              </Box>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => {
+                    setOpen(true);
+                    setEditSchedule(null);
+                  }}
+                  sx={{ minWidth: 140 }}
+                >
+                  Nuevo
+                </Button>
+                <ScheduleExportButtons schedules={schedules} />
+              </Stack>
+            </Stack>
+          )}
+        </Box>
       </Card>
-      <Card sx={{ borderRadius: 3 }}>
-        <ScheduleTable
-          schedules={schedules}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+
+      {/* Mensaje de error global */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: isMobile ? 2 : 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* TABLE CARD */}
+      <Card
+        sx={{
+          borderRadius: isMobile ? 2 : 3,
+          boxShadow: theme.shadows[1],
+          overflow: "hidden",
+        }}
+      >
+        {/* Tabla con loading overlay */}
+        <Box sx={{ position: "relative" }}>
+          {loading && schedules.length > 0 && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                bgcolor: "rgba(255, 255, 255, 0.7)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 10,
+              }}
+            >
+              <CircularProgress size={40} />
+            </Box>
+          )}
+
+          <ScheduleTable
+            schedules={schedules}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </Box>
+
+        {/* Divider antes de paginación */}
+        {schedules.length > 0 && <Divider />}
+
+        {/* Paginación */}
         <TablePagination
           component="div"
           count={total}
@@ -242,51 +416,45 @@ export default function Schedules() {
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          labelRowsPerPage="Filas por página"
+          labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
+          labelDisplayedRows={({ from, to, count }) =>
+            isMobile
+              ? `${from}-${to} de ${count}`
+              : `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+          }
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          sx={{
+            ".MuiTablePagination-toolbar": {
+              flexWrap: isMobile ? "wrap" : "nowrap",
+              minHeight: isMobile ? "auto" : 64,
+              px: isMobile ? 1 : 2,
+            },
+            ".MuiTablePagination-selectLabel": {
+              fontSize: isMobile ? "0.8rem" : "0.875rem",
+            },
+            ".MuiTablePagination-displayedRows": {
+              fontSize: isMobile ? "0.8rem" : "0.875rem",
+            },
+          }}
         />
       </Card>
 
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>
-          {editSchedule ? "Editar Horario" : "Registrar Horario"}
-        </DialogTitle>
-        <DialogContent>
-          {formError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {formError}
-            </Alert>
-          )}
-          <ScheduleForm
-            onSubmit={handleRegister}
-            defaultValues={editSchedule || {}}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button type="submit" form="schedule-form" variant="contained">
-            {editSchedule ? "Guardar Cambios" : "Registrar"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog open={!!deleteId} onClose={() => setDeleteId(null)}>
-        <DialogTitle>Confirmar eliminación</DialogTitle>
-        <DialogContent>
-          {deleteError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {deleteError}
-            </Alert>
-          )}
-          <Typography>
-            ¿Estás seguro de que deseas eliminar este horario?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteId(null)}>Cancelar</Button>
-          <Button color="error" variant="contained" onClick={confirmDelete}>
-            Eliminar
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
+      {/* DIÁLOGOS */}
+      <ScheduleDialog
+        open={open}
+        onClose={handleClose}
+        editSchedule={editSchedule}
+        formError={formError}
+        onSubmit={handleRegister}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={confirmDelete}
+        deleteError={deleteError}
+        itemName="horario"
+      />
+    </Box>
   );
 }
