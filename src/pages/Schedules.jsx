@@ -9,6 +9,10 @@ import {
   DialogActions,
   TablePagination,
   Button,
+  Grid,
+  Breadcrumbs,
+  Card,
+  CardContent,
 } from "@mui/material";
 import {
   createSchedule,
@@ -20,6 +24,10 @@ import ScheduleForm from "../components/Schedule/ScheduleForm";
 import ScheduleTable from "../components/Schedule/ScheduleTable";
 import ScheduleSearchBar from "../components/Schedule/ScheduleSearchBar";
 import ScheduleExportButtons from "../components/Schedule/ScheduleExportButtons";
+import { Link } from "react-router-dom";
+import HomeIcon from "@mui/icons-material/Home";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import { Add as AddIcon } from "@mui/icons-material";
 
 export default function Schedules() {
   const [schedules, setSchedules] = useState([]);
@@ -38,7 +46,6 @@ export default function Schedules() {
 
   useEffect(() => {
     fetchSchedules();
-    // eslint-disable-next-line
   }, [page, rowsPerPage, search]);
 
   const fetchSchedules = async () => {
@@ -126,33 +133,119 @@ export default function Schedules() {
 
   return (
     <>
-      <Typography variant="h5" gutterBottom>
-        Gestión de Horarios
-      </Typography>
-      <ScheduleSearchBar
-        searchInput={searchInput}
-        setSearchInput={setSearchInput}
-        onSearch={handleSearch}
-        onAdd={() => {
-          setOpen(true);
-          setEditSchedule(null);
-        }}
-      />
-      <ScheduleExportButtons schedules={schedules} />
-      <ScheduleTable
-        schedules={schedules}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-      <TablePagination
-        component="div"
-        count={total}
-        page={page}
-        onPageChange={handleChangePage}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        labelRowsPerPage="Filas por página"
-      />
+      <Card sx={{ borderRadius: 3 }}>
+        {/* <CardContent> */}
+        <Grid
+          container
+          spacing={1}
+          sx={{
+            px: 3,
+            py: 1,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Grid>
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              Gestión de Horarios
+            </Typography>
+          </Grid>
+          <Grid>
+            <Breadcrumbs
+              aria-label="breadcrumb"
+              separator={<NavigateNextIcon fontSize="small" />}
+            >
+              <Link
+                underline="hover"
+                sx={{ display: "flex", alignItems: "center" }}
+                color="inherit"
+                href="/"
+              >
+                <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
+              </Link>
+              {/* <Link
+                underline="hover"
+                sx={{ display: "flex", alignItems: "center" }}
+                color="inherit"
+                href="/material-ui/getting-started/installation/"
+              >
+                Core
+              </Link> */}
+              <Typography
+                sx={{
+                  color: "text.primary",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                variant="body2"
+              >
+                Horarios
+              </Typography>
+            </Breadcrumbs>
+          </Grid>
+        </Grid>
+        {/* </CardContent> */}
+      </Card>
+      <Card sx={{ my: 2, py: 2, borderRadius: 3 }}>
+        <Grid
+          container
+          spacing={1}
+          sx={{
+            px: 3,
+            py: 1,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ScheduleSearchBar
+              searchInput={searchInput}
+              setSearchInput={setSearchInput}
+              onSearch={handleSearch}
+            />
+          </Grid>
+          <Grid
+            size={{ xs: 12, md: 6 }}
+            sx={{
+              display: "flex",
+              justifyContent: "end",
+              alignItems: "center",
+            }}
+          >
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setOpen(true);
+                setEditSchedule(null);
+              }}
+              sx={{ mr: 1 }}
+            >
+              Nuevo
+            </Button>
+            <ScheduleExportButtons schedules={schedules} />
+          </Grid>
+        </Grid>
+      </Card>
+      <Card sx={{ borderRadius: 3 }}>
+        <ScheduleTable
+          schedules={schedules}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+        <TablePagination
+          component="div"
+          count={total}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Filas por página"
+        />
+      </Card>
+
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>
           {editSchedule ? "Editar Horario" : "Registrar Horario"}
@@ -170,11 +263,7 @@ export default function Schedules() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button
-            type="submit"
-            form="schedule-form"
-            variant="contained"
-          >
+          <Button type="submit" form="schedule-form" variant="contained">
             {editSchedule ? "Guardar Cambios" : "Registrar"}
           </Button>
         </DialogActions>

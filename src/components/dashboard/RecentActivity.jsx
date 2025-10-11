@@ -69,12 +69,8 @@ const RecentActivity = ({ topUsers }) => {
     // </Card>
     <Card>
       <CardContent>
-        <Typography
-          variant="h5"
-          gutterBottom
-          sx={{ fontWeight: "bold", textAlign: "center" }}
-        >
-          🏆 Top 5 Usuarios del Mes
+        <Typography variant="h6" gutterBottom>
+          Top 5 usuarios del mes
         </Typography>
 
         <TableContainer
