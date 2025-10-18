@@ -8,7 +8,6 @@ import {
   Box,
   Breadcrumbs,
   Card,
-  IconButton,
   Link,
   Stack,
   useTheme,
@@ -32,8 +31,11 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ScheduleDialog from "../components/Schedule/ScheduleDialog";
 import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import FloatingAddButton from "../components/common/FloatingAddButton";
+import useSnackbarStore from "../store/useSnackbarStore";
 
 export default function Schedules() {
+  const { showSuccess, showError } = useSnackbarStore();
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
@@ -88,21 +90,50 @@ export default function Schedules() {
     return () => clearTimeout(handler);
   }, [searchInput, search]);
 
+  // const handleRegister = async (data) => {
+  //   setFormError("");
+  //   try {
+  //     if (editSchedule) {
+  //       await updateSchedule(editSchedule._id, data);
+  //     } else {
+  //       await createSchedule(data);
+  //     }
+  //     setOpen(false);
+  //     setEditSchedule(null);
+  //     fetchSchedules();
+  //   } catch (err) {
+  //     setFormError(
+  //       err.response?.data?.message || "Error al guardar el horario"
+  //     );
+  //   }
+  // };
   const handleRegister = async (data) => {
     setFormError("");
+
     try {
-      if (editSchedule) {
+      const isEditing = !!editSchedule;
+
+      if (isEditing) {
         await updateSchedule(editSchedule._id, data);
+        showSuccess("Horario actualizado correctamente");
       } else {
         await createSchedule(data);
+        showSuccess("Horario creado correctamente");
       }
+
+      // Limpiar estado y recargar
       setOpen(false);
       setEditSchedule(null);
-      fetchSchedules();
+      await fetchSchedules();
     } catch (err) {
-      setFormError(
-        err.response?.data?.message || "Error al guardar el horario"
-      );
+      const errorMessage =
+        err.response?.data?.message ||
+        `Error al ${editSchedule ? "actualizar" : "crear"} el horario`;
+
+      setFormError(errorMessage);
+      showError(errorMessage);
+
+      console.error("Error en handleRegister:", err);
     }
   };
 
@@ -120,12 +151,22 @@ export default function Schedules() {
     setDeleteError("");
     try {
       await deleteSchedule(deleteId);
+      showSuccess("Horario eliminado correctamente");
+      // Limpiar estado y recargar
       setDeleteId(null);
-      fetchSchedules();
+      await fetchSchedules();
     } catch (err) {
-      setDeleteError(
+      const errorMessage =
+        err.response?.data?.message || `Error al eliminar el horario`;
+
+      setDeleteError(errorMessage);
+      showError(errorMessage);
+
+      console.error("Error en confirmDelete:", err);
+
+      /*setDeleteError(
         err.response?.data?.message || "Error al eliminar el horario"
-      );
+      );*/
     }
   };
 

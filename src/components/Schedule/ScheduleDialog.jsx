@@ -60,7 +60,7 @@ const ScheduleDialog = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          pb: 2,
+          pb: 1.5,
           borderBottom: `1px solid ${theme.palette.divider}`,
         }}
       >
@@ -88,8 +88,10 @@ const ScheduleDialog = ({
       {/* Contenido */}
       <DialogContent
         sx={{
-          pt: 3,
-          pb: 2,
+          "&.MuiDialogContent-root": {
+            pt: 3,
+            pb: 2,
+          },
         }}
       >
         {formError && (

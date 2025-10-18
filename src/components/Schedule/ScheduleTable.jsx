@@ -1,5 +1,5 @@
 // ScheduleTable.jsx - Tabla responsive con filas colapsables en mobile
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -251,10 +251,10 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                 const isOpen = openRows[schedule._id] || false;
 
                 return (
-                  <>
+                  <React.Fragment key={schedule._id}>
                     {/* Fila Principal */}
                     <TableRow
-                      key={schedule._id}
+                      //key={schedule._id}
                       sx={{
                         bgcolor:
                           index % 2 === 0
@@ -475,7 +475,7 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                         </Collapse>
                       </TableCell>
                     </TableRow>
-                  </>
+                  </React.Fragment>
                 );
               })}
             </TableBody>

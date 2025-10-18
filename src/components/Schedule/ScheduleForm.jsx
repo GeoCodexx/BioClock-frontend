@@ -278,7 +278,7 @@ const ScheduleForm = ({ onSubmit, defaultValues = {} }) => {
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 Resumen del Horario:
               </Typography>
-              <Typography variant="body1" fontWeight={500}>
+              {/* <Typography variant="body1" fontWeight={500}>
                 {watch("startTime")} - {watch("endTime")}
                 {watch("toleranceMinutes") > 0 && (
                   <Chip
@@ -288,7 +288,20 @@ const ScheduleForm = ({ onSubmit, defaultValues = {} }) => {
                     color="info"
                   />
                 )}
-              </Typography>
+              </Typography> */}
+              <Box display="flex" alignItems="center">
+                <Typography variant="body1" fontWeight={500}>
+                  {watch("startTime")} - {watch("endTime")}
+                </Typography>
+                {watch("toleranceMinutes") > 0 && (
+                  <Chip
+                    label={`+${watch("toleranceMinutes")} min`}
+                    size="small"
+                    sx={{ ml: 1 }}
+                    color="info"
+                  />
+                )}
+              </Box>
             </Paper>
           </Grid>
         )}

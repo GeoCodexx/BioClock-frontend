@@ -14,8 +14,8 @@ import theme from "./themes";
 import Fingerprint from "./pages/Fingerprints";
 import Attendances from "./pages/Attendances";
 import DailyReport from "./pages/DailyReport";
-import MonthlyReport from "./pages/MonthlyReport";
 import UserHistoryReport from "./pages/UserHistoryReport";
+import GlobalSnackbar from "./components/GlobalSnackbar";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -54,6 +54,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
+      <GlobalSnackbar />
     </ThemeProvider>
   );
 }

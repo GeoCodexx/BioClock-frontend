@@ -22,6 +22,10 @@ import {
 import DepartmentExportButtons from "../components/Department/DepartmentExportButtons";
 
 export default function Departments() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  
   const [departments, setDepartments] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
