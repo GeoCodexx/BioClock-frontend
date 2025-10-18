@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import {
   Typography,
   CircularProgress,
@@ -27,11 +28,38 @@ import { Link as RouterLink } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { Add as AddIcon } from "@mui/icons-material";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ScheduleDialog from "../components/Schedule/ScheduleDialog";
 import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
+
+// ============================================
+// OPTIMIZACIÓN 6: Componente LoadingOverlay memoizado
+// ============================================
+const LoadingOverlay = memo(({ show }) => {
+  if (!show) return null;
+
+  return (
+    <Box
+      sx={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        bgcolor: "rgba(255, 255, 255, 0.7)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 10,
+      }}
+    >
+      <CircularProgress size={40} />
+    </Box>
+  );
+});
+
+LoadingOverlay.displayName = "LoadingOverlay";
 
 export default function Schedules() {
   const { showSuccess, showError } = useSnackbarStore();
@@ -44,25 +72,80 @@ export default function Schedules() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [open, setOpen] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [editSchedule, setEditSchedule] = useState(null);
-  const [deleteId, setDeleteId] = useState(null);
-  const [deleteError, setDeleteError] = useState("");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
-  // Función para obtener los datos
-  const fetchSchedules = useCallback(async () => {
+  // ============================================
+  // OPTIMIZACIÓN 3: Consolidar estados relacionados
+  // ============================================
+  const [pagination, setPagination] = useState({
+    page: 0,
+    rowsPerPage: 10,
+    search: "",
+  });
+
+  const [dialog, setDialog] = useState({
+    open: false,
+    editSchedule: null,
+    error: "",
+  });
+
+  const [deleteState, setDeleteState] = useState({
+    id: null,
+    error: "",
+  });
+
+  // ============================================
+  // OPTIMIZACIÓN 4: Evitar llamadas duplicadas
+  // Eliminamos fetchSchedules de las dependencias
+  // ============================================
+  useEffect(() => {
+    const loadSchedules = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await getPaginatedSchedules({
+          search: pagination.search,
+          page: (pagination.page + 1).toString(),
+          limit: pagination.rowsPerPage.toString(),
+        });
+        setSchedules(data.schedules);
+        setTotal(data.total);
+      } catch (err) {
+        setError(err.response?.data?.message || "Error al cargar horarios");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSchedules();
+  }, [pagination.search, pagination.page, pagination.rowsPerPage]);
+
+  // Debounce para búsqueda
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchInput !== pagination.search) {
+        setPagination((prev) => ({
+          ...prev,
+          search: searchInput,
+          page: 0,
+        }));
+      }
+    }, 600);
+
+    return () => clearTimeout(handler);
+  }, [searchInput, pagination.search]);
+
+  // ============================================
+  // OPTIMIZACIÓN 2: Handlers con useCallback
+  // ============================================
+  const refreshSchedules = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const data = await getPaginatedSchedules({
-        search,
-        page: (page + 1).toString(),
-        limit: rowsPerPage.toString(),
+        search: pagination.search,
+        page: (pagination.page + 1).toString(),
+        limit: pagination.rowsPerPage.toString(),
       });
       setSchedules(data.schedules);
       setTotal(data.total);
@@ -71,130 +154,153 @@ export default function Schedules() {
     } finally {
       setLoading(false);
     }
-  }, [search, page, rowsPerPage]);
+  }, [pagination.search, pagination.page, pagination.rowsPerPage]);
 
-  // Llamada normal cuando cambian paginación
-  useEffect(() => {
-    fetchSchedules();
-  }, [page, rowsPerPage, search, fetchSchedules]);
+  const handleSubmit = useCallback(
+    async (data) => {
+      setDialog((prev) => ({ ...prev, error: "" }));
 
-  // Debounce solo para búsqueda
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (searchInput !== search) {
-        setSearch(searchInput);
-        setPage(0); // Reset page on search
+      try {
+        const isEditing = !!dialog.editSchedule;
+
+        if (isEditing) {
+          await updateSchedule(dialog.editSchedule._id, data);
+          showSuccess("Horario actualizado correctamente");
+        } else {
+          await createSchedule(data);
+          showSuccess("Horario creado correctamente");
+        }
+
+        setDialog({ open: false, editSchedule: null, error: "" });
+        await refreshSchedules();
+      } catch (err) {
+        const errorMessage =
+          err.response?.data?.message ||
+          `Error al ${dialog.editSchedule ? "actualizar" : "crear"} el horario`;
+
+        setDialog((prev) => ({ ...prev, error: errorMessage }));
+        showError(errorMessage);
+        console.error("Error en handleSubmit:", err);
+        throw err;
       }
-    }, 600);
+    },
+    [dialog.editSchedule, showSuccess, showError, refreshSchedules]
+  );
 
-    return () => clearTimeout(handler);
-  }, [searchInput, search]);
+  const handleEdit = useCallback((schedule) => {
+    setDialog({
+      open: true,
+      editSchedule: schedule,
+      error: "",
+    });
+  }, []);
 
-  // const handleRegister = async (data) => {
-  //   setFormError("");
-  //   try {
-  //     if (editSchedule) {
-  //       await updateSchedule(editSchedule._id, data);
-  //     } else {
-  //       await createSchedule(data);
-  //     }
-  //     setOpen(false);
-  //     setEditSchedule(null);
-  //     fetchSchedules();
-  //   } catch (err) {
-  //     setFormError(
-  //       err.response?.data?.message || "Error al guardar el horario"
-  //     );
-  //   }
-  // };
-  const handleSubmit = async (data) => {
-    setFormError("");
+  const handleDelete = useCallback((scheduleId) => {
+    setDeleteState({
+      id: scheduleId,
+      error: "",
+    });
+  }, []);
 
+  const confirmDelete = useCallback(async () => {
+    setDeleteState((prev) => ({ ...prev, error: "" }));
     try {
-      const isEditing = !!editSchedule;
-
-      if (isEditing) {
-        await updateSchedule(editSchedule._id, data);
-        showSuccess("Horario actualizado correctamente");
-      } else {
-        await createSchedule(data);
-        showSuccess("Horario creado correctamente");
-      }
-
-      // Limpiar estado y recargar
-      setOpen(false);
-      setEditSchedule(null);
-      await fetchSchedules();
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        `Error al ${editSchedule ? "actualizar" : "crear"} el horario`;
-
-      setFormError(errorMessage);
-      showError(errorMessage);
-
-      console.error("Error en handleRegister:", err);
-
-      // Re-lanzar el error para que el dialog maneje el loading
-      throw err;
-    }
-  };
-
-  const handleEdit = (schedule) => {
-    setEditSchedule(schedule);
-    setOpen(true);
-  };
-
-  const handleDelete = (scheduleId) => {
-    setDeleteId(scheduleId);
-    setDeleteError("");
-  };
-
-  const confirmDelete = async () => {
-    setDeleteError("");
-    try {
-      await deleteSchedule(deleteId);
+      await deleteSchedule(deleteState.id);
       showSuccess("Horario eliminado correctamente");
-      // Limpiar estado y recargar
-      setDeleteId(null);
-      await fetchSchedules();
+      setDeleteState({ id: null, error: "" });
+      await refreshSchedules();
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || `Error al eliminar el horario`;
+        err.response?.data?.message || "Error al eliminar el horario";
 
-      setDeleteError(errorMessage);
+      setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);
-
       console.error("Error en confirmDelete:", err);
-
-      /*setDeleteError(
-        err.response?.data?.message || "Error al eliminar el horario"
-      );*/
     }
-  };
+  }, [deleteState.id, showSuccess, showError, refreshSchedules]);
 
-  const handleClose = () => {
-    setOpen(false);
-    setEditSchedule(null);
-    setFormError("");
-  };
+  const handleClose = useCallback(() => {
+    setDialog({ open: false, editSchedule: null, error: "" });
+  }, []);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+  const handleChangePage = useCallback((event, newPage) => {
+    setPagination((prev) => ({ ...prev, page: newPage }));
+  }, []);
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  const handleChangeRowsPerPage = useCallback((event) => {
+    setPagination((prev) => ({
+      ...prev,
+      rowsPerPage: parseInt(event.target.value, 10),
+      page: 0,
+    }));
+  }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setPage(0);
-    setSearch(searchInput);
-  };
+  const handleSearch = useCallback(
+    (e) => {
+      e.preventDefault();
+      setPagination((prev) => ({
+        ...prev,
+        search: searchInput,
+        page: 0,
+      }));
+    },
+    [searchInput]
+  );
 
-  // Estado de carga
+  const handleOpenDialog = useCallback(() => {
+    setDialog({ open: true, editSchedule: null, error: "" });
+  }, []);
+
+  const handleCloseDelete = useCallback(() => {
+    setDeleteState({ id: null, error: "" });
+  }, []);
+
+  // ============================================
+  // OPTIMIZACIÓN 1: Memoizar valores reutilizables
+  // ============================================
+  const breadcrumbItems = useMemo(
+    () => (
+      <Breadcrumbs
+        aria-label="breadcrumb"
+        separator={<NavigateNextIcon fontSize="small" />}
+        sx={isMobile ? { fontSize: "0.875rem" } : undefined}
+      >
+        <Link
+          component={RouterLink}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            color: "inherit",
+            textDecoration: "none",
+            "&:hover": { color: "primary.main" },
+          }}
+        >
+          <HomeIcon fontSize="small" />
+        </Link>
+        <Typography variant="body2" color="text.primary">
+          Horarios
+        </Typography>
+      </Breadcrumbs>
+    ),
+    [isMobile]
+  );
+
+  // ============================================
+  // OPTIMIZACIÓN 5: Memoizar tabla
+  // ============================================
+  const scheduleTableMemo = useMemo(
+    () => (
+      <ScheduleTable
+        schedules={schedules}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+    ),
+    [schedules, handleEdit, handleDelete]
+  );
+
+  // Estado de carga inicial
   if (loading && schedules.length === 0) {
     return (
       <Box
@@ -231,7 +337,6 @@ export default function Schedules() {
             py: isMobile ? 1.5 : 2,
           }}
         >
-          {/* Mobile: Stack vertical */}
           {isMobile ? (
             <Stack spacing={1.5}>
               <Box
@@ -249,71 +354,26 @@ export default function Schedules() {
                     alignItems: "center",
                   }}
                 >
-                  {/* <AccessTimeIcon color="primary" /> */}
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
                     Gestión de Horarios
                   </Typography>
                 </Box>
-
                 <ScheduleExportButtons schedules={schedules} />
               </Box>
-              <Breadcrumbs
-                aria-label="breadcrumb"
-                separator={<NavigateNextIcon fontSize="small" />}
-                sx={{ fontSize: "0.875rem" }}
-              >
-                <Link
-                  component={RouterLink}
-                  to="/"
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    color: "inherit",
-                    textDecoration: "none",
-                    "&:hover": { color: "primary.main" },
-                  }}
-                >
-                  <HomeIcon fontSize="small" />
-                </Link>
-                <Typography variant="body2" color="text.primary">
-                  Horarios
-                </Typography>
-              </Breadcrumbs>
+              {breadcrumbItems}
             </Stack>
           ) : (
-            // Desktop: Horizontal con espacio entre
             <Stack
               direction="row"
               justifyContent="space-between"
               alignItems="center"
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <AccessTimeIcon color="primary" sx={{ fontSize: 28 }} />
                 <Typography variant="h5" sx={{ fontWeight: 700 }}>
                   Gestión de Horarios
                 </Typography>
               </Box>
-              <Breadcrumbs
-                aria-label="breadcrumb"
-                separator={<NavigateNextIcon fontSize="small" />}
-              >
-                <Link
-                  component={RouterLink}
-                  to="/"
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    color: "inherit",
-                    textDecoration: "none",
-                    "&:hover": { color: "primary.main" },
-                  }}
-                >
-                  <HomeIcon fontSize="small" />
-                </Link>
-                <Typography variant="body2" color="text.primary">
-                  Horarios
-                </Typography>
-              </Breadcrumbs>
+              {breadcrumbItems}
             </Stack>
           )}
         </Box>
@@ -333,39 +393,15 @@ export default function Schedules() {
             py: isMobile ? 1.5 : 2,
           }}
         >
-          {/* Mobile: Stack vertical */}
           {isTablet ? (
             <Stack spacing={2}>
-              {/* Botones de acción */}
               <Stack
                 direction={isMobile ? "column" : "row"}
                 spacing={1}
                 sx={{ width: "100%" }}
               >
-                <FloatingAddButton
-                  onClick={() => {
-                    setOpen(true);
-                    setEditSchedule(null);
-                  }}
-                />
-                {/* <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => {
-                    setOpen(true);
-                    setEditSchedule(null);
-                  }}
-                  fullWidth={isMobile}
-                  sx={{
-                    flex: isMobile ? 1 : "none",
-                    minWidth: isMobile ? "auto" : 140,
-                  }}
-                >
-                  Nuevo Horario
-                </Button> */}
-                {/* <ScheduleExportButtons schedules={schedules} /> */}
+                <FloatingAddButton onClick={handleOpenDialog} />
               </Stack>
-              {/* Barra de búsqueda */}
               <ScheduleSearchBar
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
@@ -373,7 +409,6 @@ export default function Schedules() {
               />
             </Stack>
           ) : (
-            // Desktop: Horizontal
             <Stack
               direction="row"
               justifyContent="space-between"
@@ -391,10 +426,7 @@ export default function Schedules() {
                 <Button
                   variant="contained"
                   startIcon={<AddIcon />}
-                  onClick={() => {
-                    setOpen(true);
-                    setEditSchedule(null);
-                  }}
+                  onClick={handleOpenDialog}
                   sx={{ minWidth: 140 }}
                 >
                   Nuevo
@@ -421,44 +453,19 @@ export default function Schedules() {
           overflow: "hidden",
         }}
       >
-        {/* Tabla con loading overlay */}
         <Box sx={{ position: "relative" }}>
-          {loading && schedules.length > 0 && (
-            <Box
-              sx={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                bgcolor: "rgba(255, 255, 255, 0.7)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                zIndex: 10,
-              }}
-            >
-              <CircularProgress size={40} />
-            </Box>
-          )}
-
-          <ScheduleTable
-            schedules={schedules}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
+          <LoadingOverlay show={loading && schedules.length > 0} />
+          {scheduleTableMemo}
         </Box>
 
-        {/* Divider antes de paginación */}
         {schedules.length > 0 && <Divider />}
 
-        {/* Paginación */}
         <TablePagination
           component="div"
           count={total}
-          page={page}
+          page={pagination.page}
           onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
+          rowsPerPage={pagination.rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
           labelDisplayedRows={({ from, to, count }) =>
@@ -485,18 +492,18 @@ export default function Schedules() {
 
       {/* DIÁLOGOS */}
       <ScheduleDialog
-        open={open}
+        open={dialog.open}
         onClose={handleClose}
-        editSchedule={editSchedule}
-        formError={formError}
+        editSchedule={dialog.editSchedule}
+        formError={dialog.error}
         onSubmit={handleSubmit}
       />
 
       <DeleteConfirmDialog
-        open={!!deleteId}
-        onClose={() => setDeleteId(null)}
+        open={!!deleteState.id}
+        onClose={handleCloseDelete}
         onConfirm={confirmDelete}
-        deleteError={deleteError}
+        deleteError={deleteState.error}
         itemName="horario"
       />
     </Box>

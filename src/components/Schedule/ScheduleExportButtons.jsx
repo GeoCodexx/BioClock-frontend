@@ -1,18 +1,17 @@
 // ScheduleExportButtons.jsx - Versión optimizada y responsive
-import { 
-  Button, 
-  Stack, 
-  IconButton, 
-  Menu, 
-  MenuItem, 
-  ListItemIcon, 
+import {
+  Button,
+  Stack,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
   ListItemText,
   useTheme,
   useMediaQuery,
   Tooltip,
 } from "@mui/material";
 import {
-  Download as DownloadIcon,
   PictureAsPdf as PictureAsPdfIcon,
   MoreVert as MoreVertIcon,
   Description as DescriptionIcon,
@@ -89,7 +88,10 @@ export default function ScheduleExportButtons({ schedules }) {
         fgColor: { argb: "FF1976D2" }, // Azul primary de MUI
       };
       worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-      worksheet.getRow(1).alignment = { vertical: "middle", horizontal: "center" };
+      worksheet.getRow(1).alignment = {
+        vertical: "middle",
+        horizontal: "center",
+      };
       worksheet.getRow(1).height = 25;
 
       // Bordes y alineación para todas las celdas
@@ -122,12 +124,12 @@ export default function ScheduleExportButtons({ schedules }) {
   const handleExportPDF = () => {
     try {
       const doc = new jsPDF();
-      
+
       // Título
       doc.setFontSize(18);
       doc.setTextColor(25, 118, 210); // Color primary de MUI
       doc.text("Listado de Horarios", 14, 20);
-      
+
       // Fecha de generación
       doc.setFontSize(10);
       doc.setTextColor(100);
@@ -144,16 +146,7 @@ export default function ScheduleExportButtons({ schedules }) {
       // Tabla
       doc.autoTable({
         startY: 35,
-        head: [
-          [
-            "Nombre",
-            "Días",
-            "Entrada",
-            "Salida",
-            "Tolerancia",
-            "Estado",
-          ],
-        ],
+        head: [["Nombre", "Días", "Entrada", "Salida", "Tolerancia", "Estado"]],
         body: schedules.map((schedule) => [
           schedule.name,
           formatDays(schedule.days),
@@ -306,36 +299,40 @@ export default function ScheduleExportButtons({ schedules }) {
   // Versión desktop: Botones completos
   return (
     <Stack direction="row" spacing={1}>
-      <Button
-        variant="outlined"
-        color="success"
-        startIcon={<DescriptionIcon />}
-        onClick={handleExportExcel}
-        disabled={isDisabled}
-        sx={{
-          minWidth: 140,
-          borderColor: theme.palette.success.main,
-          color: theme.palette.success.main,
-          "&:hover": {
-            borderColor: theme.palette.success.dark,
-            bgcolor: theme.palette.success.light + "20",
-          },
-        }}
-      >
-        Excel
-      </Button>
-      <Button
-        variant="outlined"
-        color="error"
-        startIcon={<PictureAsPdfIcon />}
-        onClick={handleExportPDF}
-        disabled={isDisabled}
-        sx={{
-          minWidth: 140,
-        }}
-      >
-        PDF
-      </Button>
+      <Tooltip title="Exportar a Excel" arrow>
+        <Button
+          variant="outlined"
+          color="success"
+          startIcon={<DescriptionIcon />}
+          onClick={handleExportExcel}
+          disabled={isDisabled}
+          sx={{
+            minWidth: 140,
+            borderColor: theme.palette.success.main,
+            color: theme.palette.success.main,
+            "&:hover": {
+              borderColor: theme.palette.success.dark,
+              bgcolor: theme.palette.success.light + "20",
+            },
+          }}
+        >
+          Excel
+        </Button>
+      </Tooltip>
+      <Tooltip title="Exportar en PDF" arrow>
+        <Button
+          variant="outlined"
+          color="error"
+          startIcon={<PictureAsPdfIcon />}
+          onClick={handleExportPDF}
+          disabled={isDisabled}
+          sx={{
+            minWidth: 140,
+          }}
+        >
+          PDF
+        </Button>
+      </Tooltip>
     </Stack>
   );
 }

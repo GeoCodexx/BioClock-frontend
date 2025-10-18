@@ -9,6 +9,8 @@ import {
   DialogActions,
   TablePagination,
   Button,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import DepartmentForm from "../components/Department/DepartmentForm";
 import DepartmentTable from "../components/Department/DepartmentTable";
