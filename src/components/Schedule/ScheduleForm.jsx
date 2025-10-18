@@ -16,9 +16,15 @@ import {
 } from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import EventIcon from "@mui/icons-material/Event";
+import { useEffect } from "react";
 //import DescriptionIcon from "@mui/icons-material/Description";
 
-const ScheduleForm = ({ onSubmit, defaultValues = {} }) => {
+const ScheduleForm = ({
+  onSubmit,
+  defaultValues = {},
+  onChange,
+  disabled = false,
+}) => {
   const {
     control,
     handleSubmit,
@@ -34,6 +40,16 @@ const ScheduleForm = ({ onSubmit, defaultValues = {} }) => {
       //description: defaultValues.description || "",
     },
   });
+
+  // Detectar cambios en el formulario
+  useEffect(() => {
+    const subscription = watch(() => {
+      if (onChange) {
+        onChange();
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, onChange]);
 
   const workDaysOptions = [
     { value: "monday", label: "Lunes" },
@@ -71,6 +87,7 @@ const ScheduleForm = ({ onSubmit, defaultValues = {} }) => {
                 label="Nombre del Horario"
                 fullWidth
                 required
+                disabled={disabled}
                 error={!!errors.name}
                 helperText={errors.name?.message}
                 placeholder="Ej: Horario Administrativo"
@@ -99,6 +116,7 @@ const ScheduleForm = ({ onSubmit, defaultValues = {} }) => {
                 type="time"
                 fullWidth
                 required
+                disabled={disabled}
                 error={!!errors.startTime}
                 helperText={errors.startTime?.message}
                 InputProps={{
@@ -137,6 +155,7 @@ const ScheduleForm = ({ onSubmit, defaultValues = {} }) => {
                 type="time"
                 fullWidth
                 required
+                disabled={disabled}
                 error={!!errors.endTime}
                 helperText={errors.endTime?.message}
                 InputProps={{
@@ -177,6 +196,7 @@ const ScheduleForm = ({ onSubmit, defaultValues = {} }) => {
                 type="number"
                 fullWidth
                 required
+                disabled={disabled}
                 error={!!errors.toleranceMinutes}
                 helperText={
                   errors.toleranceMinutes?.message ||
@@ -199,7 +219,7 @@ const ScheduleForm = ({ onSubmit, defaultValues = {} }) => {
                 value.length > 0 || "Debe seleccionar al menos un día",
             }}
             render={({ field }) => (
-              <FormControl fullWidth error={!!errors.days} required>
+              <FormControl fullWidth error={!!errors.days} required disabled={disabled}>
                 <InputLabel id="work-days-label">Días Laborales</InputLabel>
                 <Select
                   {...field}

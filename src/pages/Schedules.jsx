@@ -107,7 +107,7 @@ export default function Schedules() {
   //     );
   //   }
   // };
-  const handleRegister = async (data) => {
+  const handleSubmit = async (data) => {
     setFormError("");
 
     try {
@@ -134,6 +134,9 @@ export default function Schedules() {
       showError(errorMessage);
 
       console.error("Error en handleRegister:", err);
+
+      // Re-lanzar el error para que el dialog maneje el loading
+      throw err;
     }
   };
 
@@ -486,7 +489,7 @@ export default function Schedules() {
         onClose={handleClose}
         editSchedule={editSchedule}
         formError={formError}
-        onSubmit={handleRegister}
+        onSubmit={handleSubmit}
       />
 
       <DeleteConfirmDialog
