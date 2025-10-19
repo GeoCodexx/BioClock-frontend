@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import {
   Typography,
@@ -32,34 +31,7 @@ import ScheduleDialog from "../components/Schedule/ScheduleDialog";
 import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
-
-// ============================================
-// OPTIMIZACIÓN 6: Componente LoadingOverlay memoizado
-// ============================================
-const LoadingOverlay = memo(({ show }) => {
-  if (!show) return null;
-
-  return (
-    <Box
-      sx={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        bgcolor: "rgba(255, 255, 255, 0.7)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 10,
-      }}
-    >
-      <CircularProgress size={40} />
-    </Box>
-  );
-});
-
-LoadingOverlay.displayName = "LoadingOverlay";
+import LoadingOverlay from "../components/common/LoadingOverlay";
 
 export default function Schedules() {
   const { showSuccess, showError } = useSnackbarStore();
@@ -74,9 +46,7 @@ export default function Schedules() {
   const [error, setError] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
-  // ============================================
-  // OPTIMIZACIÓN 3: Consolidar estados relacionados
-  // ============================================
+  // Consolidar estados relacionados
   const [pagination, setPagination] = useState({
     page: 0,
     rowsPerPage: 10,
@@ -94,10 +64,7 @@ export default function Schedules() {
     error: "",
   });
 
-  // ============================================
-  // OPTIMIZACIÓN 4: Evitar llamadas duplicadas
-  // Eliminamos fetchSchedules de las dependencias
-  // ============================================
+  // Evitar llamadas duplicadas eliminando fetchSchedules de las dependencias
   useEffect(() => {
     const loadSchedules = async () => {
       setLoading(true);
@@ -135,9 +102,7 @@ export default function Schedules() {
     return () => clearTimeout(handler);
   }, [searchInput, pagination.search]);
 
-  // ============================================
-  // OPTIMIZACIÓN 2: Handlers con useCallback
-  // ============================================
+  // Handlers con useCallback
   const refreshSchedules = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -255,9 +220,7 @@ export default function Schedules() {
     setDeleteState({ id: null, error: "" });
   }, []);
 
-  // ============================================
-  // OPTIMIZACIÓN 1: Memoizar valores reutilizables
-  // ============================================
+  // Memorizar valores reutilizables
   const breadcrumbItems = useMemo(
     () => (
       <Breadcrumbs
@@ -286,9 +249,7 @@ export default function Schedules() {
     [isMobile]
   );
 
-  // ============================================
-  // OPTIMIZACIÓN 5: Memoizar tabla
-  // ============================================
+  // Memorizar tabla
   const scheduleTableMemo = useMemo(
     () => (
       <ScheduleTable

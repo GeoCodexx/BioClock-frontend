@@ -1,38 +1,537 @@
-import React from 'react';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material';
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+// DepartmentTable.jsx - Tabla responsive con filas colapsables en mobile
+import React, { useState, useMemo } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Chip,
+  useTheme,
+  Box,
+  Typography,
+  TableSortLabel,
+  Tooltip,
+  alpha,
+  Stack,
+  Collapse,
+  useMediaQuery,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EventIcon from "@mui/icons-material/Event";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import PlaceIcon from "@mui/icons-material/Place";
 
-export default function DepartmentTable({ departments, onEdit, onDelete }) {
+const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [orderBy, setOrderBy] = useState("name");
+  const [order, setOrder] = useState("asc");
+  const [openRows, setOpenRows] = useState({});
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
 
+  // Toggle row collapse
+  const handleRowToggle = (departmentId) => {
+    setOpenRows((prev) => ({
+      ...prev,
+      [departmentId]: !prev[departmentId],
+    }));
+  };
+
+  // Menu de acciones (mobile)
+  const handleMenuOpen = (event, department) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedDepartment(department);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedDepartment(null);
+  };
+
+  const handleEdit = () => {
+    if (selectedDepartment && onEdit) {
+      onEdit(selectedDepartment);
+    }
+    handleMenuClose();
+  };
+
+  const handleDelete = () => {
+    if (selectedDepartment && onDelete) {
+      onDelete(selectedDepartment._id);
+    }
+    handleMenuClose();
+  };
+
+  // Configuración de columnas
+  const columns = [
+    {
+      id: "name",
+      label: "Nombre",
+      sortable: true,
+      minWidth: 200,
+    },
+    {
+      id: "location",
+      label: "Ubicación",
+      sortable: true,
+      minWidth: 150,
+      align: "center",
+    },
+
+    {
+      id: "status",
+      label: "Estado",
+      sortable: true,
+      minWidth: 100,
+      align: "center",
+    },
+    {
+      id: "actions",
+      label: "Acciones",
+      sortable: false,
+      minWidth: 120,
+      align: "center",
+    },
+  ];
+
+  // Función de comparación para ordenamiento
+  const getComparator = (order, orderBy) => {
+    return order === "desc"
+      ? (a, b) => descendingComparator(a, b, orderBy)
+      : (a, b) => -descendingComparator(a, b, orderBy);
+  };
+
+  const descendingComparator = (a, b, orderBy) => {
+    let aValue = a[orderBy];
+    let bValue = b[orderBy];
+
+    /*if (orderBy === "days") {
+      const aFirstDay = a.days?.[0] || "";
+      const bFirstDay = b.days?.[0] || "";
+      aValue = dayOrder[aFirstDay] || 999;
+      bValue = dayOrder[bFirstDay] || 999;
+    }*/
+
+    if (bValue === null || bValue === undefined) return -1;
+    if (aValue === null || aValue === undefined) return 1;
+
+    if (bValue < aValue) return -1;
+    if (bValue > aValue) return 1;
+    return 0;
+  };
+
+  const handleRequestSort = (property) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
+  const sortedDepartments = useMemo(() => {
+    return [...departments].sort(getComparator(order, orderBy));
+  }, [departments, order, orderBy]);
+
+  // Empty state
+  if (departments.length === 0) {
     return (
-        <TableContainer component={Paper}>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>Nombre</TableCell>
-                        <TableCell>Ubicación</TableCell>
-                        <TableCell>Estado</TableCell>
-                        <TableCell>Acciones</TableCell>
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {departments.map(department => (
-                        <TableRow key={department._id}>
-                            <TableCell>{department.name}</TableCell>
-                            <TableCell>{department.location}</TableCell>
-                            <TableCell>{department.status}</TableCell>
-                            <TableCell>
-                                <IconButton color="primary" size="small" onClick={() => onEdit && onEdit(department)}>
-                                    <EditIcon />
-                                </IconButton>
-                                <IconButton color="error" size="small" onClick={() => onDelete && onDelete(department._id)}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+      <Paper
+        sx={{
+          p: 6,
+          textAlign: "center",
+          borderRadius: 0,
+          bgcolor: alpha(theme.palette.primary.main, 0.02),
+        }}
+      >
+        <EventIcon
+          sx={{
+            fontSize: 64,
+            color: theme.palette.text.disabled,
+            mb: 2,
+          }}
+        />
+        <Typography variant="h6" color="text.secondary" gutterBottom>
+          No hay departamentos registrados
+        </Typography>
+        <Typography variant="body2" color="text.disabled">
+          Comienza agregando tu primer departamento
+        </Typography>
+      </Paper>
     );
-}
+  }
+
+  // VISTA MOBILE
+  if (isMobile) {
+    return (
+      <>
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 0,
+            boxShadow: "none",
+            overflow: "hidden",
+          }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow
+                sx={{
+                  bgcolor: alpha(theme.palette.primary.main, 0.08),
+                  "& th": {
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                    color: theme.palette.text.primary,
+                    borderBottom: `2px solid ${theme.palette.divider}`,
+                    py: 1.5,
+                  },
+                }}
+              >
+                <TableCell sx={{ width: 50 }} />
+                <TableCell>Departamento</TableCell>
+                <TableCell align="right" sx={{ width: 50 }} />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {sortedDepartments.map((department, index) => {
+                const isOpen = openRows[department._id] || false;
+
+                return (
+                  <React.Fragment key={department._id}>
+                    {/* Fila Principal */}
+                    <TableRow
+                      //key={department._id}
+                      sx={{
+                        bgcolor:
+                          index % 2 === 0
+                            ? "transparent"
+                            : alpha(theme.palette.grey[500], 0.02),
+                        "& td": {
+                          borderBottom: isOpen ? "none" : undefined,
+                        },
+                      }}
+                    >
+                      {/* Botón Expandir/Contraer */}
+                      <TableCell sx={{ py: 1 }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleRowToggle(department._id)}
+                          sx={{
+                            color: theme.palette.primary.main,
+                          }}
+                        >
+                          {isOpen ? (
+                            <KeyboardArrowUpIcon />
+                          ) : (
+                            <KeyboardArrowDownIcon />
+                          )}
+                        </IconButton>
+                      </TableCell>
+
+                      {/* Nombre del Departamento */}
+                      <TableCell sx={{ py: 1.5 }}>
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            sx={{ mb: 0.5 }}
+                          >
+                            {department.name || "—"}
+                          </Typography>
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            alignItems="center"
+                          >
+                            <Chip
+                              label={
+                                department.status === "active"
+                                  ? "Activo"
+                                  : "Inactivo"
+                              }
+                              size="small"
+                              sx={{
+                                height: 20,
+                                fontSize: "0.7rem",
+                                fontWeight: 600,
+                                bgcolor:
+                                  department.status === "active"
+                                    ? alpha(theme.palette.success.main, 0.15)
+                                    : alpha(theme.palette.error.main, 0.15),
+                                color:
+                                  department.status === "active"
+                                    ? theme.palette.success.main
+                                    : theme.palette.error.main,
+                              }}
+                            />
+                          </Stack>
+                        </Box>
+                      </TableCell>
+
+                      {/* Menú de Acciones */}
+                      <TableCell align="right" sx={{ py: 1 }}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleMenuOpen(e, department)}
+                          sx={{
+                            color: theme.palette.text.secondary,
+                          }}
+                        >
+                          <MoreVertIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+
+                    {/* Fila Colapsable con Detalles */}
+                    <TableRow>
+                      <TableCell
+                        colSpan={3}
+                        sx={{
+                          py: 0,
+                          borderBottom: isOpen ? undefined : "none",
+                          bgcolor:
+                            index % 2 === 0
+                              ? alpha(theme.palette.primary.main, 0.02)
+                              : alpha(theme.palette.grey[500], 0.04),
+                        }}
+                      >
+                        <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                          <Box sx={{ py: 2, px: 2 }}>
+                            {/* Ubicación */}
+                            <Box>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 0.5,
+                                  mb: 0.5,
+                                }}
+                              >
+                                <PlaceIcon sx={{ fontSize: 14 }} />
+                                {`Ubicación: ${
+                                  department.location || "Desconocida"
+                                }`}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                    </TableRow>
+                  </React.Fragment>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Menú de Acciones Mobile */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          transformOrigin={{ horizontal: "right", vertical: "top" }}
+          anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+          slotProps={{
+            paper: {
+              sx: {
+                mt: 0.5,
+                minWidth: 160,
+              },
+            },
+          }}
+        >
+          <MenuItem onClick={handleEdit}>
+            <ListItemIcon>
+              <EditIcon fontSize="small" color="primary" />
+            </ListItemIcon>
+            <ListItemText>Editar</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={handleDelete}>
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>Eliminar</ListItemText>
+          </MenuItem>
+        </Menu>
+      </>
+    );
+  }
+
+  // VISTA DESKTOP (código original)
+  return (
+    <TableContainer
+      component={Paper}
+      sx={{
+        borderRadius: 0,
+        boxShadow: "none",
+        overflow: "hidden",
+      }}
+    >
+      <Table sx={{ minWidth: 800 }}>
+        <TableHead>
+          <TableRow
+            sx={{
+              bgcolor: alpha(theme.palette.primary.main, 0.08),
+              "& th": {
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                color: theme.palette.text.primary,
+                borderBottom: `2px solid ${theme.palette.divider}`,
+              },
+            }}
+          >
+            {columns.map((column) => (
+              <TableCell
+                key={column.id}
+                align={column.align || "left"}
+                sx={{
+                  minWidth: column.minWidth,
+                  py: 2,
+                }}
+              >
+                {column.sortable ? (
+                  <TableSortLabel
+                    active={orderBy === column.id}
+                    direction={orderBy === column.id ? order : "asc"}
+                    onClick={() => handleRequestSort(column.id)}
+                    sx={{
+                      "&:hover": {
+                        color: theme.palette.primary.main,
+                      },
+                      "&.Mui-active": {
+                        color: theme.palette.primary.main,
+                        fontWeight: 700,
+                      },
+                    }}
+                  >
+                    {column.label}
+                  </TableSortLabel>
+                ) : (
+                  column.label
+                )}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+
+        <TableBody>
+          {sortedDepartments.map((department, index) => (
+            <TableRow
+              key={department._id}
+              hover
+              sx={{
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  bgcolor: alpha(theme.palette.primary.main, 0.04),
+                },
+                "&:last-child td": {
+                  borderBottom: 0,
+                },
+                bgcolor:
+                  index % 2 === 0
+                    ? "transparent"
+                    : alpha(theme.palette.grey[500], 0.02),
+              }}
+            >
+              <TableCell>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  {/* <EventIcon
+                    fontSize="small"
+                    sx={{ color: theme.palette.primary.main }}
+                  /> */}
+                  <Typography variant="body2" fontWeight={500}>
+                    {department.name || "—"}
+                  </Typography>
+                </Box>
+              </TableCell>
+
+              <TableCell align="center">
+                <Typography variant="body2" fontWeight={500}>
+                  {department.location || "—"}
+                </Typography>
+              </TableCell>
+
+              <TableCell align="center">
+                {department.status ? (
+                  <Chip
+                    label={
+                      department.status === "active" ? "Activo" : "Inactivo"
+                    }
+                    size="small"
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: "0.75rem",
+                      bgcolor:
+                        department.status === "active"
+                          ? alpha(theme.palette.success.main, 0.15)
+                          : alpha(theme.palette.error.main, 0.15),
+                      color:
+                        department.status === "active"
+                          ? theme.palette.success.main
+                          : theme.palette.error.main,
+                      borderRadius: 1,
+                    }}
+                  />
+                ) : (
+                  <Typography variant="body2" color="text.disabled">
+                    —
+                  </Typography>
+                )}
+              </TableCell>
+
+              <TableCell align="center">
+                <Box
+                  sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}
+                >
+                  <Tooltip title="Editar horario" arrow>
+                    <IconButton
+                      size="small"
+                      onClick={() => onEdit && onEdit(department)}
+                      sx={{
+                        color: theme.palette.primary.main,
+                        bgcolor: alpha(theme.palette.primary.main, 0.08),
+                        "&:hover": {
+                          bgcolor: alpha(theme.palette.primary.main, 0.15),
+                        },
+                      }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Eliminar horario" arrow>
+                    <IconButton
+                      size="small"
+                      onClick={() => onDelete && onDelete(department._id)}
+                      sx={{
+                        color: theme.palette.error.main,
+                        bgcolor: alpha(theme.palette.error.main, 0.08),
+                        "&:hover": {
+                          bgcolor: alpha(theme.palette.error.main, 0.15),
+                        },
+                      }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
+
+export default DepartmentTable;

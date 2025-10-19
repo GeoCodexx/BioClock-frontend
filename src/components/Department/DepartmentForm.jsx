@@ -1,35 +1,128 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { TextField } from '@mui/material';
+// DepartmentForm.jsx - Formulario optimizado con mejores campos
+import { useForm, Controller } from "react-hook-form";
+import { Box, TextField, Grid, InputAdornment } from "@mui/material";
+import ApartmentIcon from "@mui/icons-material/Apartment";
+import PlaceIcon from "@mui/icons-material/Place";
+import { useEffect } from "react";
 
-export default function DepartmentForm({ onSubmit, defaultValues = {}, loading }) {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm({ defaultValues });
+const DepartmentForm = ({
+  onSubmit,
+  defaultValues = {},
+  onChange,
+  disabled = false,
+}) => {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm({
+    defaultValues: {
+      name: defaultValues.name || "",
+      location: defaultValues.location || "",
+    },
+  });
 
+  // Detectar cambios en el formulario
+  useEffect(() => {
+    const subscription = watch(() => {
+      if (onChange) {
+        onChange();
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, onChange]);
 
-    useEffect(() => {
-        if (Object.keys(defaultValues).length > 0) {
-            reset(defaultValues);
-        }
-    }, [JSON.stringify(defaultValues)]);
-
-    return (
-        <form id="department-form" onSubmit={handleSubmit(onSubmit)}>
-            <TextField
-                margin="normal"
+  return (
+    <Box
+      component="form"
+      id="schedule-form"
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+    >
+      <Grid container spacing={2.5}>
+        {/* Nombre del Departamento */}
+        <Grid size={{ xs: 12 }}>
+          <Controller
+            name="name"
+            control={control}
+            rules={{
+              required: "El nombre del departamento es obligatorio",
+              minLength: {
+                value: 3,
+                message: "Mínimo 3 caracteres",
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Nombre del Departamento"
                 fullWidth
-                label="Nombre"
-                {...register('name', { required: 'Nombre requerido' })}
+                required
+                disabled={disabled}
                 error={!!errors.name}
                 helperText={errors.name?.message}
-            />
-            <TextField
-                margin="normal"
-                fullWidth
+                placeholder="Ej: Departamento Administrativo"
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment
+                        position="start"
+                        sx={{ alignSelf: "flex-start", mt: 2 }}
+                      >
+                        <ApartmentIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            )}
+          />
+        </Grid>
+
+        {/* Ubicación */}
+        <Grid size={{ xs: 12 }}>
+          <Controller
+            name="location"
+            control={control}
+            rules={{
+              required: "La ubicación es obligatoria",
+              minLength: {
+                value: 5,
+                message: "Mínimo 5 caracteres",
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
                 label="Ubicación"
-                {...register('location', { required: 'Ubicación requerida' })}
+                fullWidth
+                multiline
+                rows={3}
+                required
+                disabled={disabled}
                 error={!!errors.location}
                 helperText={errors.location?.message}
-            />
-        </form>
-    );
-}
+                placeholder="Detalles de la ubicación del departamento"
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment
+                        position="start"
+                        sx={{ alignSelf: "flex-start", mt: 2 }}
+                      >
+                        <PlaceIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            )}
+          />
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
+
+export default DepartmentForm;

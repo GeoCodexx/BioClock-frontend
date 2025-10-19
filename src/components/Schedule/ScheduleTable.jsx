@@ -292,7 +292,11 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                           >
                             {schedule.name || "—"}
                           </Typography>
-                          <Stack direction="row" spacing={0.5} alignItems="center">
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            alignItems="center"
+                          >
                             <Chip
                               label={
                                 schedule.status === "active"
@@ -353,7 +357,12 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                                 <Typography
                                   variant="caption"
                                   color="text.secondary"
-                                  sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
+                                    mb: 0.5,
+                                  }}
                                 >
                                   <CalendarTodayIcon sx={{ fontSize: 14 }} />
                                   Días Laborales
@@ -383,7 +392,10 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                                       />
                                     ))
                                   ) : (
-                                    <Typography variant="body2" color="text.disabled">
+                                    <Typography
+                                      variant="body2"
+                                      color="text.disabled"
+                                    >
                                       —
                                     </Typography>
                                   )}
@@ -460,10 +472,15 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                                   Tolerancia
                                 </Typography>
                                 <Chip
-                                  label={`${schedule.toleranceMinutes || 0} minutos`}
+                                  label={`${
+                                    schedule.toleranceMinutes || 0
+                                  } minutos`}
                                   size="small"
                                   sx={{
-                                    bgcolor: alpha(theme.palette.info.main, 0.1),
+                                    bgcolor: alpha(
+                                      theme.palette.info.main,
+                                      0.1
+                                    ),
                                     color: theme.palette.info.main,
                                     fontWeight: 500,
                                     fontSize: "0.75rem",
@@ -489,10 +506,12 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
           onClose={handleMenuClose}
           transformOrigin={{ horizontal: "right", vertical: "top" }}
           anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-          PaperProps={{
-            sx: {
-              mt: 0.5,
-              minWidth: 160,
+          slotProps={{
+            paper: {
+              sx: {
+                mt: 0.5,
+                minWidth: 160,
+              },
             },
           }}
         >
@@ -579,7 +598,6 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                 transition: "all 0.2s ease",
                 "&:hover": {
                   bgcolor: alpha(theme.palette.primary.main, 0.04),
-                  transform: "scale(1.001)",
                 },
                 "&:last-child td": {
                   borderBottom: 0,
@@ -592,10 +610,10 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
             >
               <TableCell>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <EventIcon
+                  {/* <EventIcon
                     fontSize="small"
                     sx={{ color: theme.palette.primary.main }}
-                  />
+                  /> */}
                   <Typography variant="body2" fontWeight={500}>
                     {schedule.name || "—"}
                   </Typography>
@@ -606,7 +624,7 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                 <Stack
                   direction="row"
                   spacing={0.5}
-                  justifyContent="center"
+                  justifyContent="start"
                   flexWrap="wrap"
                   gap={0.5}
                 >
@@ -635,37 +653,39 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
               </TableCell>
 
               <TableCell align="center">
-                <Box
+                {/* <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 0.5,
                   }}
-                >
-                  <AccessTimeIcon
+                > */}
+                {/* <AccessTimeIcon
                     fontSize="small"
                     sx={{ color: theme.palette.success.main }}
-                  />
-                  <Typography variant="body2" fontWeight={500}>
-                    {schedule.startTime || "—"}
-                  </Typography>
-                </Box>
+                  /> */}
+                <Typography variant="body2" fontWeight={500}>
+                  {schedule.startTime || "—"}
+                </Typography>
+                {/* </Box> */}
               </TableCell>
 
               <TableCell align="center">
                 <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 0.5,
-                  }}
+                  sx={
+                    {
+                      // display: "flex",
+                      // alignItems: "center",
+                      // justifyContent: "center",
+                      // gap: 0.5,
+                    }
+                  }
                 >
-                  <AccessTimeIcon
+                  {/* <AccessTimeIcon
                     fontSize="small"
                     sx={{ color: theme.palette.error.main }}
-                  />
+                  /> */}
                   <Typography variant="body2" fontWeight={500}>
                     {schedule.endTime || "—"}
                   </Typography>
@@ -673,7 +693,7 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
               </TableCell>
 
               <TableCell align="center">
-                <Chip
+                {/* <Chip
                   icon={<TimerIcon sx={{ fontSize: "1rem !important" }} />}
                   label={`${schedule.toleranceMinutes || 0} min`}
                   size="small"
@@ -683,15 +703,16 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                     fontWeight: 500,
                     fontSize: "0.75rem",
                   }}
-                />
+                /> */}
+                <Typography variant="body2" fontWeight={500}>
+                  {`${schedule.toleranceMinutes || 0} min`}
+                </Typography>
               </TableCell>
 
               <TableCell align="center">
                 {schedule.status ? (
                   <Chip
-                    label={
-                      schedule.status === "active" ? "Activo" : "Inactivo"
-                    }
+                    label={schedule.status === "active" ? "Activo" : "Inactivo"}
                     size="small"
                     sx={{
                       fontWeight: 600,

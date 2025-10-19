@@ -222,12 +222,20 @@ export default function ScheduleExportButtons({ schedules }) {
           onClose={handleClose}
           transformOrigin={{ horizontal: "right", vertical: "top" }}
           anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-          PaperProps={{
+          slotProps={{
+            paper: {
+              sx: {
+                mt: 1,
+                minWidth: 200,
+              },
+            },
+          }}
+          /*PaperProps={{
             sx: {
               mt: 1,
               minWidth: 200,
             },
-          }}
+          }}*/
         >
           <MenuItem onClick={handleExportExcel}>
             <ListItemIcon>

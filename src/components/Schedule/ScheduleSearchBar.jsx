@@ -63,7 +63,7 @@ export default function ScheduleSearchBar({
         fullWidth
         label={isMobile ? "Buscar" : "Buscar horarios"}
         size="small"
-        placeholder={isMobile ? "Nombre..." : "Buscar por nombre de horario"}
+        placeholder={isMobile ? "Nombre..." : "Buscar por nombre"}
         value={searchInput}
         //type="search"
         onChange={(e) => setSearchInput(e.target.value)}
