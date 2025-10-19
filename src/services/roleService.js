@@ -1,32 +1,69 @@
 import api from './api';
 
-export const getPaginatedRoles = async ({ search = '', page = 1, limit = 10 } = {}) => {
-  const res = await api.get('/roles/paginated', { params: { search, page, limit } });
-  return res.data;
+const handleApiError = (error, defaultMessage) => {
+  const message =
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    defaultMessage;
+  throw new Error(message);
 };
 
 export const createRole = async (roleData) => {
-  const res = await api.post('/roles', roleData);
-  return res.data;
+  try {
+    const { data } = await api.post("/roles", roleData);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al crear el rol");
+  }
 };
-
 
 export const updateRole = async (id, roleData) => {
-  const res = await api.put(`/roles/${id}`, roleData);
-  return res.data;
-};
-
-export const deleteRole = async (id) => {
-  const res = await api.delete(`/roles/${id}`);
-  return res.data;
-};
-
-export const getRoleById = async (id) => {
-  const res = await api.get(`/roles/${id}`);
-  return res.data;
+  try {
+    const { data } = await api.put(`/roles/${id}`, roleData);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al actualizar el rol");
+  }
 };
 
 export const getRoles = async () => {
-  const res = await api.get('/roles');
-  return res.data;
+  try {
+    const { data } = await api.get("/roles");
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al obtener los roles");
+  }
+};
+
+export const deleteRole = async (id) => {
+  try {
+    const { data } = await api.delete(`/roles/${id}`);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al eliminar el rol");
+  }
+};
+
+export const getRoleById = async (id) => {
+  try {
+    const { data } = await api.get(`/roles/${id}`);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al obtener el rol");
+  }
+};
+
+export const getPaginatedRoles = async ({
+  search = "",
+  page = 1,
+  limit = 10,
+} = {}) => {
+  try {
+    const { data } = await api.get("/roles/paginated", {
+      params: { search, page, limit },
+    });
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al obtener los departamentos paginados");
+  }
 };

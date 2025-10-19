@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { Search, Clear } from "@mui/icons-material";
 
-export default function ScheduleSearchBar({
+export default function DepartmentSearchBar({
   searchInput,
   setSearchInput,
   onSearch,

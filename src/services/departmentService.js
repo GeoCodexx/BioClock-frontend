@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 // Función auxiliar para manejar errores consistentemente
 const handleApiError = (error, defaultMessage) => {
@@ -9,21 +9,21 @@ const handleApiError = (error, defaultMessage) => {
   throw new Error(message);
 };
 
-export const createDepartment = async (scheduleData) => {
+export const createDepartment = async (departmentData) => {
   try {
-    const { data } = await api.post("/departments", scheduleData);
+    const { data } = await api.post("/departments", departmentData);
     return data;
   } catch (error) {
-    handleApiError(error, "Error al crear el horario");
+    handleApiError(error, "Error al crear el deparamento");
   }
 };
 
-export const updateDepartment = async (id, scheduleData) => {
+export const updateDepartment = async (id, departmentData) => {
   try {
-    const { data } = await api.put(`/departments/${id}`, scheduleData);
+    const { data } = await api.put(`/departments/${id}`, departmentData);
     return data;
   } catch (error) {
-    handleApiError(error, "Error al actualizar el horario");
+    handleApiError(error, "Error al actualizar el deparamento");
   }
 };
 
@@ -32,7 +32,7 @@ export const getDepartments = async () => {
     const { data } = await api.get("/departments");
     return data;
   } catch (error) {
-    handleApiError(error, "Error al obtener los horarios");
+    handleApiError(error, "Error al obtener los deparamentos");
   }
 };
 
@@ -41,7 +41,16 @@ export const deleteDepartment = async (id) => {
     const { data } = await api.delete(`/departments/${id}`);
     return data;
   } catch (error) {
-    handleApiError(error, "Error al eliminar el horario");
+    handleApiError(error, "Error al eliminar el deparamento");
+  }
+};
+
+export const getDepartmentById = async (id) => {
+  try {
+    const { data } = await api.get(`/departments/${id}`);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al obtener el deparamento");
   }
 };
 
@@ -56,6 +65,6 @@ export const getPaginatedDepartments = async ({
     });
     return data;
   } catch (error) {
-    handleApiError(error, "Error al obtener los horarios paginados");
+    handleApiError(error, "Error al obtener los departamentos paginados");
   }
 };

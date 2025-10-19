@@ -319,9 +319,8 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                                 }}
                               >
                                 <PlaceIcon sx={{ fontSize: 14 }} />
-                                {`Ubicación: ${
-                                  department.location || "Desconocida"
-                                }`}
+                                <b>Ubicación: </b>
+                                  {department.location || "Desconocida"}
                               </Typography>
                             </Box>
                           </Box>

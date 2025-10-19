@@ -45,6 +45,15 @@ export const deleteSchedule = async (id) => {
   }
 };
 
+export const getScheduleById = async (id) => {
+  try {
+    const { data } = await api.get(`/schedules/${id}`);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al obtener el horario");
+  }
+};
+
 export const getPaginatedSchedules = async ({
   search = "",
   page = 1,
