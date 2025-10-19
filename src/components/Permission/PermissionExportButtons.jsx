@@ -45,8 +45,8 @@ export default function PermissionExportButtons({ permissions }) {
       // Configurar columnas
       worksheet.columns = [
         { header: "Nombre", key: "name", width: 30 },
-        { header: "Código", key: "code", width: 30 },
         { header: "Descripción", key: "description", width: 30 },
+        { header: "Código", key: "code", width: 30 },
         { header: "Estado", key: "status", width: 15 },
       ];
 
@@ -126,7 +126,7 @@ export default function PermissionExportButtons({ permissions }) {
       // Tabla
       doc.autoTable({
         startY: 35,
-        head: [["Nombre", "Código", "Descripción", "Estado"]],
+        head: [["Nombre", "Descripción", "Código", "Estado"]],
         body: permissions.map((permission) => [
           permission.name,
           permission.code,

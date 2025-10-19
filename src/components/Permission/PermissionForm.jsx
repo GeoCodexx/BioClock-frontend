@@ -1,9 +1,29 @@
-// PermissionForm.jsx - Formulario optimizado con mejores campos
 import { useForm, Controller } from "react-hook-form";
-import { Box, TextField, Grid, InputAdornment } from "@mui/material";
-import VpnKeyIcon from "@mui/icons-material/VpnKey";
-import PinIcon from "@mui/icons-material/Pin";
+import { Box, TextField, Grid, MenuItem, Chip } from "@mui/material";
+
 import { useEffect } from "react";
+
+// Configuración de módulos y acciones
+const MODULES = [
+  { value: "dashboard", label: "Dashboard" },
+  { value: "devices", label: "Dispositivos" },
+  { value: "schedules", label: "Horarios" },
+  { value: "departments", label: "Departamentos" },
+  { value: "permissions", label: "Permisos" },
+  { value: "roles", label: "Roles" },
+  { value: "users", label: "Usuarios" },
+  { value: "fingerprints", label: "Huellas Dactilares" },
+  { value: "attendances", label: "Asistencias" },
+  { value: "personal-report", label: "Reporte Personal" },
+  { value: "general-report", label: "Reporte General" },
+];
+
+const ACTIONS = [
+  { value: "create", label: "Crear", color: "success" },
+  { value: "read", label: "Leer", color: "info" },
+  { value: "update", label: "Actualizar", color: "warning" },
+  { value: "delete", label: "Eliminar", color: "error" },
+];
 
 const PermissionForm = ({
   onSubmit,
@@ -16,13 +36,31 @@ const PermissionForm = ({
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm({
     defaultValues: {
       name: defaultValues.name || "",
-      code: defaultValues.code || "",
       description: defaultValues.description || "",
+      module: defaultValues.module || "",
+      action: defaultValues.action || "",
+      code: defaultValues.code || "",
     },
   });
+
+  // Observar cambios en módulo y acciones
+  const watchModule = watch("module");
+  const watchAction = watch("action");
+
+  // Generar código automáticamente
+  useEffect(() => {
+    if (watchModule && watchAction) {
+      const code = `${watchModule}:${watchAction}`;
+
+      setValue("code", code);
+    } else {
+      setValue("code", "");
+    }
+  }, [watchModule, watchAction, setValue]);
 
   // Detectar cambios en el formulario
   useEffect(() => {
@@ -37,13 +75,13 @@ const PermissionForm = ({
   return (
     <Box
       component="form"
-      id="schedule-form"
+      id="permission-form"
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >
-      <Grid container spacing={2.5}>
+      <Grid container spacing={3}>
         {/* Nombre del Permiso */}
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Controller
             name="name"
             control={control}
@@ -51,7 +89,7 @@ const PermissionForm = ({
               required: "El nombre del permiso es obligatorio",
               minLength: {
                 value: 3,
-                message: "Mínimo 5 caracteres",
+                message: "Mínimo 3 caracteres",
               },
             }}
             render={({ field }) => (
@@ -59,63 +97,82 @@ const PermissionForm = ({
                 {...field}
                 label="Nombre del Permiso"
                 fullWidth
+                size="small"
                 required
                 disabled={disabled}
                 error={!!errors.name}
                 helperText={errors.name?.message}
                 placeholder="Ej: Crear Usuario"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment
-                        position="start"
-                        sx={{ alignSelf: "flex-start", mt: 2 }}
-                      >
-                        <VpnKeyIcon color="action" fontSize="small" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
               />
             )}
           />
         </Grid>
 
-        {/* Código del Permiso */}
-        <Grid size={{ xs: 12 }}>
+        {/* Módulo Referencial */}
+        <Grid size={{ xs: 12, md: 6 }}>
           <Controller
-            name="code"
+            name="module"
             control={control}
             rules={{
-              required: "El código del permiso es obligatorio",
-              minLength: {
-                value: 3,
-                message: "Mínimo 5 caracteres",
-              },
+              required: "El módulo es obligatorio",
             }}
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Código del Permiso"
+                select
+                label="Módulo Referencial"
                 fullWidth
+                size="small"
                 required
                 disabled={disabled}
-                error={!!errors.code}
-                helperText={errors.code?.message}
-                placeholder="Ej: user:create"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment
-                        position="start"
-                        sx={{ alignSelf: "flex-start", mt: 2 }}
-                      >
-                        <PinIcon color="action" fontSize="small" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
+                error={!!errors.module}
+                helperText={errors.module?.message}
+                placeholder="Seleccione un módulo"
+              >
+                {MODULES.map((module) => (
+                  <MenuItem key={module.value} value={module.value}>
+                    {module.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+          />
+        </Grid>
+
+        {/* Acciones (CRUD) */}
+        <Grid size={{ xs: 12 }}>
+          <Controller
+            name="action"
+            control={control}
+            rules={{
+              required: "La acción es obligatoria",
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                select
+                label="Acción"
+                fullWidth
+                size="small"
+                required
+                disabled={disabled}
+                error={!!errors.action}
+                helperText={
+                  errors.action?.message || "Seleccione una accion (CRUD)"
+                }
+              >
+                {ACTIONS.map((action) => (
+                  <MenuItem key={action.value} value={action.value}>
+                    {/* <Chip
+                      label={action.label}
+                      size="small"
+                      color={action.color}
+                      sx={{ mr: 1 }}
+                    /> */}
+                    {action.label}
+                  </MenuItem>
+                ))}
+              </TextField>
             )}
           />
         </Grid>
@@ -144,6 +201,30 @@ const PermissionForm = ({
                 error={!!errors.description}
                 helperText={errors.description?.message}
                 placeholder="Detalle la descripción del permiso aquí"
+              />
+            )}
+          />
+        </Grid>
+
+        {/* Código Generado Automáticamente */}
+        <Grid size={{ xs: 12 }}>
+          <Controller
+            name="code"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Código del Permiso"
+                fullWidth
+                size="small"
+                disabled
+                placeholder="Se generará automáticamente"
+                slotProps={{
+                  input: {
+                    readOnly: true,
+                  },
+                }}
+                helperText="Código generado automaticamente"
               />
             )}
           />

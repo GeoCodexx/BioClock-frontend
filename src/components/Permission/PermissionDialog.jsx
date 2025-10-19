@@ -23,7 +23,6 @@ import { forwardRef, useState, useEffect } from "react";
 import PermissionForm from "./PermissionForm";
 import ConfirmDialog from "../common/ConfirmDialog";
 
-
 const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -192,7 +191,7 @@ const PermissionDialog = ({
               <Stack spacing={1.5} sx={{ mt: 3 }}>
                 <Button
                   type="submit"
-                  form="schedule-form"
+                  form="permission-form"
                   variant="contained"
                   size="large"
                   fullWidth
@@ -247,7 +246,7 @@ const PermissionDialog = ({
             </Button>
             <Button
               type="submit"
-              form="schedule-form"
+              form="permission-form"
               variant="contained"
               disabled={isLoading}
               startIcon={

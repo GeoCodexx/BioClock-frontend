@@ -76,9 +76,7 @@ export default function Permissions() {
         setPermissions(data.permissions);
         setTotal(data.total);
       } catch (err) {
-        setError(
-          err.response?.data?.message || "Error al cargar permisos"
-        );
+        setError(err.response?.data?.message || "Error al cargar permisos");
       } finally {
         setLoading(false);
       }
@@ -123,6 +121,7 @@ export default function Permissions() {
 
   const handleSubmit = useCallback(
     async (data) => {
+      console.log(data);
       setDialog((prev) => ({ ...prev, error: "" }));
 
       try {
@@ -155,9 +154,16 @@ export default function Permissions() {
   );
 
   const handleEdit = useCallback((permission) => {
+    // Destructurando para agregar el modulo y la accion
+    const element = permission.code.split(":");
+    const formattedPermission = {
+      ...permission,
+      module: element[0],
+      action: element[1],
+    };
     setDialog({
       open: true,
-      editPermission: permission,
+      editPermission: formattedPermission,
       error: "",
     });
   }, []);

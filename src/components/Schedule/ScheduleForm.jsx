@@ -91,12 +91,14 @@ const ScheduleForm = ({
                 error={!!errors.name}
                 helperText={errors.name?.message}
                 placeholder="Ej: Horario Administrativo"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EventIcon color="action" fontSize="small" />
-                    </InputAdornment>
-                  ),
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <EventIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  },
                 }}
               />
             )}
@@ -119,15 +121,17 @@ const ScheduleForm = ({
                 disabled={disabled}
                 error={!!errors.startTime}
                 helperText={errors.startTime?.message}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AccessTimeIcon color="action" fontSize="small" />
-                    </InputAdornment>
-                  ),
-                }}
-                InputLabelProps={{
-                  shrink: true,
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AccessTimeIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  },
+                  inputLabel: {
+                    shrink: true,
+                  },
                 }}
               />
             )}
@@ -158,15 +162,17 @@ const ScheduleForm = ({
                 disabled={disabled}
                 error={!!errors.endTime}
                 helperText={errors.endTime?.message}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AccessTimeIcon color="action" fontSize="small" />
-                    </InputAdornment>
-                  ),
-                }}
-                InputLabelProps={{
-                  shrink: true,
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <AccessTimeIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  },
+                  inputLabel: {
+                    shrink: true,
+                  },
                 }}
               />
             )}
@@ -202,7 +208,12 @@ const ScheduleForm = ({
                   errors.toleranceMinutes?.message ||
                   "Minutos de tolerancia para entrada"
                 }
-                inputProps={{ min: 0, max: 60 }}
+                slotProps={{
+                  htmlInput: {
+                    min: 0,
+                    max: 60,
+                  },
+                }}
               />
             )}
           />
@@ -219,7 +230,12 @@ const ScheduleForm = ({
                 value.length > 0 || "Debe seleccionar al menos un día",
             }}
             render={({ field }) => (
-              <FormControl fullWidth error={!!errors.days} required disabled={disabled}>
+              <FormControl
+                fullWidth
+                error={!!errors.days}
+                required
+                disabled={disabled}
+              >
                 <InputLabel id="work-days-label">Días Laborales</InputLabel>
                 <Select
                   {...field}

@@ -83,19 +83,19 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
       minWidth: 200,
     },
     {
-      id: "code",
-      label: "Código",
-      sortable: true,
-      minWidth: 200,
-    },
-    {
       id: "description",
       label: "Descripción",
       sortable: true,
       minWidth: 150,
       align: "center",
     },
-
+    {
+      id: "code",
+      label: "Código",
+      sortable: true,
+      minWidth: 200,
+      align: "center",
+    },
     {
       id: "status",
       label: "Estado",
