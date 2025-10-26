@@ -28,6 +28,8 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import DescriptionIcon from "@mui/icons-material/Description";
+import PinIcon from '@mui/icons-material/Pin';
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -306,39 +308,79 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
                           <Box sx={{ py: 2, px: 2 }}>
                             <Stack spacing={2}>
                               {/* Descripción */}
-                              <Box>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 0.5,
-                                    mb: 0.5,
-                                  }}
-                                >
-                                  <b>Descripción: </b>
-                                  {permission.description || "Ninguna"}
-                                </Typography>
+                              <Box sx={{ py: 2, px: 2 }}>
+                                <Stack spacing={2}>
+                                  <Box>
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={0.5}
+                                      mb={0.5}
+                                    >
+                                      {
+                                        <DescriptionIcon
+                                          sx={{
+                                            fontSize: 14,
+                                            color: theme.palette.text.secondary,
+                                          }}
+                                        />
+                                      }
+                                      <Typography
+                                        variant="caption"
+                                        fontWeight={600}
+                                        color="text.secondary"
+                                      >
+                                        DESCRIPCIÓN
+                                      </Typography>
+                                    </Stack>
+                                    <Typography
+                                      variant="body2"
+                                      color="text.primary"
+                                    >
+                                      {permission.description ||
+                                        "Sin Descripción"}
+                                    </Typography>
+                                  </Box>
+                                </Stack>
                               </Box>
 
                               <Divider />
 
                               {/* Código */}
-                              <Box>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 0.5,
-                                    mb: 0.5,
-                                  }}
-                                >
-                                  <b>Código: </b>
-                                  {permission.code || "Desconocido"}
-                                </Typography>
+                             <Box sx={{ py: 2, px: 2 }}>
+                                <Stack spacing={2}>
+                                  <Box>
+                                    <Stack
+                                      direction="row"
+                                      alignItems="center"
+                                      spacing={0.5}
+                                      mb={0.5}
+                                    >
+                                      {
+                                        <PinIcon
+                                          sx={{
+                                            fontSize: 14,
+                                            color: theme.palette.text.secondary,
+                                          }}
+                                        />
+                                      }
+                                      <Typography
+                                        variant="caption"
+                                        fontWeight={600}
+                                        color="text.secondary"
+                                      >
+                                        CÓDIGO
+                                      </Typography>
+                                    </Stack>
+                                    <Typography
+                                      variant="body2"
+                                      color="text.primary"
+                                    >
+                                      {permission.code ||
+                                        "Sin Código"}
+                                    </Typography>
+                                  </Box>
+                                </Stack>
                               </Box>
                             </Stack>
                           </Box>

@@ -1,68 +1,492 @@
-import React from 'react';
-import { Button, Stack } from '@mui/material';
-import { Download as DownloadIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
-import ExcelJS from 'exceljs';
-import { saveAs } from 'file-saver';
+import {
+  Button,
+  Stack,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  useTheme,
+  useMediaQuery,
+  Tooltip,
+} from "@mui/material";
+import {
+  PictureAsPdf as PictureAsPdfIcon,
+  MoreVert as MoreVertIcon,
+  Description as DescriptionIcon,
+  FileDownload as FileDownloadIcon,
+} from "@mui/icons-material";
+import { useState } from "react";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
 export default function RoleExportButtons({ roles }) {
-    // Exportar a Excel
-    const handleExportExcel = async () => {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Roles');
-        worksheet.columns = [
-            { header: 'Nombre', key: 'name', width: 30 },
-            { header: 'Descripción', key: 'description', width: 40 },
-            { header: 'Estado', key: 'status', width: 15 },
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  // Formatear permisos para texto (con saltos de línea)
+  const formatPermissionsForText = (permissions) => {
+    if (!permissions || permissions.length === 0) {
+      return "Sin permisos";
+    }
+    return permissions.map((p) => `• ${p.name}`).join("\n");
+  };
+
+  // Formatear permisos para una sola línea
+  /*const formatPermissionsInline = (permissions) => {
+    if (!permissions || permissions.length === 0) {
+      return "Sin permisos";
+    }
+    return permissions.map((p) => p.name).join(", ");
+  };*/
+
+  // Exportar a Excel
+  const handleExportExcel = async () => {
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Roles");
+
+      // Configurar columnas
+      worksheet.columns = [
+        { header: "Nombre", key: "name", width: 25 },
+        { header: "Descripción", key: "description", width: 40 },
+        { header: "Permisos", key: "permissions", width: 35 },
+        { header: "Estado", key: "status", width: 12 },
+      ];
+
+      // Agregar datos
+      roles.forEach((role) => {
+        const permissionsList = formatPermissionsForText(role.permissions);
+        
+        worksheet.addRow({
+          name: role.name || "—",
+          description: role.description || "Sin descripción",
+          permissions: permissionsList,
+          status: role.status === "active" ? "Activo" : "Inactivo",
+        });
+      });
+
+      // Estilo de la cabecera
+      const headerRow = worksheet.getRow(1);
+      headerRow.height = 25;
+      headerRow.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
+      headerRow.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF1976D2" },
+      };
+      headerRow.alignment = {
+        vertical: "middle",
+        horizontal: "center",
+      };
+
+      // Aplicar estilos a todas las filas de datos
+      worksheet.eachRow((row, rowNumber) => {
+        row.eachCell((cell, colNumber) => {
+          // Bordes
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFE0E0E0" } },
+            left: { style: "thin", color: { argb: "FFE0E0E0" } },
+            bottom: { style: "thin", color: { argb: "FFE0E0E0" } },
+            right: { style: "thin", color: { argb: "FFE0E0E0" } },
+          };
+
+          // Estilo para filas de datos
+          if (rowNumber > 1) {
+            cell.alignment = {
+              vertical: "top",
+              horizontal: "left",
+              wrapText: true,
+            };
+
+            // Ajustar altura de fila según cantidad de permisos
+            const role = roles[rowNumber - 2];
+            if (role && role.permissions && role.permissions.length > 0) {
+              const lineCount = role.permissions.length;
+              row.height = Math.max(20, lineCount * 15 + 10);
+            }
+
+            // Color alternado para filas
+            if (rowNumber % 2 === 0) {
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFF5F5F5" },
+              };
+            }
+
+            // Columna de Estado con color
+            if (colNumber === 4) {
+              cell.alignment = { vertical: "middle", horizontal: "center" };
+              const status = cell.value;
+              if (status === "Activo") {
+                cell.font = { bold: true, color: { argb: "FF2E7D32" } };
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: "FFE8F5E9" },
+                };
+              } else {
+                cell.font = { bold: true, color: { argb: "FFD32F2F" } };
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: "FFFFEBEE" },
+                };
+              }
+            }
+          }
+        });
+      });
+
+      // Información adicional al final
+      const lastRow = worksheet.rowCount + 2;
+      worksheet.getCell(`A${lastRow}`).value = "Total de roles:";
+      worksheet.getCell(`A${lastRow}`).font = { bold: true };
+      worksheet.getCell(`B${lastRow}`).value = roles.length;
+      worksheet.getCell(`B${lastRow}`).font = { bold: true, color: { argb: "FF1976D2" } };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      
+      const fileName = `roles_${new Date().toISOString().split("T")[0]}.xlsx`;
+      saveAs(blob, fileName);
+      handleClose();
+    } catch (error) {
+      console.error("Error al exportar Excel:", error);
+      alert("Error al exportar a Excel. Por favor, intente nuevamente.");
+    }
+  };
+
+  // Exportar a PDF
+  const handleExportPDF = () => {
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      // Título
+      doc.setFontSize(20);
+      doc.setTextColor(25, 118, 210);
+      doc.setFont(undefined, "bold");
+      doc.text("Listado de Roles", 14, 22);
+
+      // Línea decorativa
+      doc.setDrawColor(25, 118, 210);
+      doc.setLineWidth(0.5);
+      doc.line(14, 25, pageWidth - 14, 25);
+
+      // Información del reporte
+      doc.setFontSize(9);
+      doc.setTextColor(100);
+      doc.setFont(undefined, "normal");
+      doc.text(
+        `Fecha de generación: ${new Date().toLocaleDateString("es-ES", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`,
+        14,
+        32
+      );
+      doc.text(`Total de roles: ${roles.length}`, 14, 37);
+
+      // Preparar datos de la tabla
+      const tableData = roles.map((role) => {
+        const permissionsList = role.permissions && role.permissions.length > 0
+          ? role.permissions.map((p) => `• ${p.name}`).join("\n")
+          : "Sin permisos";
+
+        return [
+          role.name || "—",
+          role.description || "Sin descripción",
+          permissionsList,
+          role.status === "active" ? "Activo" : "Inactivo",
         ];
-        roles.forEach(role => {
-            worksheet.addRow({
-                name: role.name,
-                description: role.description,
-                status: role.status
-            });
-        });
-        const buffer = await workbook.xlsx.writeBuffer();
-        saveAs(new Blob([buffer]), 'roles.xlsx');
-    };
+      });
 
-    // Exportar a PDF
-    const handleExportPDF = () => {
-        const doc = new jsPDF();
-        doc.text('Roles', 14, 16);
+      // Tabla principal
+      doc.autoTable({
+        startY: 42,
+        head: [["Nombre", "Descripción", "Permisos", "Estado"]],
+        body: tableData,
+        styles: {
+          fontSize: 8,
+          cellPadding: 4,
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: [25, 118, 210],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          halign: "center",
+          valign: "middle",
+          fontSize: 9,
+        },
+        columnStyles: {
+          0: { cellWidth: 35, fontStyle: "bold" }, // Nombre
+          1: { cellWidth: 60 }, // Descripción
+          2: { cellWidth: 55, valign: "top" }, // Permisos
+          3: { cellWidth: 25, halign: "center" }, // Estado
+        },
+        alternateRowStyles: {
+          fillColor: [245, 247, 250],
+        },
+        didDrawCell: (data) => {
+          // Colorear la celda de Estado
+          if (data.column.index === 3 && data.section === "body") {
+            const status = data.cell.raw;
+            if (status === "Activo") {
+              doc.setFillColor(232, 245, 233);
+              doc.rect(
+                data.cell.x,
+                data.cell.y,
+                data.cell.width,
+                data.cell.height,
+                "F"
+              );
+              doc.setTextColor(46, 125, 50);
+              doc.setFontSize(8);
+              doc.setFont(undefined, "bold");
+              doc.text(
+                status,
+                data.cell.x + data.cell.width / 2,
+                data.cell.y + data.cell.height / 2,
+                { align: "center", baseline: "middle" }
+              );
+            } else if (status === "Inactivo") {
+              doc.setFillColor(255, 235, 238);
+              doc.rect(
+                data.cell.x,
+                data.cell.y,
+                data.cell.width,
+                data.cell.height,
+                "F"
+              );
+              doc.setTextColor(211, 47, 47);
+              doc.setFontSize(8);
+              doc.setFont(undefined, "bold");
+              doc.text(
+                status,
+                data.cell.x + data.cell.width / 2,
+                data.cell.y + data.cell.height / 2,
+                { align: "center", baseline: "middle" }
+              );
+            }
+          }
+        },
+        margin: { top: 42, left: 14, right: 14 },
+      });
 
-        doc.autoTable({
-            startY: 22,
-            head: [[
-                'Nombre', 'Descripción', 'Estado'
-            ]],
-            body: roles.map(role => [
-                role.name,
-                role.description,
-                role.status
-            ]),
-        });
+      // Footer con número de página
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.setFont(undefined, "normal");
+        
+        // Línea superior del footer
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.1);
+        doc.line(14, doc.internal.pageSize.getHeight() - 15, pageWidth - 14, doc.internal.pageSize.getHeight() - 15);
+        
+        // Número de página
+        doc.text(
+          `Página ${i} de ${pageCount}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: "center" }
+        );
+      }
 
-        doc.save('roles.pdf');
-    };
+      const fileName = `roles_${new Date().toISOString().split("T")[0]}.pdf`;
+      doc.save(fileName);
+      handleClose();
+    } catch (error) {
+      console.error("Error al exportar PDF:", error);
+      alert("Error al exportar a PDF. Por favor, intente nuevamente.");
+    }
+  };
 
+  // Validar si hay roles disponibles
+  const isDisabled = !roles || roles.length === 0;
+
+  // =============== VERSIÓN MOBILE ===============
+  if (isMobile) {
     return (
-        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-            <Button
-                variant="outlined"
-                startIcon={<DownloadIcon />}
-                onClick={handleExportExcel}
+      <>
+        <Tooltip title={isDisabled ? "No hay roles para exportar" : "Exportar"}>
+          <span>
+            <IconButton
+              onClick={handleClick}
+              disabled={isDisabled}
+              sx={{
+                bgcolor: theme.palette.background.paper,
+                //border: `1px solid ${theme.palette.divider}`,
+                "&:hover": {
+                  bgcolor: theme.palette.action.hover,
+                },
+                "&:disabled": {
+                  bgcolor: theme.palette.action.disabledBackground,
+                },
+              }}
             >
-                Exportar Excel
-            </Button>
-            <Button
-                variant="outlined"
-                startIcon={<PictureAsPdfIcon />}
-                onClick={handleExportPDF}
-            >
-                Exportar PDF
-            </Button>
-        </Stack>
+              <FileDownloadIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+          transformOrigin={{ horizontal: "right", vertical: "top" }}
+          anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+          slotProps={{
+            paper: {
+              sx: {
+                mt: 1,
+                minWidth: 200,
+                boxShadow: theme.shadows[4],
+              },
+            },
+          }}
+        >
+          <MenuItem onClick={handleExportExcel}>
+            <ListItemIcon>
+              <DescriptionIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
+            </ListItemIcon>
+            <ListItemText>Exportar a Excel</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={handleExportPDF}>
+            <ListItemIcon>
+              <PictureAsPdfIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
+            </ListItemIcon>
+            <ListItemText>Exportar a PDF</ListItemText>
+          </MenuItem>
+        </Menu>
+      </>
     );
+  }
+
+  // =============== VERSIÓN TABLET ===============
+  if (isTablet) {
+    return (
+      <Stack direction="row" spacing={1}>
+        <Tooltip title={isDisabled ? "No hay roles" : "Exportar a Excel"} arrow>
+          <span>
+            <IconButton
+              onClick={handleExportExcel}
+              disabled={isDisabled}
+              size="medium"
+              sx={{
+                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                color: theme.palette.success.main,
+                border: `1px solid ${theme.palette.success.light}`,
+                "&:hover": {
+                  bgcolor: theme.palette.success.light + "40",
+                },
+                "&:disabled": {
+                  bgcolor: theme.palette.action.disabledBackground,
+                  color: theme.palette.action.disabled,
+                },
+              }}
+            >
+              <DescriptionIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Tooltip title={isDisabled ? "No hay roles" : "Exportar a PDF"} arrow>
+          <span>
+            <IconButton
+              onClick={handleExportPDF}
+              disabled={isDisabled}
+              size="medium"
+              sx={{
+                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                color: theme.palette.error.main,
+                border: `1px solid ${theme.palette.error.light}`,
+                "&:hover": {
+                  bgcolor: theme.palette.error.light + "40",
+                },
+                "&:disabled": {
+                  bgcolor: theme.palette.action.disabledBackground,
+                  color: theme.palette.action.disabled,
+                },
+              }}
+            >
+              <PictureAsPdfIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Stack>
+    );
+  }
+
+  // =============== VERSIÓN DESKTOP ===============
+  return (
+    <Stack direction="row" spacing={1.5}>
+      <Tooltip title={isDisabled ? "No hay roles para exportar" : "Descargar lista en formato Excel"} arrow>
+        <span>
+          <Button
+            variant="outlined"
+            color="success"
+            startIcon={<DescriptionIcon />}
+            onClick={handleExportExcel}
+            disabled={isDisabled}
+            sx={{
+              minWidth: 140,
+              fontWeight: 600,
+              borderWidth: 1.5,
+              "&:hover": {
+                borderWidth: 1.5,
+                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+              },
+            }}
+          >
+            Excel
+          </Button>
+        </span>
+      </Tooltip>
+      <Tooltip title={isDisabled ? "No hay roles para exportar" : "Descargar lista en formato PDF"} arrow>
+        <span>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<PictureAsPdfIcon />}
+            onClick={handleExportPDF}
+            disabled={isDisabled}
+            sx={{
+              minWidth: 140,
+              fontWeight: 600,
+              borderWidth: 1.5,
+              "&:hover": {
+                borderWidth: 1.5,
+                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+              },
+            }}
+          >
+            PDF
+          </Button>
+        </span>
+      </Tooltip>
+    </Stack>
+  );
 }

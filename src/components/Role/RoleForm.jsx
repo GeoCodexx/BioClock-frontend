@@ -1,21 +1,16 @@
 import { useForm, Controller } from "react-hook-form";
+import { useEffect, useState } from "react";
 import {
   Box,
   TextField,
   Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormHelperText,
-  InputAdornment,
   Chip,
   Typography,
-  Paper,
+  Alert,
+  MenuItem,
+  Stack,
+  CircularProgress,
 } from "@mui/material";
-import EventIcon from "@mui/icons-material/Event";
-import { useEffect, useState } from "react";
-import DescriptionIcon from "@mui/icons-material/Description";
 import { getPermissions } from "../../services/permissionService";
 
 const RoleForm = ({
@@ -23,7 +18,25 @@ const RoleForm = ({
   defaultValues = {},
   onChange,
   disabled = false,
+  //getPermissions, // Servicio para obtener permisos
 }) => {
+  const [permissions, setPermissions] = useState([]);
+  const [loadingPermissions, setLoadingPermissions] = useState(true);
+  const [permissionsError, setPermissionsError] = useState(null);
+
+  // Normalizar permisos: si vienen como objetos, extraer solo los IDs
+  const normalizePermissions = (permissions) => {
+    if (!permissions || permissions.length === 0) return [];
+
+    // Si el primer elemento es un objeto con _id, extraer los IDs
+    if (typeof permissions[0] === "object" && permissions[0]._id) {
+      return permissions.map((p) => p._id);
+    }
+
+    // Si ya son strings (IDs), retornarlos tal cual
+    return permissions;
+  };
+
   const {
     control,
     handleSubmit,
@@ -33,23 +46,30 @@ const RoleForm = ({
     defaultValues: {
       name: defaultValues.name || "",
       description: defaultValues.description || "",
-      permissions: defaultValues.permissions || [],
+      permissions: normalizePermissions(defaultValues.permissions),
     },
   });
 
-  const [permissionsOptions, setPermissionsOptions] = useState([]);
-
+  // Obtener permisos de la API
   useEffect(() => {
-    try {
-      const loadPermissions = async () => {
-        const response = await getPermissions();
-        setPermissionsOptions(response);
-      };
-      loadPermissions();
-    } catch (error) {
-      console.error("Error cargando permisos:", error);
+    const fetchPermissions = async () => {
+      try {
+        setLoadingPermissions(true);
+        setPermissionsError(null);
+        const data = await getPermissions();
+        setPermissions(data);
+      } catch (error) {
+        setPermissionsError("Error al cargar los permisos");
+        console.error("Error fetching permissions:", error);
+      } finally {
+        setLoadingPermissions(false);
+      }
+    };
+
+    if (getPermissions) {
+      fetchPermissions();
     }
-  }, []);
+  }, [getPermissions]);
 
   // Detectar cambios en el formulario
   useEffect(() => {
@@ -61,16 +81,22 @@ const RoleForm = ({
     return () => subscription.unsubscribe();
   }, [watch, onChange]);
 
+  // Observar los valores del formulario para la vista previa
+  /*const formValues = watch();
+  const selectedPermissions = permissions.filter((p) =>
+    formValues.permissions?.includes(p._id)
+  );*/
+
   return (
     <Box
       component="form"
-      id="schedule-form"
+      id="role-form"
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >
-      <Grid container spacing={2.5}>
+      <Grid container spacing={3}>
         {/* Nombre del Rol */}
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12 /*, md: 6*/ }}>
           <Controller
             name="name"
             control={control}
@@ -80,6 +106,10 @@ const RoleForm = ({
                 value: 3,
                 message: "Mínimo 3 caracteres",
               },
+              maxLength: {
+                value: 50,
+                message: "Máximo 50 caracteres",
+              },
             }}
             render={({ field }) => (
               <TextField
@@ -87,32 +117,30 @@ const RoleForm = ({
                 label="Nombre del Rol"
                 fullWidth
                 required
+                size="small"
                 disabled={disabled}
                 error={!!errors.name}
                 helperText={errors.name?.message}
-                placeholder="Ej: Asistente, Gerente, etc."
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EventIcon color="action" fontSize="small" />
-                    </InputAdornment>
-                  ),
-                }}
+                placeholder="Ej: Administrador, Gerente, Asistente"
               />
             )}
           />
         </Grid>
 
         {/* Descripción */}
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12 /*, md: 6*/ }}>
           <Controller
             name="description"
             control={control}
             rules={{
               required: "La descripción es obligatoria",
               minLength: {
-                value: 3,
-                message: "Mínimo 5 caracteres",
+                value: 10,
+                message: "Mínimo 10 caracteres",
+              },
+              maxLength: {
+                value: 200,
+                message: "Máximo 200 caracteres",
               },
             }}
             render={({ field }) => (
@@ -120,116 +148,112 @@ const RoleForm = ({
                 {...field}
                 label="Descripción"
                 fullWidth
+                multiline
+                rows={3}
+                size="small"
                 required
                 disabled={disabled}
                 error={!!errors.description}
                 helperText={errors.description?.message}
-                multiline
-                rows={3}
-                placeholder="Descripción algo breve del rol"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment
-                        position="start"
-                        sx={{ alignSelf: "flex-start", mt: 2 }}
-                      >
-                        <DescriptionIcon color="action" fontSize="small" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
+                placeholder="Describe las responsabilidades y alcance del rol"
               />
             )}
           />
         </Grid>
 
         {/* Permisos */}
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid size={{ xs: 12 }}>
+          {permissionsError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {permissionsError}
+            </Alert>
+          )}
+
           <Controller
             name="permissions"
             control={control}
             rules={{
-              required: "Selecciona al menos un permiso",
+              required: "Debe seleccionar al menos un permiso",
               validate: (value) =>
-                value.length > 0 || "Debe seleccionar al menos un día",
+                (value && value.length > 0) ||
+                "Debe seleccionar al menos un permiso",
             }}
             render={({ field }) => (
-              <FormControl
+              <TextField
+                {...field}
+                select
+                label="Permisos"
                 fullWidth
-                error={!!errors.permissions}
+                size="small"
                 required
-                disabled={disabled}
+                disabled={disabled || loadingPermissions}
+                error={!!errors.permissions}
+                helperText={
+                  errors.permissions?.message ||
+                  "Seleccione uno o más permisos para este rol"
+                }
+                slotProps={{
+                  select: {
+                    //size: "small",
+                    multiple: true,
+                    renderValue: (selected) => (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {selected.length === 0 ? (
+                          <Typography variant="body2" color="text.secondary">
+                            Ningún permiso seleccionado
+                          </Typography>
+                        ) : (
+                          selected.map((id) => {
+                            const permission = permissions.find(
+                              (p) => p._id === id
+                            );
+                            return (
+                              <Chip
+                                key={id}
+                                label={permission?.name || id}
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                              />
+                            );
+                          })
+                        )}
+                      </Box>
+                    ),
+                  },
+                  input: {
+                    startAdornment: loadingPermissions ? (
+                      <CircularProgress size={20} sx={{ mr: 1 }} />
+                    ) : null,
+                  },
+                }}
               >
-                <InputLabel id="work-permissions-label">Permisos</InputLabel>
-                <Select
-                  {...field}
-                  labelId="work-permissions-label"
-                  multiple
-                  label="Permisos"
-                  renderValue={(selected) => (
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                      {selected.map((value) => {
-                        const day = permissionsOptions.find(
-                          (d) => d.value === value
-                        );
-                        return (
-                          <Chip
-                            key={value}
-                            label={day?.label}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                          />
-                        );
-                      })}
-                    </Box>
-                  )}
-                >
-                  {permissionsOptions.map((option) => (
-                    <MenuItem key={option._id} value={option._id}>
-                      {option.name}
+                {permissions.length === 0 && !loadingPermissions ? (
+                  <MenuItem disabled>
+                    <Typography variant="body2" color="text.secondary">
+                      No hay permisos disponibles
+                    </Typography>
+                  </MenuItem>
+                ) : (
+                  permissions.map((permission) => (
+                    <MenuItem key={permission._id} value={permission._id}>
+                      <Stack spacing={0.5}>
+                        <Typography variant="body2" fontWeight="medium">
+                          {permission.name}
+                        </Typography>
+                        {permission.description && (
+                          <Typography variant="caption" color="text.secondary">
+                            {permission.description}
+                          </Typography>
+                        )}
+                      </Stack>
                     </MenuItem>
-                  ))}
-                </Select>
-                {errors.permissions && (
-                  <FormHelperText>{errors.permissions.message}</FormHelperText>
+                  ))
                 )}
-              </FormControl>
+              </TextField>
             )}
           />
         </Grid>
-
-        {/* Resumen visual */}
-        {watch("startTime") && watch("endTime") && (
-          <Grid size={{ xs: 12 }}>
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 2,
-                bgcolor: "primary.50",
-                borderColor: "primary.200",
-              }}
-            >
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Resumen del Rol:
-              </Typography>
-              <Box display="flex" alignItems="center">
-                <Typography variant="body1" fontWeight={500}>
-                  {watch("startTime")} - {watch("endTime")}
-                </Typography>
-                {watch("toleranceMinutes") > 0 && (
-                  <Chip
-                    label={`+${watch("toleranceMinutes")} min`}
-                    size="small"
-                    sx={{ ml: 1 }}
-                    color="info"
-                  />
-                )}
-              </Box>
-            </Paper>
-          </Grid>
-        )}
       </Grid>
     </Box>
   );

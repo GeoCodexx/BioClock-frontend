@@ -192,7 +192,7 @@ const RoleDialog = ({
               <Stack spacing={1.5} sx={{ mt: 3 }}>
                 <Button
                   type="submit"
-                  form="schedule-form"
+                  form="role-form"
                   variant="contained"
                   size="large"
                   fullWidth
@@ -247,7 +247,7 @@ const RoleDialog = ({
             </Button>
             <Button
               type="submit"
-              form="schedule-form"
+              form="role-form"
               variant="contained"
               disabled={isLoading}
               startIcon={

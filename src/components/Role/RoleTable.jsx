@@ -1,4 +1,3 @@
-// RoleTable.jsx - Tabla responsive con filas colapsables en mobile
 import React, { useState, useMemo } from "react";
 import {
   Table,
@@ -25,15 +24,18 @@ import {
   ListItemText,
   Divider,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EventIcon from "@mui/icons-material/Event";
-import KeyIcon from '@mui/icons-material/Key';
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  KeyboardArrowUp as KeyboardArrowUpIcon,
+  KeyboardArrowDown as KeyboardArrowDownIcon,
+  MoreVert as MoreVertIcon,
+  VpnKey as VpnKeyIcon,
+  Description as DescriptionIcon,
+  Security as SecurityIcon,
+} from "@mui/icons-material";
 
-const RoleTable = ({ roles = [], onEdit, onDelete }) => {
+const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("name");
@@ -42,7 +44,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
 
-  // Toggle row collapse
+  // Toggle row collapse (mobile)
   const handleRowToggle = (roleId) => {
     setOpenRows((prev) => ({
       ...prev,
@@ -52,6 +54,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
 
   // Menu de acciones (mobile)
   const handleMenuOpen = (event, role) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
     setSelectedRole(role);
   };
@@ -77,24 +80,13 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
 
   // Configuración de columnas
   const columns = [
-    {
-      id: "name",
-      label: "Nombre",
-      sortable: true,
-      minWidth: 200,
-    },
-    {
-      id: "description",
-      label: "Descripción",
-      sortable: true,
-      minWidth: 100,
-      align: "center",
-    },
+    { id: "name", label: "Nombre", sortable: true, minWidth: 180 },
+    { id: "description", label: "Descripción", sortable: false, minWidth: 250 },
     {
       id: "permissions",
       label: "Permisos",
       sortable: true,
-      minWidth: 150,
+      minWidth: 200,
       align: "center",
     },
     {
@@ -113,7 +105,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
     },
   ];
 
-  // Función de comparación para ordenamiento
+  // Funciones de ordenamiento
   const getComparator = (order, orderBy) => {
     return order === "desc"
       ? (a, b) => descendingComparator(a, b, orderBy)
@@ -121,11 +113,22 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
   };
 
   const descendingComparator = (a, b, orderBy) => {
+    // Caso especial para permisos (ordenar por cantidad)
+    if (orderBy === "permissions") {
+      const aLength = a.permissions?.length || 0;
+      const bLength = b.permissions?.length || 0;
+      return bLength - aLength;
+    }
+
     let aValue = a[orderBy];
     let bValue = b[orderBy];
 
     if (bValue === null || bValue === undefined) return -1;
     if (aValue === null || aValue === undefined) return 1;
+
+    if (typeof aValue === "string" && typeof bValue === "string") {
+      return bValue.localeCompare(aValue);
+    }
 
     if (bValue < aValue) return -1;
     if (bValue > aValue) return 1;
@@ -142,18 +145,19 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
     return [...roles].sort(getComparator(order, orderBy));
   }, [roles, order, orderBy]);
 
-  // Empty state
-  if (roles.length === 0) {
+  // Estado vacío
+  if (roles.length === 0 && !loading) {
     return (
       <Paper
         sx={{
           p: 6,
           textAlign: "center",
-          borderRadius: 0,
+          borderRadius: 2,
           bgcolor: alpha(theme.palette.primary.main, 0.02),
+          border: `1px dashed ${alpha(theme.palette.primary.main, 0.2)}`,
         }}
       >
-        <EventIcon
+        <SecurityIcon
           sx={{
             fontSize: 64,
             color: theme.palette.text.disabled,
@@ -164,21 +168,21 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
           No hay roles registrados
         </Typography>
         <Typography variant="body2" color="text.disabled">
-          Comienza agregando tu primer rol
+          Comienza creando tu primer rol con permisos personalizados
         </Typography>
       </Paper>
     );
   }
 
-  // VISTA MOBILE
+  // =============== VISTA MOBILE ===============
   if (isMobile) {
     return (
       <>
         <TableContainer
           component={Paper}
           sx={{
-            borderRadius: 0,
-            boxShadow: "none",
+            borderRadius: 2,
+            boxShadow: theme.shadows[2],
             overflow: "hidden",
           }}
         >
@@ -196,20 +200,20 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
                   },
                 }}
               >
-                <TableCell sx={{ width: 50 }} />
+                <TableCell sx={{ width: 48 }} />
                 <TableCell>Rol</TableCell>
-                <TableCell align="right" sx={{ width: 50 }} />
+                <TableCell align="right" sx={{ width: 48 }} />
               </TableRow>
             </TableHead>
             <TableBody>
               {sortedRoles.map((role, index) => {
                 const isOpen = openRows[role._id] || false;
+                const permissionsCount = role.permissions?.length || 0;
 
                 return (
                   <React.Fragment key={role._id}>
                     {/* Fila Principal */}
                     <TableRow
-                      //key={role._id}
                       sx={{
                         bgcolor:
                           index % 2 === 0
@@ -218,16 +222,15 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
                         "& td": {
                           borderBottom: isOpen ? "none" : undefined,
                         },
+                        cursor: "pointer",
                       }}
+                      onClick={() => handleRowToggle(role._id)}
                     >
-                      {/* Botón Expandir/Contraer */}
-                      <TableCell sx={{ py: 1 }}>
+                      {/* Botón Expandir */}
+                      <TableCell sx={{ py: 1, pl: 2 }}>
                         <IconButton
                           size="small"
-                          onClick={() => handleRowToggle(role._id)}
-                          sx={{
-                            color: theme.palette.primary.main,
-                          }}
+                          sx={{ color: theme.palette.primary.main }}
                         >
                           {isOpen ? (
                             <KeyboardArrowUpIcon />
@@ -237,19 +240,15 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
                         </IconButton>
                       </TableCell>
 
-                      {/* Nombre del Rol */}
+                      {/* Información del Rol */}
                       <TableCell sx={{ py: 1.5 }}>
-                        <Box>
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            sx={{ mb: 0.5 }}
-                          >
-                            {role.name || "—"}
+                        <Stack spacing={0.5}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {role.name}
                           </Typography>
                           <Stack
                             direction="row"
-                            spacing={0.5}
+                            spacing={1}
                             alignItems="center"
                           >
                             <Chip
@@ -271,18 +270,23 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
                                     : theme.palette.error.main,
                               }}
                             />
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {permissionsCount}{" "}
+                              {permissionsCount === 1 ? "permiso" : "permisos"}
+                            </Typography>
                           </Stack>
-                        </Box>
+                        </Stack>
                       </TableCell>
 
                       {/* Menú de Acciones */}
-                      <TableCell align="right" sx={{ py: 1 }}>
+                      <TableCell align="right" sx={{ py: 1, pr: 2 }}>
                         <IconButton
                           size="small"
                           onClick={(e) => handleMenuOpen(e, role)}
-                          sx={{
-                            color: theme.palette.text.secondary,
-                          }}
+                          sx={{ color: theme.palette.text.secondary }}
                         >
                           <MoreVertIcon />
                         </IconButton>
@@ -307,18 +311,33 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
                             <Stack spacing={2}>
                               {/* Descripción */}
                               <Box>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 0.5,
-                                    mb: 0.5,
-                                  }}
+                                <Stack
+                                  direction="row"
+                                  alignItems="center"
+                                  spacing={0.5}
+                                  mb={0.5}
                                 >
-                                  <b>Descripción: </b>
-                                  {role.description || "Ninguna"}
+                                  {
+                                    <DescriptionIcon
+                                      sx={{
+                                        fontSize: 14,
+                                        color: theme.palette.text.secondary,
+                                      }}
+                                    />
+                                  }
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight={600}
+                                    color="text.secondary"
+                                  >
+                                    DESCRIPCIÓN
+                                  </Typography>
+                                </Stack>
+                                <Typography
+                                  variant="body2"
+                                  color="text.primary"
+                                >
+                                  {role.description || "Sin descripción"}
                                 </Typography>
                               </Box>
 
@@ -326,27 +345,35 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
 
                               {/* Permisos */}
                               <Box>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 0.5,
-                                    mb: 0.5,
-                                  }}
-                                >
-                                  <KeyIcon sx={{ fontSize: 14 }} />
-                                  Permisos
-                                </Typography>
                                 <Stack
                                   direction="row"
+                                  alignItems="center"
                                   spacing={0.5}
-                                  flexWrap="wrap"
-                                  gap={0.5}
+                                  mb={1}
                                 >
-                                  {role.permissions?.length ? (
-                                    role.permissions.map((permission) => (
+                                  {
+                                    <VpnKeyIcon
+                                      sx={{
+                                        fontSize: 14,
+                                        color: theme.palette.text.secondary,
+                                      }}
+                                    />
+                                  }
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight={600}
+                                    color="text.secondary"
+                                  >
+                                    PERMISOS ASIGNADOS ({permissionsCount})
+                                  </Typography>
+                                </Stack>
+                                {role.permissions?.length ? (
+                                  <Stack
+                                    direction="row"
+                                    flexWrap="wrap"
+                                    gap={0.5}
+                                  >
+                                    {role.permissions.map((permission) => (
                                       <Chip
                                         key={permission._id}
                                         label={permission.name}
@@ -362,16 +389,17 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
                                           color: theme.palette.primary.main,
                                         }}
                                       />
-                                    ))
-                                  ) : (
-                                    <Typography
-                                      variant="body2"
-                                      color="text.disabled"
-                                    >
-                                      —
-                                    </Typography>
-                                  )}
-                                </Stack>
+                                    ))}
+                                  </Stack>
+                                ) : (
+                                  <Typography
+                                    variant="body2"
+                                    color="text.disabled"
+                                    fontStyle="italic"
+                                  >
+                                    Sin permisos asignados
+                                  </Typography>
+                                )}
                               </Box>
                             </Stack>
                           </Box>
@@ -397,6 +425,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
               sx: {
                 mt: 0.5,
                 minWidth: 160,
+                boxShadow: theme.shadows[4],
               },
             },
           }}
@@ -407,6 +436,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
             </ListItemIcon>
             <ListItemText>Editar</ListItemText>
           </MenuItem>
+          <Divider />
           <MenuItem onClick={handleDelete}>
             <ListItemIcon>
               <DeleteIcon fontSize="small" color="error" />
@@ -418,13 +448,13 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
     );
   }
 
-  // VISTA DESKTOP (código original)
+  // =============== VISTA DESKTOP ===============
   return (
     <TableContainer
       component={Paper}
       sx={{
-        borderRadius: 0,
-        boxShadow: "none",
+        borderRadius: 2,
+        boxShadow: theme.shadows[2],
         overflow: "hidden",
       }}
     >
@@ -445,10 +475,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
               <TableCell
                 key={column.id}
                 align={column.align || "left"}
-                sx={{
-                  minWidth: column.minWidth,
-                  py: 2,
-                }}
+                sx={{ minWidth: column.minWidth, py: 2 }}
               >
                 {column.sortable ? (
                   <TableSortLabel
@@ -456,9 +483,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
                     direction={orderBy === column.id ? order : "asc"}
                     onClick={() => handleRequestSort(column.id)}
                     sx={{
-                      "&:hover": {
-                        color: theme.palette.primary.main,
-                      },
+                      "&:hover": { color: theme.palette.primary.main },
                       "&.Mui-active": {
                         color: theme.palette.primary.main,
                         fontWeight: 700,
@@ -476,76 +501,116 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
         </TableHead>
 
         <TableBody>
-          {sortedRoles.map((role, index) => (
-            <TableRow
-              key={role._id}
-              hover
-              sx={{
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  bgcolor: alpha(theme.palette.primary.main, 0.04),
-                },
-                "&:last-child td": {
-                  borderBottom: 0,
-                },
-                bgcolor:
-                  index % 2 === 0
-                    ? "transparent"
-                    : alpha(theme.palette.grey[500], 0.02),
-              }}
-            >
-              <TableCell>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  {/* <EventIcon
-                    fontSize="small"
-                    sx={{ color: theme.palette.primary.main }}
-                  /> */}
-                  <Typography variant="body2" fontWeight={500}>
-                    {role.name || "—"}
-                  </Typography>
-                </Box>
-              </TableCell>
+          {sortedRoles.map((role, index) => {
+            const permissionsCount = role.permissions?.length || 0;
 
-              <TableCell align="center">
-                <Typography variant="body2" fontWeight={500}>
-                  {role.description || "—"}
-                </Typography>
-              </TableCell>
-
-              <TableCell align="center">
-                <Stack
-                  direction="row"
-                  spacing={0.5}
-                  justifyContent="start"
-                  flexWrap="wrap"
-                  gap={0.5}
-                >
-                  {role.permissions?.length ? (
-                    role.permissions.map((permission) => (
-                      <Chip
-                        key={permission._id}
-                        label={permission.name}
-                        size="small"
-                        variant="outlined"
-                        sx={{
-                          fontSize: "0.75rem",
-                          height: 24,
-                          borderColor: alpha(theme.palette.primary.main, 0.3),
-                          color: theme.palette.primary.main,
-                          fontWeight: 500,
-                        }}
-                      />
-                    ))
-                  ) : (
-                    <Typography variant="body2" color="text.disabled">
-                      —
+            return (
+              <TableRow
+                key={role._id}
+                hover
+                sx={{
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    bgcolor: alpha(theme.palette.primary.main, 0.04),
+                  },
+                  "&:last-child td": { borderBottom: 0 },
+                  bgcolor:
+                    index % 2 === 0
+                      ? "transparent"
+                      : alpha(theme.palette.grey[500], 0.02),
+                }}
+              >
+                {/* Nombre */}
+                <TableCell>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    {/* <VpnKeyIcon
+                      fontSize="small"
+                      sx={{ color: theme.palette.primary.main }}
+                    /> */}
+                    <Typography variant="body2" fontWeight={600}>
+                      {role.name || "—"}
                     </Typography>
-                  )}
-                </Stack>
-              </TableCell>
+                  </Stack>
+                </TableCell>
 
-              <TableCell align="center">
-                {role.status ? (
+                {/* Descripción */}
+                <TableCell>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                    }}
+                  >
+                    {role.description || "Sin descripción"}
+                  </Typography>
+                </TableCell>
+
+                {/* Permisos */}
+                <TableCell align="center">
+                  <Stack
+                    direction="row"
+                    spacing={0.5}
+                    flexWrap="wrap"
+                    gap={0.5}
+                    justifyContent="center"
+                  >
+                    {role.permissions?.length ? (
+                      <>
+                        {role.permissions.slice(0, 3).map((permission) => (
+                          <Chip
+                            key={permission._id}
+                            label={permission.name}
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                              fontSize: "0.75rem",
+                              height: 24,
+                              borderColor: alpha(
+                                theme.palette.primary.main,
+                                0.3
+                              ),
+                              color: theme.palette.primary.main,
+                              fontWeight: 500,
+                            }}
+                          />
+                        ))}
+                        {permissionsCount > 3 && (
+                          <Tooltip
+                            title={role.permissions
+                              .slice(3)
+                              .map((p) => p.name)
+                              .join(", ")}
+                            arrow
+                          >
+                            <Chip
+                              label={`+${permissionsCount - 3}`}
+                              size="small"
+                              sx={{
+                                fontSize: "0.75rem",
+                                height: 24,
+                                bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                color: theme.palette.primary.main,
+                                fontWeight: 600,
+                              }}
+                            />
+                          </Tooltip>
+                        )}
+                      </>
+                    ) : (
+                      <Typography variant="body2" color="text.disabled">
+                        Sin permisos
+                      </Typography>
+                    )}
+                  </Stack>
+                </TableCell>
+
+                {/* Estado */}
+                <TableCell align="center">
                   <Chip
                     label={role.status === "active" ? "Activo" : "Inactivo"}
                     size="small"
@@ -563,51 +628,46 @@ const RoleTable = ({ roles = [], onEdit, onDelete }) => {
                       borderRadius: 1,
                     }}
                   />
-                ) : (
-                  <Typography variant="body2" color="text.disabled">
-                    —
-                  </Typography>
-                )}
-              </TableCell>
+                </TableCell>
 
-              <TableCell align="center">
-                <Box
-                  sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}
-                >
-                  <Tooltip title="Editar role" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={() => onEdit && onEdit(role)}
-                      sx={{
-                        color: theme.palette.primary.main,
-                        bgcolor: alpha(theme.palette.primary.main, 0.08),
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.primary.main, 0.15),
-                        },
-                      }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Eliminar role" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={() => onDelete && onDelete(role._id)}
-                      sx={{
-                        color: theme.palette.error.main,
-                        bgcolor: alpha(theme.palette.error.main, 0.08),
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.error.main, 0.15),
-                        },
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-              </TableCell>
-            </TableRow>
-          ))}
+                {/* Acciones */}
+                <TableCell align="center">
+                  <Stack direction="row" spacing={0.5} justifyContent="center">
+                    <Tooltip title="Editar rol" arrow>
+                      <IconButton
+                        size="small"
+                        onClick={() => onEdit && onEdit(role)}
+                        sx={{
+                          color: theme.palette.primary.main,
+                          bgcolor: alpha(theme.palette.primary.main, 0.08),
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.primary.main, 0.15),
+                          },
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Eliminar rol" arrow>
+                      <IconButton
+                        size="small"
+                        onClick={() => onDelete && onDelete(role._id)}
+                        sx={{
+                          color: theme.palette.error.main,
+                          bgcolor: alpha(theme.palette.error.main, 0.08),
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.error.main, 0.15),
+                          },
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </TableContainer>

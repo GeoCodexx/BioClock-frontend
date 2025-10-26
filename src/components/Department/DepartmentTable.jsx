@@ -306,8 +306,40 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                       >
                         <Collapse in={isOpen} timeout="auto" unmountOnExit>
                           <Box sx={{ py: 2, px: 2 }}>
+                            <Stack spacing={2}>
+                              <Box>
+                                <Stack
+                                  direction="row"
+                                  alignItems="center"
+                                  spacing={0.5}
+                                  mb={0.5}
+                                >
+                                  {
+                                    <PlaceIcon
+                                      sx={{
+                                        fontSize: 14,
+                                        color: theme.palette.text.secondary,
+                                      }}
+                                    />
+                                  }
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight={600}
+                                    color="text.secondary"
+                                  >
+                                    UBICACIÓN
+                                  </Typography>
+                                </Stack>
+                                <Typography
+                                  variant="body2"
+                                  color="text.primary"
+                                >
+                                  {department.location || "Sin Ubicación"}
+                                </Typography>
+                              </Box>
+                            </Stack>
                             {/* Ubicación */}
-                            <Box>
+                            {/* <Box>
                               <Typography
                                 variant="caption"
                                 color="text.secondary"
@@ -320,9 +352,9 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                               >
                                 <PlaceIcon sx={{ fontSize: 14 }} />
                                 <b>Ubicación: </b>
-                                  {department.location || "Desconocida"}
+                                {department.location || "Desconocida"}
                               </Typography>
-                            </Box>
+                            </Box> */}
                           </Box>
                         </Collapse>
                       </TableCell>
@@ -449,18 +481,30 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                     fontSize="small"
                     sx={{ color: theme.palette.primary.main }}
                   /> */}
-                  <Typography variant="body2" fontWeight={500}>
+                  <Typography variant="body2" fontWeight={600}>
                     {department.name || "—"}
                   </Typography>
                 </Box>
               </TableCell>
 
+              {/* Ubicación */}
               <TableCell align="center">
-                <Typography variant="body2" fontWeight={500}>
-                  {department.location || "—"}
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                  }}
+                >
+                  {department.location || "Sin ubicación"}
                 </Typography>
               </TableCell>
 
+              {/* Estado */}
               <TableCell align="center">
                 {department.status ? (
                   <Chip

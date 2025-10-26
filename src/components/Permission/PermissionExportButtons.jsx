@@ -12,8 +12,8 @@ import {
 } from "@mui/material";
 import {
   PictureAsPdf as PictureAsPdfIcon,
-  MoreVert as MoreVertIcon,
   Description as DescriptionIcon,
+  FileDownload as FileDownloadIcon,
 } from "@mui/icons-material";
 import { useState } from "react";
 import ExcelJS from "exceljs";
@@ -45,58 +45,117 @@ export default function PermissionExportButtons({ permissions }) {
       // Configurar columnas
       worksheet.columns = [
         { header: "Nombre", key: "name", width: 30 },
-        { header: "Descripción", key: "description", width: 30 },
-        { header: "Código", key: "code", width: 30 },
-        { header: "Estado", key: "status", width: 15 },
+        { header: "Descripción", key: "description", width: 45 },
+        { header: "Código", key: "code", width: 25 },
+        { header: "Estado", key: "status", width: 12 },
       ];
 
       // Agregar datos
       permissions.forEach((permission) => {
         worksheet.addRow({
-          name: permission.name,
-          code: permission.code,
-          description: permission.description,
+          name: permission.name || "—",
+          description: permission.description || "Sin descripción",
+          code: permission.code || "—",
           status: permission.status === "active" ? "Activo" : "Inactivo",
         });
       });
 
       // Estilo de la cabecera
-      worksheet.getRow(1).font = { bold: true, size: 12 };
-      worksheet.getRow(1).fill = {
+      const headerRow = worksheet.getRow(1);
+      headerRow.height = 25;
+      headerRow.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 12 };
+      headerRow.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: "FF1976D2" }, // Azul primary de MUI
+        fgColor: { argb: "FF1976D2" },
       };
-      worksheet.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-      worksheet.getRow(1).alignment = {
+      headerRow.alignment = {
         vertical: "middle",
         horizontal: "center",
       };
-      worksheet.getRow(1).height = 25;
 
-      // Bordes y alineación para todas las celdas
+      // Aplicar estilos a todas las filas de datos
       worksheet.eachRow((row, rowNumber) => {
-        row.eachCell((cell) => {
+        row.eachCell((cell, colNumber) => {
+          // Bordes
           cell.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            bottom: { style: "thin" },
-            right: { style: "thin" },
+            top: { style: "thin", color: { argb: "FFE0E0E0" } },
+            left: { style: "thin", color: { argb: "FFE0E0E0" } },
+            bottom: { style: "thin", color: { argb: "FFE0E0E0" } },
+            right: { style: "thin", color: { argb: "FFE0E0E0" } },
           };
+
+          // Estilo para filas de datos
           if (rowNumber > 1) {
-            cell.alignment = { vertical: "middle", horizontal: "left" };
+            cell.alignment = {
+              vertical: "middle",
+              horizontal: "left",
+              wrapText: true,
+            };
+
+            row.height = 20;
+
+            // Color alternado para filas
+            if (rowNumber % 2 === 0) {
+              cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFF5F5F5" },
+              };
+            }
+
+            // Columna de Código con estilo especial
+            if (colNumber === 3) {
+              cell.font = { 
+                name: "Courier New",
+                color: { argb: "FF0D47A1" },
+                bold: true 
+              };
+              cell.alignment = { vertical: "middle", horizontal: "center" };
+            }
+
+            // Columna de Estado con color
+            if (colNumber === 4) {
+              cell.alignment = { vertical: "middle", horizontal: "center" };
+              const status = cell.value;
+              if (status === "Activo") {
+                cell.font = { bold: true, color: { argb: "FF2E7D32" } };
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: "FFE8F5E9" },
+                };
+              } else {
+                cell.font = { bold: true, color: { argb: "FFD32F2F" } };
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: "FFFFEBEE" },
+                };
+              }
+            }
           }
         });
       });
+
+      // Información adicional al final
+      const lastRow = worksheet.rowCount + 2;
+      worksheet.getCell(`A${lastRow}`).value = "Total de permisos:";
+      worksheet.getCell(`A${lastRow}`).font = { bold: true };
+      worksheet.getCell(`B${lastRow}`).value = permissions.length;
+      worksheet.getCell(`B${lastRow}`).font = { bold: true, color: { argb: "FF1976D2" } };
 
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      saveAs(blob, `permisos_${new Date().toISOString().split("T")[0]}.xlsx`);
+      
+      const fileName = `permisos_${new Date().toISOString().split("T")[0]}.xlsx`;
+      saveAs(blob, fileName);
       handleClose();
     } catch (error) {
       console.error("Error al exportar Excel:", error);
+      alert("Error al exportar a Excel. Por favor, intente nuevamente.");
     }
   };
 
@@ -104,49 +163,137 @@ export default function PermissionExportButtons({ permissions }) {
   const handleExportPDF = () => {
     try {
       const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
 
       // Título
-      doc.setFontSize(18);
-      doc.setTextColor(25, 118, 210); // Color primary de MUI
-      doc.text("Listado de Permisos", 14, 20);
+      doc.setFontSize(20);
+      doc.setTextColor(25, 118, 210);
+      doc.setFont(undefined, "bold");
+      doc.text("Listado de Permisos", 14, 22);
 
-      // Fecha de generación
-      doc.setFontSize(10);
+      // Línea decorativa
+      doc.setDrawColor(25, 118, 210);
+      doc.setLineWidth(0.5);
+      doc.line(14, 25, pageWidth - 14, 25);
+
+      // Información del reporte
+      doc.setFontSize(9);
       doc.setTextColor(100);
+      doc.setFont(undefined, "normal");
       doc.text(
-        `Generado: ${new Date().toLocaleDateString("es-ES", {
+        `Fecha de generación: ${new Date().toLocaleDateString("es-ES", {
           year: "numeric",
           month: "long",
           day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         })}`,
         14,
-        28
+        32
       );
+      doc.text(`Total de permisos: ${permissions.length}`, 14, 37);
 
-      // Tabla
+      // Preparar datos de la tabla
+      const tableData = permissions.map((permission) => [
+        permission.name || "—",
+        permission.description || "Sin descripción",
+        permission.code || "—",
+        permission.status === "active" ? "Activo" : "Inactivo",
+      ]);
+
+      // Tabla principal
       doc.autoTable({
-        startY: 35,
+        startY: 42,
         head: [["Nombre", "Descripción", "Código", "Estado"]],
-        body: permissions.map((permission) => [
-          permission.name,
-          permission.code,
-          permission.description,
-          permission.status === "active" ? "Activo" : "Inactivo",
-        ]),
+        body: tableData,
         styles: {
-          fontSize: 9,
-          cellPadding: 3,
+          fontSize: 8,
+          cellPadding: 4,
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1,
         },
         headStyles: {
-          fillColor: [25, 118, 210], // Azul primary de MUI
+          fillColor: [25, 118, 210],
           textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",
+          valign: "middle",
+          fontSize: 9,
+        },
+        columnStyles: {
+          0: { cellWidth: 40, fontStyle: "bold" }, // Nombre
+          1: { cellWidth: 65 }, // Descripción
+          2: { cellWidth: 40, halign: "center", font: "courier" }, // Código
+          3: { cellWidth: 30, halign: "center" }, // Estado
         },
         alternateRowStyles: {
           fillColor: [245, 247, 250],
         },
-        margin: { top: 35 },
+        didDrawCell: (data) => {
+          // Estilo especial para la columna de Código
+          if (data.column.index === 2 && data.section === "body") {
+            doc.setFillColor(227, 242, 253);
+            doc.rect(
+              data.cell.x,
+              data.cell.y,
+              data.cell.width,
+              data.cell.height,
+              "F"
+            );
+            doc.setTextColor(13, 71, 161);
+            doc.setFontSize(8);
+            doc.setFont("courier", "bold");
+            doc.text(
+              data.cell.raw,
+              data.cell.x + data.cell.width / 2,
+              data.cell.y + data.cell.height / 2,
+              { align: "center", baseline: "middle" }
+            );
+          }
+
+          // Colorear la celda de Estado
+          if (data.column.index === 3 && data.section === "body") {
+            const status = data.cell.raw;
+            if (status === "Activo") {
+              doc.setFillColor(232, 245, 233);
+              doc.rect(
+                data.cell.x,
+                data.cell.y,
+                data.cell.width,
+                data.cell.height,
+                "F"
+              );
+              doc.setTextColor(46, 125, 50);
+              doc.setFontSize(8);
+              doc.setFont(undefined, "bold");
+              doc.text(
+                status,
+                data.cell.x + data.cell.width / 2,
+                data.cell.y + data.cell.height / 2,
+                { align: "center", baseline: "middle" }
+              );
+            } else if (status === "Inactivo") {
+              doc.setFillColor(255, 235, 238);
+              doc.rect(
+                data.cell.x,
+                data.cell.y,
+                data.cell.width,
+                data.cell.height,
+                "F"
+              );
+              doc.setTextColor(211, 47, 47);
+              doc.setFontSize(8);
+              doc.setFont(undefined, "bold");
+              doc.text(
+                status,
+                data.cell.x + data.cell.width / 2,
+                data.cell.y + data.cell.height / 2,
+                { align: "center", baseline: "middle" }
+              );
+            }
+          }
+        },
+        margin: { top: 42, left: 14, right: 14 },
       });
 
       // Footer con número de página
@@ -155,42 +302,54 @@ export default function PermissionExportButtons({ permissions }) {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(150);
+        doc.setFont(undefined, "normal");
+        
+        // Línea superior del footer
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.1);
+        doc.line(14, doc.internal.pageSize.getHeight() - 15, pageWidth - 14, doc.internal.pageSize.getHeight() - 15);
+        
+        // Número de página
         doc.text(
           `Página ${i} de ${pageCount}`,
-          doc.internal.pageSize.getWidth() / 2,
+          pageWidth / 2,
           doc.internal.pageSize.getHeight() - 10,
           { align: "center" }
         );
       }
 
-      doc.save(`permisos_${new Date().toISOString().split("T")[0]}.pdf`);
+      const fileName = `permisos_${new Date().toISOString().split("T")[0]}.pdf`;
+      doc.save(fileName);
       handleClose();
     } catch (error) {
       console.error("Error al exportar PDF:", error);
+      alert("Error al exportar a PDF. Por favor, intente nuevamente.");
     }
   };
 
-  // Si no hay permisos, deshabilitar botones
+  // Validar si hay permisos disponibles
   const isDisabled = !permissions || permissions.length === 0;
 
-  // Versión mobile: Menú con tres puntos
+  // =============== VERSIÓN MOBILE ===============
   if (isMobile) {
     return (
       <>
-        <Tooltip title="Exportar">
+        <Tooltip title={isDisabled ? "No hay permisos para exportar" : "Exportar"}>
           <span>
             <IconButton
               onClick={handleClick}
               disabled={isDisabled}
               sx={{
                 bgcolor: theme.palette.background.paper,
-                border: `1px solid ${theme.palette.divider}`,
                 "&:hover": {
                   bgcolor: theme.palette.action.hover,
                 },
+                "&:disabled": {
+                  bgcolor: theme.palette.action.disabledBackground,
+                },
               }}
             >
-              <MoreVertIcon />
+              <FileDownloadIcon />
             </IconButton>
           </span>
         </Tooltip>
@@ -205,38 +364,40 @@ export default function PermissionExportButtons({ permissions }) {
               sx: {
                 mt: 1,
                 minWidth: 200,
+                boxShadow: theme.shadows[4],
               },
             },
           }}
         >
           <MenuItem onClick={handleExportExcel}>
             <ListItemIcon>
-              <DescriptionIcon fontSize="small" color="success" />
+              <DescriptionIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
             </ListItemIcon>
-            <ListItemText>Exportar Excel</ListItemText>
+            <ListItemText>Exportar a Excel</ListItemText>
           </MenuItem>
           <MenuItem onClick={handleExportPDF}>
             <ListItemIcon>
-              <PictureAsPdfIcon fontSize="small" color="error" />
+              <PictureAsPdfIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
             </ListItemIcon>
-            <ListItemText>Exportar PDF</ListItemText>
+            <ListItemText>Exportar a PDF</ListItemText>
           </MenuItem>
         </Menu>
       </>
     );
   }
 
-  // Versión tablet: Solo íconos
+  // =============== VERSIÓN TABLET ===============
   if (isTablet) {
     return (
       <Stack direction="row" spacing={1}>
-        <Tooltip title="Exportar a Excel" arrow>
+        <Tooltip title={isDisabled ? "No hay permisos" : "Exportar a Excel"} arrow>
           <span>
             <IconButton
               onClick={handleExportExcel}
               disabled={isDisabled}
+              size="medium"
               sx={{
-                bgcolor: theme.palette.success.light + "20",
+                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
                 color: theme.palette.success.main,
                 border: `1px solid ${theme.palette.success.light}`,
                 "&:hover": {
@@ -244,6 +405,7 @@ export default function PermissionExportButtons({ permissions }) {
                 },
                 "&:disabled": {
                   bgcolor: theme.palette.action.disabledBackground,
+                  color: theme.palette.action.disabled,
                 },
               }}
             >
@@ -251,13 +413,14 @@ export default function PermissionExportButtons({ permissions }) {
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title="Exportar a PDF" arrow>
+        <Tooltip title={isDisabled ? "No hay permisos" : "Exportar a PDF"} arrow>
           <span>
             <IconButton
               onClick={handleExportPDF}
               disabled={isDisabled}
+              size="medium"
               sx={{
-                bgcolor: theme.palette.error.light + "20",
+                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
                 color: theme.palette.error.main,
                 border: `1px solid ${theme.palette.error.light}`,
                 "&:hover": {
@@ -265,6 +428,7 @@ export default function PermissionExportButtons({ permissions }) {
                 },
                 "&:disabled": {
                   bgcolor: theme.palette.action.disabledBackground,
+                  color: theme.palette.action.disabled,
                 },
               }}
             >
@@ -276,42 +440,52 @@ export default function PermissionExportButtons({ permissions }) {
     );
   }
 
-  // Versión desktop: Botones completos
+  // =============== VERSIÓN DESKTOP ===============
   return (
-    <Stack direction="row" spacing={1}>
-      <Tooltip title="Exportar a Excel" arrow>
-        <Button
-          variant="outlined"
-          color="success"
-          startIcon={<DescriptionIcon />}
-          onClick={handleExportExcel}
-          disabled={isDisabled}
-          sx={{
-            minWidth: 140,
-            borderColor: theme.palette.success.main,
-            color: theme.palette.success.main,
-            "&:hover": {
-              borderColor: theme.palette.success.dark,
-              bgcolor: theme.palette.success.light + "20",
-            },
-          }}
-        >
-          Excel
-        </Button>
+    <Stack direction="row" spacing={1.5}>
+      <Tooltip title={isDisabled ? "No hay permisos para exportar" : "Descargar lista en formato Excel"} arrow>
+        <span>
+          <Button
+            variant="outlined"
+            color="success"
+            startIcon={<DescriptionIcon />}
+            onClick={handleExportExcel}
+            disabled={isDisabled}
+            sx={{
+              minWidth: 140,
+              fontWeight: 600,
+              borderWidth: 1.5,
+              "&:hover": {
+                borderWidth: 1.5,
+                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+              },
+            }}
+          >
+            Excel
+          </Button>
+        </span>
       </Tooltip>
-      <Tooltip title="Exportar en PDF" arrow>
-        <Button
-          variant="outlined"
-          color="error"
-          startIcon={<PictureAsPdfIcon />}
-          onClick={handleExportPDF}
-          disabled={isDisabled}
-          sx={{
-            minWidth: 140,
-          }}
-        >
-          PDF
-        </Button>
+      <Tooltip title={isDisabled ? "No hay permisos para exportar" : "Descargar lista en formato PDF"} arrow>
+        <span>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<PictureAsPdfIcon />}
+            onClick={handleExportPDF}
+            disabled={isDisabled}
+            sx={{
+              minWidth: 140,
+              fontWeight: 600,
+              borderWidth: 1.5,
+              "&:hover": {
+                borderWidth: 1.5,
+                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+              },
+            }}
+          >
+            PDF
+          </Button>
+        </span>
       </Tooltip>
     </Stack>
   );
