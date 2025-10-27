@@ -39,17 +39,21 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("code");
   const [order, setOrder] = useState("asc");
-  const [openRows, setOpenRows] = useState({});
+  //const [openRows, setOpenRows] = useState({});
+  const [openRowId, setOpenRowId] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedPermission, setSelectedPermission] = useState(null);
 
   // Toggle row collapse
-  const handleRowToggle = (permissionId) => {
+  /*const handleRowToggle = (permissionId) => {
     setOpenRows((prev) => ({
       ...prev,
       [permissionId]: !prev[permissionId],
     }));
-  };
+  };*/
+  const handleRowToggle = (permissionId) => {
+  setOpenRowId((prev) => (prev === permissionId ? null : permissionId));
+};
 
   // Menu de acciones (mobile)
   const handleMenuOpen = (event, permission) => {
@@ -204,7 +208,8 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
             </TableHead>
             <TableBody>
               {sortedPermissions.map((permission, index) => {
-                const isOpen = openRows[permission._id] || false;
+                //const isOpen = openRows[permission._id] || false;
+                const isOpen = openRowId === permission._id;
 
                 return (
                   <React.Fragment key={permission._id}>

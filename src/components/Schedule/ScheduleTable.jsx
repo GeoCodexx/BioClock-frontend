@@ -40,7 +40,8 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("name");
   const [order, setOrder] = useState("asc");
-  const [openRows, setOpenRows] = useState({});
+  //const [openRows, setOpenRows] = useState({});
+  const [openRowId, setOpenRowId] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
 
@@ -67,11 +68,14 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
   };
 
   // Toggle row collapse
-  const handleRowToggle = (scheduleId) => {
+  /*const handleRowToggle = (scheduleId) => {
     setOpenRows((prev) => ({
       ...prev,
       [scheduleId]: !prev[scheduleId],
     }));
+  };*/
+  const handleRowToggle = (scheduleId) => {
+    setOpenRowId((prev) => (prev === scheduleId ? null : scheduleId));
   };
 
   // Menu de acciones (mobile)
@@ -248,7 +252,8 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
             </TableHead>
             <TableBody>
               {sortedSchedules.map((schedule, index) => {
-                const isOpen = openRows[schedule._id] || false;
+                //const isOpen = openRows[schedule._id] || false;
+                const isOpen = openRowId === schedule._id;
 
                 return (
                   <React.Fragment key={schedule._id}>

@@ -57,7 +57,7 @@ const RoleForm = ({
         setLoadingPermissions(true);
         setPermissionsError(null);
         const data = await getPermissions();
-        setPermissions(data);
+        setPermissions(data.filter((p) => p.status === "active"));
       } catch (error) {
         setPermissionsError("Error al cargar los permisos");
         console.error("Error fetching permissions:", error);
@@ -80,12 +80,6 @@ const RoleForm = ({
     });
     return () => subscription.unsubscribe();
   }, [watch, onChange]);
-
-  // Observar los valores del formulario para la vista previa
-  /*const formValues = watch();
-  const selectedPermissions = permissions.filter((p) =>
-    formValues.permissions?.includes(p._id)
-  );*/
 
   return (
     <Box

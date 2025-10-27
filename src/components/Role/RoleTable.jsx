@@ -40,16 +40,21 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("name");
   const [order, setOrder] = useState("asc");
-  const [openRows, setOpenRows] = useState({});
+  //const [openRows, setOpenRows] = useState({});
+  const [openRowId, setOpenRowId] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
 
   // Toggle row collapse (mobile)
-  const handleRowToggle = (roleId) => {
+  /*const handleRowToggle = (roleId) => {
     setOpenRows((prev) => ({
       ...prev,
       [roleId]: !prev[roleId],
     }));
+  };*/
+
+  const handleRowToggle = (roleId) => {
+    setOpenRowId((prev) => (prev === roleId ? null : roleId));
   };
 
   // Menu de acciones (mobile)
@@ -207,7 +212,8 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
             </TableHead>
             <TableBody>
               {sortedRoles.map((role, index) => {
-                const isOpen = openRows[role._id] || false;
+                //const isOpen = openRows[role._id] || false;
+                const isOpen = openRowId === role._id;
                 const permissionsCount = role.permissions?.length || 0;
 
                 return (

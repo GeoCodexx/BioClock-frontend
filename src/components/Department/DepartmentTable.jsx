@@ -37,16 +37,21 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("name");
   const [order, setOrder] = useState("asc");
-  const [openRows, setOpenRows] = useState({});
+  //const [openRows, setOpenRows] = useState({});
+  const [openRowId, setOpenRowId] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
 
   // Toggle row collapse
-  const handleRowToggle = (departmentId) => {
+  /*const handleRowToggle = (departmentId) => {
     setOpenRows((prev) => ({
       ...prev,
       [departmentId]: !prev[departmentId],
     }));
+  };*/
+
+  const handleRowToggle = (departmentId) => {
+    setOpenRowId((prev) => (prev === departmentId ? null : departmentId));
   };
 
   // Menu de acciones (mobile)
@@ -203,7 +208,8 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
             </TableHead>
             <TableBody>
               {sortedDepartments.map((department, index) => {
-                const isOpen = openRows[department._id] || false;
+                //const isOpen = openRows[department._id] || false;
+                const isOpen = openRowId === department._id;
 
                 return (
                   <React.Fragment key={department._id}>
@@ -307,6 +313,7 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                         <Collapse in={isOpen} timeout="auto" unmountOnExit>
                           <Box sx={{ py: 2, px: 2 }}>
                             <Stack spacing={2}>
+                              {/* Ubicación */}
                               <Box>
                                 <Stack
                                   direction="row"
@@ -338,23 +345,6 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                                 </Typography>
                               </Box>
                             </Stack>
-                            {/* Ubicación */}
-                            {/* <Box>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 0.5,
-                                  mb: 0.5,
-                                }}
-                              >
-                                <PlaceIcon sx={{ fontSize: 14 }} />
-                                <b>Ubicación: </b>
-                                {department.location || "Desconocida"}
-                              </Typography>
-                            </Box> */}
                           </Box>
                         </Collapse>
                       </TableCell>
