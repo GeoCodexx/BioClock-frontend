@@ -12,6 +12,7 @@ import {
   CircularProgress,
   InputAdornment,
   IconButton,
+  Skeleton,
 } from "@mui/material";
 import {
   Visibility,
@@ -64,24 +65,68 @@ const UserForm = ({
     handleSubmit,
     formState: { errors },
     watch,
+    reset,
   } = useForm({
+    // defaultValues: {
+    //   name: defaultValues.name || "",
+    //   firstSurname: defaultValues.firstSurname || "",
+    //   secondSurname: defaultValues.secondSurname || "",
+    //   dni: defaultValues.dni || "",
+    //   email: defaultValues.email || "",
+    //   phone: defaultValues.phone || "",
+    //   password: "", // Solo para crear nuevos usuarios
+    //   roleId: normalizeId(defaultValues.roleId),
+    //   departmentId: normalizeId(defaultValues.departmentId),
+    //   scheduleIds: normalizeSchedules(defaultValues.scheduleIds),
+    //   deviceId: normalizeId(defaultValues.deviceId),
+    // },
     defaultValues: {
-      name: defaultValues.name || "",
-      firstSurname: defaultValues.firstSurname || "",
-      secondSurname: defaultValues.secondSurname || "",
-      dni: defaultValues.dni || "",
-      email: defaultValues.email || "",
-      phone: defaultValues.phone || "",
-      password: "", // Solo para crear nuevos usuarios
-      roleId: normalizeId(defaultValues.roleId),
-      departmentId: normalizeId(defaultValues.departmentId),
-      scheduleIds: normalizeSchedules(defaultValues.scheduleIds),
-      deviceId: normalizeId(defaultValues.deviceId),
+      name: "",
+      firstSurname: "",
+      secondSurname: "",
+      dni: "",
+      email: "",
+      phone: "",
+      password: "",
+      roleId: "",
+      departmentId: "",
+      scheduleIds: [],
+      deviceId: "",
     },
   });
 
   // Obtener datos de las APIs
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setDataError(null);
+
+        const [rolesData, deptsData, schedulesData, devicesData] =
+          await Promise.all([
+            getRoles(),
+            getDepartments(),
+            getSchedules(),
+            getDevices(),
+          ]);
+
+        setRoles(rolesData.filter((r) => r.status === "active"));
+        setDepartments(deptsData.filter((d) => d.status === "active"));
+        setSchedules(schedulesData.filter((s) => s.status === "active"));
+        setDevices(devicesData.filter((d) => d.status === "active"));
+      } catch (error) {
+        console.error("Error fetching form data:", error);
+        setDataError("Error al cargar los datos del formulario");
+      } finally {
+        setLoadingRoles(false);
+        setLoadingDepartments(false);
+        setLoadingSchedules(false);
+        setLoadingDevices(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+  /*useEffect(() => {
     const fetchData = async () => {
       try {
         setDataError(null);
@@ -120,7 +165,40 @@ const UserForm = ({
     };
 
     fetchData();
-  }, []);
+  }, []);*/
+
+  // Cuando todos los datos estén listos y haya defaultValues, reseteamos el formulario
+  useEffect(() => {
+    const allLoaded =
+      !loadingRoles &&
+      !loadingDepartments &&
+      !loadingSchedules &&
+      !loadingDevices;
+
+    if (isEditing && allLoaded && Object.keys(defaultValues).length > 0) {
+      reset({
+        name: defaultValues.name || "",
+        firstSurname: defaultValues.firstSurname || "",
+        secondSurname: defaultValues.secondSurname || "",
+        dni: defaultValues.dni || "",
+        email: defaultValues.email || "",
+        phone: defaultValues.phone || "",
+        password: "",
+        roleId: normalizeId(defaultValues.roleId),
+        departmentId: normalizeId(defaultValues.departmentId),
+        scheduleIds: normalizeSchedules(defaultValues.scheduleIds),
+        deviceId: normalizeId(defaultValues.deviceId),
+      });
+    }
+  }, [
+    isEditing,
+    defaultValues,
+    loadingRoles,
+    loadingDepartments,
+    loadingSchedules,
+    loadingDevices,
+    reset,
+  ]);
 
   // Detectar cambios en el formulario
   useEffect(() => {
@@ -135,6 +213,48 @@ const UserForm = ({
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
+
+  // Si aún se cargan las listas, mostrar un loader o skeleton
+  if (
+    loadingRoles ||
+    loadingDepartments ||
+    loadingSchedules ||
+    loadingDevices
+  ) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Stack spacing={2}>
+          {/* Campos de texto */}
+          <Skeleton variant="rounded" height={36} />
+          <Skeleton variant="rounded" height={36} />
+          <Skeleton variant="rounded" height={36} />
+
+          {/* Selects en dos columnas (roles y departamentos) */}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Skeleton variant="rounded" height={36} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Skeleton variant="rounded" height={36} />
+            </Grid>
+          </Grid>
+
+          {/* Más selects (horarios y dispositivos) */}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Skeleton variant="rounded" height={36} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Skeleton variant="rounded" height={36} />
+            </Grid>
+          </Grid>
+
+          {/* Botón */}
+          <Skeleton variant="rounded" height={40} width="30%" />
+        </Stack>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -586,7 +706,9 @@ const UserForm = ({
                           </Typography>
                         ) : (
                           selected.map((id) => {
-                            const schedule = schedules.find((s) => s._id === id);
+                            const schedule = schedules.find(
+                              (s) => s._id === id
+                            );
                             return (
                               <Chip
                                 key={id}
@@ -668,7 +790,7 @@ const UserForm = ({
                 {devices.length === 0 && !loadingDevices ? (
                   <MenuItem disabled>
                     <Typography variant="body2" color="text.secondary">
-                      No hay departamentos disponibles
+                      No hay dispositivos disponibles
                     </Typography>
                   </MenuItem>
                 ) : (
@@ -691,61 +813,6 @@ const UserForm = ({
             )}
           />
         </Grid>
-        {/* <Grid size={{ xs: 12, md: 6 }}>
-          <Controller
-            name="deviceId"
-            control={control}
-            rules={{
-              required: "Debe seleccionar un dispositivo",
-            }}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                select
-                label="Dispositivo"
-                fullWidth
-                size="small"
-                required
-                disabled={disabled || loadingDevices}
-                error={!!errors.deviceId}
-                helperText={
-                  errors.deviceId?.message ||
-                  "Seleccione el dispositivo asignado"
-                }
-                slotProps={{
-                  input: {
-                    startAdornment: loadingDevices ? (
-                      <CircularProgress size={20} sx={{ mr: 1 }} />
-                    ) : null,
-                  },
-                }}
-              >
-                {devices.length === 0 && !loadingDevices ? (
-                  <MenuItem disabled>
-                    <Typography variant="body2" color="text.secondary">
-                      No hay dispositivos disponibles
-                    </Typography>
-                  </MenuItem>
-                ) : (
-                  devices.map((device) => (
-                    <MenuItem key={device._id} value={device._id}>
-                      <Stack spacing={0.5}>
-                        <Typography variant="body2" fontWeight="medium">
-                          {device.name}
-                        </Typography>
-                        {device.description && (
-                          <Typography variant="caption" color="text.secondary">
-                            {device.description}
-                          </Typography>
-                        )}
-                      </Stack>
-                    </MenuItem>
-                  ))
-                )}
-              </TextField>
-            )}
-          />
-        </Grid> */}
       </Grid>
     </Box>
   );
