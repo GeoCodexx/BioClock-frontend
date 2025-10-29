@@ -1,27 +1,43 @@
 import api from "./api";
-/*
-export const getFingerprintsPaginated = async (page = 1, pageSize = 10) => {
-    const response = await api.get(`/fingerprints?page=${page}&pageSize=${pageSize}`);
-    return response.data;
+
+// Función auxiliar para manejar errores consistentemente
+const handleApiError = (error, defaultMessage) => {
+  const message =
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    defaultMessage;
+  throw new Error(message);
 };
 
-export const updateFingerprintStatus = async (fingerprintId, status) => {
-    const response = await api.patch(`/fingerprints/${fingerprintId}/status`, { status });
-    return response.data;
-};
-
-export const filterFingerprintsByStatus = async (status, page = 1, pageSize = 10) => {
-    const response = await api.get(`/fingerprints?status=${status}&page=${page}&pageSize=${pageSize}`);
-    return response.data;
-};*/
-//const API_URL = `${import.meta.env.VITE_API_URL}/biometric-templates`;
-
-export const getFingerprintTemplates = async (params) => {
-  const response = await api.get("/biometric-templates", { params });
-  return response.data;
+export const getFingerprintTemplates = async ({
+  search = "",
+  page = 1,
+  limit = 10,
+  status = ""
+,} = {}) => {
+  try {
+    const { data } = await api.get("/biometric-templates", {
+      params: { search, page, limit, status },
+    });
+    //console.log(data);
+    return { fingerprints: data.data, total: data.pagination.total };
+  } catch (error) {
+    handleApiError(error, "Error al obtener las huellas dactilares paginadas");
+  }
 };
 
 export const updateFingerprintStatus = async (id, status) => {
-  const response = await api.put(`/biometric-templates/${id}/status`, { status });
+  const response = await api.put(`/biometric-templates/${id}/status`, {
+    status,
+  });
   return response.data;
+};
+
+export const deleteFingerprintTemplate = async (id) => {
+  try {
+    const { data } = await api.delete(`/biometric-templates/${id}`);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al eliminar la plantilla de huella dactilar");
+  }
 };

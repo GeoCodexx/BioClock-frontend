@@ -1,109 +1,514 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  Box,
   Typography,
-  TextField,
-  MenuItem,
-  Button,
-  Pagination,
+  CircularProgress,
+  Alert,
+  TablePagination,
+  Box,
+  Breadcrumbs,
+  Card,
+  Link,
   Stack,
+  useTheme,
+  useMediaQuery,
+  Divider,
 } from "@mui/material";
-import FingerprintTable from "../components/Fingerprint/FingerprintTable";
 import {
   getFingerprintTemplates,
   updateFingerprintStatus,
 } from "../services/fingerprintService";
+import FingerprintTable from "../components/Fingerprint/FingerprintTable";
+import FingerprintSearchBar from "../components/Fingerprint/FingerprintSearchBar";
+import FingerprintExportButtons from "../components/Fingerprint/FingerprintExportButtons";
+import StatusFilter from "../components/Fingerprint/StatusFilter";
+import StatusConfirmDialog from "../components/Fingerprint/StatusConfirmDialog";
+import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
+import { Link as RouterLink } from "react-router-dom";
+import HomeIcon from "@mui/icons-material/Home";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import useSnackbarStore from "../store/useSnackbarStore";
+import LoadingOverlay from "../components/common/LoadingOverlay";
 
-export default function Fingerprint() {
-  const [templates, setTemplates] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("");
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [loading, setLoading] = useState(false);
+export default function Fingerprints() {
+  const { showSuccess, showError } = useSnackbarStore();
 
-  const fetchTemplates = async () => {
-    try {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+
+  const [fingerprints, setFingerprints] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+
+  const [pagination, setPagination] = useState({
+    page: 0,
+    rowsPerPage: 10,
+    search: "",
+    status: "", // Filtro por estado
+  });
+
+  const [statusDialog, setStatusDialog] = useState({
+    open: false,
+    fingerprintId: null,
+    currentStatus: null,
+    action: null, // 'approve' o 'reject'
+    error: "",
+  });
+
+  const [deleteState, setDeleteState] = useState({
+    id: null,
+    error: "",
+  });
+
+  // Cargar fingerprints
+  useEffect(() => {
+    const loadFingerprints = async () => {
       setLoading(true);
-      const { data, totalPages } = await getFingerprintTemplates({
-        page,
-        limit: 10,
-        status: statusFilter || undefined,
-        search: search || undefined,
-        sortField: "createdAt",
-        sortOrder: "desc",
+      setError("");
+      try {
+        const data = await getFingerprintTemplates({
+          search: pagination.search,
+          page: pagination.page + 1,
+          limit: pagination.rowsPerPage,
+          status: pagination.status || undefined,
+        });
+        setFingerprints(data.fingerprints || data.templates || []);
+        setTotal(data.total || 0);
+      } catch (err) {
+        setError(
+          err.response?.data?.message || "Error al cargar huellas dactilares"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFingerprints();
+  }, [
+    pagination.search,
+    pagination.page,
+    pagination.rowsPerPage,
+    pagination.status,
+  ]);
+
+  // Debounce para búsqueda
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchInput !== pagination.search) {
+        setPagination((prev) => ({
+          ...prev,
+          search: searchInput,
+          page: 0,
+        }));
+      }
+    }, 600);
+
+    return () => clearTimeout(handler);
+  }, [searchInput, pagination.search]);
+
+  // Refresh fingerprints
+  const refreshFingerprints = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getFingerprintTemplates({
+        search: pagination.search,
+        page: pagination.page + 1,
+        limit: pagination.rowsPerPage,
+        status: pagination.status || undefined,
       });
-      setTemplates(data);
-      setTotalPages(totalPages);
+      setFingerprints(data.fingerprints || data.templates || []);
+      setTotal(data.total || 0);
     } catch (err) {
-      console.error(err);
+      setError(
+        err.response?.data?.message || "Error al cargar huellas dactilares"
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    pagination.search,
+    pagination.page,
+    pagination.rowsPerPage,
+    pagination.status,
+  ]);
 
-  const handleStatusChange = async (id, status) => {
+  // Handler para aprobar
+  const handleApprove = useCallback((fingerprint) => {
+    setStatusDialog({
+      open: true,
+      fingerprintId: fingerprint._id || fingerprint.id,
+      currentStatus: fingerprint.status,
+      action: "approve",
+      error: "",
+    });
+  }, []);
+
+  // Handler para rechazar
+  const handleReject = useCallback((fingerprint) => {
+    setStatusDialog({
+      open: true,
+      fingerprintId: fingerprint._id || fingerprint.id,
+      currentStatus: fingerprint.status,
+      action: "reject",
+      error: "",
+    });
+  }, []);
+
+  // Confirmar cambio de estado
+  const confirmStatusChange = useCallback(async () => {
+    setStatusDialog((prev) => ({ ...prev, error: "" }));
     try {
-      await updateFingerprintStatus(id, status);
-      fetchTemplates(); // recarga lista
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      const newStatus =
+        statusDialog.action === "approve" ? "approved" : "rejected";
+      await updateFingerprintStatus(statusDialog.fingerprintId, newStatus);
 
-  useEffect(() => {
-    fetchTemplates();
-  }, [page, statusFilter]);
+      showSuccess(
+        `Huella dactilar ${
+          statusDialog.action === "approve" ? "aprobada" : "rechazada"
+        } correctamente`
+      );
+
+      setStatusDialog({
+        open: false,
+        fingerprintId: null,
+        currentStatus: null,
+        action: null,
+        error: "",
+      });
+
+      await refreshFingerprints();
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        `Error al ${
+          statusDialog.action === "approve" ? "aprobar" : "rechazar"
+        } la huella dactilar`;
+
+      setStatusDialog((prev) => ({ ...prev, error: errorMessage }));
+      showError(errorMessage);
+      console.error("Error en confirmStatusChange:", err);
+    }
+  }, [
+    statusDialog.action,
+    statusDialog.fingerprintId,
+    showSuccess,
+    showError,
+    refreshFingerprints,
+  ]);
+
+  // Handler para eliminar
+  const handleDelete = useCallback((fingerprintId) => {
+    setDeleteState({
+      id: fingerprintId,
+      error: "",
+    });
+  }, []);
+
+  // Confirmar eliminación (implementa tu servicio deleteFingerprint si lo tienes)
+  const confirmDelete = useCallback(async () => {
+    setDeleteState((prev) => ({ ...prev, error: "" }));
+    try {
+      // Aquí deberías llamar a tu servicio de eliminación
+      // await deleteFingerprint(deleteState.id);
+      showSuccess("Huella dactilar eliminada correctamente");
+      setDeleteState({ id: null, error: "" });
+      await refreshFingerprints();
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Error al eliminar huella dactilar";
+
+      setDeleteState((prev) => ({ ...prev, error: errorMessage }));
+      showError(errorMessage);
+      console.error("Error en confirmDelete:", err);
+    }
+  }, [deleteState.id, showSuccess, showError, refreshFingerprints]);
+
+  // Handlers de paginación
+  const handleChangePage = useCallback((event, newPage) => {
+    setPagination((prev) => ({ ...prev, page: newPage }));
+  }, []);
+
+  const handleChangeRowsPerPage = useCallback((event) => {
+    setPagination((prev) => ({
+      ...prev,
+      rowsPerPage: parseInt(event.target.value, 10),
+      page: 0,
+    }));
+  }, []);
+
+  // Handler de búsqueda
+  const handleSearch = useCallback(
+    (e) => {
+      e.preventDefault();
+      setPagination((prev) => ({
+        ...prev,
+        search: searchInput,
+        page: 0,
+      }));
+    },
+    [searchInput]
+  );
+
+  // Handler de filtro por estado
+  const handleStatusFilterChange = useCallback((newStatus) => {
+    setPagination((prev) => ({
+      ...prev,
+      status: newStatus,
+      page: 0,
+    }));
+  }, []);
+
+  // Close dialogs
+  const handleCloseStatusDialog = useCallback(() => {
+    setStatusDialog({
+      open: false,
+      fingerprintId: null,
+      currentStatus: null,
+      action: null,
+      error: "",
+    });
+  }, []);
+
+  const handleCloseDelete = useCallback(() => {
+    setDeleteState({ id: null, error: "" });
+  }, []);
+
+  // Memorizar breadcrumbs
+  const breadcrumbItems = useMemo(
+    () => (
+      <Breadcrumbs
+        aria-label="breadcrumb"
+        separator={<NavigateNextIcon fontSize="small" />}
+        sx={isMobile ? { fontSize: "0.875rem" } : undefined}
+      >
+        <Link
+          component={RouterLink}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            color: "inherit",
+            textDecoration: "none",
+            "&:hover": { color: "primary.main" },
+          }}
+        >
+          <HomeIcon fontSize="small" />
+        </Link>
+        <Typography variant="body2" color="text.primary">
+          Huellas Dactilares
+        </Typography>
+      </Breadcrumbs>
+    ),
+    [isMobile]
+  );
+
+  // Memorizar tabla
+  const fingerprintTableMemo = useMemo(
+    () => (
+      <FingerprintTable
+        fingerprints={fingerprints}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onDelete={handleDelete}
+      />
+    ),
+    [fingerprints, handleApprove, handleReject, handleDelete]
+  );
+
+  // Estado de carga inicial
+  if (loading && fingerprints.length === 0) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+          gap: 2,
+        }}
+      >
+        <CircularProgress size={48} />
+        <Typography variant="body1" color="text.secondary">
+          Cargando huellas dactilares...
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
-    <Box p={3}>
-      <Typography variant="h5" mb={2}>
-        Gestión de Plantillas Biométricas
-      </Typography>
-
-      {/* Filtros */}
-      <Stack direction="row" spacing={2} mb={2}>
-        <TextField
-          label="Buscar por nombre o DNI"
-          variant="outlined"
-          size="small"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && fetchTemplates()}
-        />
-        <TextField
-          label="Estado"
-          select
-          size="small"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          sx={{ width: "190px" }}
+    <Box sx={{ width: "100%" }}>
+      {/* HEADER CARD */}
+      <Card
+        sx={{
+          borderRadius: isMobile ? 2 : 3,
+          mb: 2,
+          boxShadow: theme.shadows[1],
+        }}
+      >
+        <Box
+          sx={{
+            px: isMobile ? 2 : 3,
+            py: isMobile ? 1.5 : 2,
+          }}
         >
-          <MenuItem value="">Todos</MenuItem>
-          <MenuItem value="pending">Pendiente</MenuItem>
-          <MenuItem value="approved">Aprobado</MenuItem>
-          <MenuItem value="rejected">Rechazado</MenuItem>
-        </TextField>
-        <Button variant="contained" onClick={() => fetchTemplates()}>
-          Buscar
-        </Button>
-      </Stack>
+          {isMobile ? (
+            <Stack spacing={1.5}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  Gestión de Huellas Dactilares
+                </Typography>
+              </Box>
+              {breadcrumbItems}
+            </Stack>
+          ) : (
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                Gestión de Huellas Dactilares
+              </Typography>
+              {breadcrumbItems}
+            </Stack>
+          )}
+        </Box>
+      </Card>
 
-      {/* Tabla */}
-      <FingerprintTable
-        data={templates}
-        loading={loading}
-        onStatusChange={handleStatusChange}
+      {/* TOOLBAR CARD */}
+      <Card
+        sx={{
+          borderRadius: isMobile ? 2 : 3,
+          mb: 2,
+          boxShadow: theme.shadows[1],
+        }}
+      >
+        <Box
+          sx={{
+            px: isMobile ? 2 : 3,
+            py: isMobile ? 1.5 : 2,
+          }}
+        >
+          {isTablet ? (
+            <Stack spacing={2}>
+              <FingerprintSearchBar
+                searchInput={searchInput}
+                setSearchInput={setSearchInput}
+                onSearch={handleSearch}
+              />
+              <Stack direction="row" spacing={1} alignItems="center">
+                <StatusFilter
+                  value={pagination.status}
+                  onChange={handleStatusFilterChange}
+                />
+                <FingerprintExportButtons fingerprints={fingerprints} />
+              </Stack>
+            </Stack>
+          ) : (
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              spacing={2}
+            >
+              <Box sx={{ flex: 1, maxWidth: 400 }}>
+                <FingerprintSearchBar
+                  searchInput={searchInput}
+                  setSearchInput={setSearchInput}
+                  onSearch={handleSearch}
+                />
+              </Box>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <StatusFilter
+                  value={pagination.status}
+                  onChange={handleStatusFilterChange}
+                />
+                <FingerprintExportButtons fingerprints={fingerprints} />
+              </Stack>
+            </Stack>
+          )}
+        </Box>
+      </Card>
+
+      {/* Mensaje de error */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: isMobile ? 2 : 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* TABLE CARD */}
+      <Card
+        sx={{
+          borderRadius: isMobile ? 2 : 3,
+          boxShadow: theme.shadows[1],
+          overflow: "hidden",
+        }}
+      >
+        <Box sx={{ position: "relative" }}>
+          <LoadingOverlay show={loading && fingerprints.length > 0} />
+          {fingerprintTableMemo}
+        </Box>
+
+        {fingerprints.length > 0 && <Divider />}
+
+        <TablePagination
+          component="div"
+          count={total}
+          page={pagination.page}
+          onPageChange={handleChangePage}
+          rowsPerPage={pagination.rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
+          labelDisplayedRows={({ from, to, count }) =>
+            isMobile
+              ? `${from}-${to} de ${count}`
+              : `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+          }
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          sx={{
+            ".MuiTablePagination-toolbar": {
+              flexWrap: isMobile ? "wrap" : "nowrap",
+              minHeight: isMobile ? "auto" : 64,
+              px: isMobile ? 1 : 2,
+            },
+            ".MuiTablePagination-selectLabel": {
+              fontSize: isMobile ? "0.8rem" : "0.875rem",
+            },
+            ".MuiTablePagination-displayedRows": {
+              fontSize: isMobile ? "0.8rem" : "0.875rem",
+            },
+          }}
+        />
+      </Card>
+
+      {/* DIÁLOGOS */}
+      <StatusConfirmDialog
+        open={statusDialog.open}
+        onClose={handleCloseStatusDialog}
+        onConfirm={confirmStatusChange}
+        action={statusDialog.action}
+        error={statusDialog.error}
       />
 
-      {/* Paginación */}
-      <Stack mt={2} alignItems="center">
-        <Pagination
-          count={totalPages}
-          page={page}
-          onChange={(e, value) => setPage(value)}
-        />
-      </Stack>
+      <DeleteConfirmDialog
+        open={!!deleteState.id}
+        onClose={handleCloseDelete}
+        onConfirm={confirmDelete}
+        deleteError={deleteState.error}
+        itemName="registro de huella dactilar"
+      />
     </Box>
   );
 }
