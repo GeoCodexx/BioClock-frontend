@@ -13,6 +13,8 @@ import {
   useTheme,
   useMediaQuery,
   Divider,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import {
   createAttendance,
@@ -32,6 +34,15 @@ import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
+//Filtros
+import AttendanceDateRangeFilter from "../components/Attendance/AttendanceDateRangeFilter";
+import AttendanceStatusFilter from "../components/Attendance/AttendanceStatusFilter";
+import AttendanceTypeFilter from "../components/Attendance/AttendanceTypeFilter";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import FilterListOffIcon from "@mui/icons-material/FilterListOff";
+import ClearIcon from "@mui/icons-material/Clear";
+//import SearchIcon from "@mui/icons-material/Search";
+//import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 export default function Attendances() {
   const { showSuccess, showError } = useSnackbarStore();
@@ -51,6 +62,10 @@ export default function Attendances() {
     page: 0,
     rowsPerPage: 10,
     search: "",
+    startDate: null,
+    endDate: null,
+    status: "",
+    type: "",
   });
 
   const [dialog, setDialog] = useState({
@@ -64,8 +79,19 @@ export default function Attendances() {
     error: "",
   });
 
-  // Evitar llamadas duplicadas eliminando fetchAttendances de las dependencias
-  useEffect(() => {
+  //Estado de filtros
+  const [filters, setFilters] = useState({
+    startDate: null,
+    endDate: null,
+    status: "",
+    type: "",
+  });
+
+  //Estado para mostrar u olcultar filtros mobile
+  const [openFilters, setOpenFilters] = useState(false);
+
+  // Carga de datos llamando a la API
+  /*useEffect(() => {
     const loadAttendances = async () => {
       setLoading(true);
       setError("");
@@ -85,7 +111,53 @@ export default function Attendances() {
     };
 
     loadAttendances();
-  }, [pagination.search, pagination.page, pagination.rowsPerPage]);
+  }, [pagination.search, pagination.page, pagination.rowsPerPage]);*/
+
+  useEffect(() => {
+    const loadAttendances = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const params = {
+          search: pagination.search,
+          page: (pagination.page + 1).toString(),
+          limit: pagination.rowsPerPage.toString(),
+        };
+
+        // Agregar filtros solo si tienen valor
+        if (pagination.startDate) {
+          params.startDate = pagination.startDate.toISOString();
+        }
+        if (pagination.endDate) {
+          params.endDate = pagination.endDate.toISOString();
+        }
+        if (pagination.status) {
+          params.status = pagination.status;
+        }
+        if (pagination.type) {
+          params.type = pagination.type;
+        }
+
+        const data = await getPaginatedAttendances(params);
+        setAttendances(data.attendances);
+        setTotal(data.total);
+      } catch (err) {
+        setError(err.response?.data?.message || "Error al cargar asistencias");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAttendances();
+  }, [
+    pagination.search,
+    pagination.page,
+    pagination.rowsPerPage,
+    pagination.startDate,
+    pagination.endDate,
+    pagination.status,
+    pagination.type,
+  ]);
 
   // Debounce para búsqueda
   useEffect(() => {
@@ -103,7 +175,7 @@ export default function Attendances() {
   }, [searchInput, pagination.search]);
 
   // Handlers con useCallback
-  const refreshusers = useCallback(async () => {
+  /*const refreshusers = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -119,7 +191,88 @@ export default function Attendances() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.search, pagination.page, pagination.rowsPerPage]);
+  }, [pagination.search, pagination.page, pagination.rowsPerPage]);*/
+  const refreshusers = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = {
+        search: pagination.search,
+        page: (pagination.page + 1).toString(),
+        limit: pagination.rowsPerPage.toString(),
+      };
+
+      if (pagination.startDate) {
+        params.startDate = pagination.startDate.toISOString();
+      }
+      if (pagination.endDate) {
+        params.endDate = pagination.endDate.toISOString();
+      }
+      if (pagination.status) {
+        params.status = pagination.status;
+      }
+      if (pagination.type) {
+        params.type = pagination.type;
+      }
+
+      const data = await getPaginatedAttendances(params);
+      setAttendances(data.attendances);
+      setTotal(data.total);
+    } catch (err) {
+      setError(err.response?.data?.message || "Error al cargar usuarios");
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    pagination.search,
+    pagination.page,
+    pagination.rowsPerPage,
+    pagination.startDate,
+    pagination.endDate,
+    pagination.status,
+    pagination.type,
+  ]);
+
+  //handlers
+  // Agrega estos handlers:
+  const handleStartDateChange = useCallback((date) => {
+    setFilters((prev) => ({ ...prev, startDate: date }));
+  }, []);
+
+  const handleEndDateChange = useCallback((date) => {
+    setFilters((prev) => ({ ...prev, endDate: date }));
+  }, []);
+
+  const handleStatusChange = useCallback((status) => {
+    setFilters((prev) => ({ ...prev, status }));
+  }, []);
+
+  const handleTypeChange = useCallback((type) => {
+    setFilters((prev) => ({ ...prev, type }));
+  }, []);
+
+  const handleApplyFilters = useCallback(() => {
+    setPagination((prev) => ({
+      ...prev,
+      ...filters,
+      page: 0,
+    }));
+  }, [filters]);
+
+  const handleClearFilters = useCallback(() => {
+    const emptyFilters = {
+      startDate: null,
+      endDate: null,
+      status: "",
+      type: "",
+    };
+    setFilters(emptyFilters);
+    setPagination((prev) => ({
+      ...prev,
+      ...emptyFilters,
+      page: 0,
+    }));
+  }, []);
 
   const handleSubmit = useCallback(
     async (data) => {
@@ -263,6 +416,10 @@ export default function Attendances() {
     [attendances, handleEdit, handleDelete]
   );
 
+  // Verifica si hay filtros activos
+  const hasActiveFilters =
+    filters.startDate || filters.endDate || filters.status || filters.type;
+
   // Estado de carga inicial
   if (loading && attendances.length === 0) {
     return (
@@ -278,7 +435,7 @@ export default function Attendances() {
       >
         <CircularProgress size={48} />
         <Typography variant="body1" color="text.secondary">
-          Cargando rols...
+          Cargando asistencias...
         </Typography>
       </Box>
     );
@@ -321,6 +478,58 @@ export default function Attendances() {
                     Gestión de Asistencias
                   </Typography>
                 </Box>
+                {/* <Tooltip
+                  title={
+                    !attendances || attendances.length === 0
+                      ? "No hay asistencias para buscar"
+                      : "Buscar"
+                  }
+                >
+                  <span>
+                    <IconButton
+                      onClick={() => alert("Prueba de boton busqueda")}
+                      disabled={!attendances || attendances.length === 0}
+                      sx={{
+                        bgcolor: theme.palette.background.paper,
+                        "&:hover": {
+                          bgcolor: theme.palette.action.hover,
+                        },
+                        "&:disabled": {
+                          bgcolor: theme.palette.action.disabledBackground,
+                        },
+                      }}
+                    >
+                      <SearchIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip> */}
+                <Tooltip
+                  title={
+                    !attendances || attendances.length === 0
+                      ? "No hay asistencias para filtrar"
+                      : openFilters
+                      ? "Ocultar filtros"
+                      : "Mostrar filtros"
+                  }
+                >
+                  <span>
+                    <IconButton
+                      onClick={() => setOpenFilters((prev) => !prev)}
+                      disabled={!attendances || attendances.length === 0}
+                      sx={{
+                        bgcolor: theme.palette.background.paper,
+                        "&:hover": {
+                          bgcolor: theme.palette.action.hover,
+                        },
+                        "&:disabled": {
+                          bgcolor: theme.palette.action.disabledBackground,
+                        },
+                      }}
+                    >
+                      {openFilters ? <FilterListOffIcon /> : <FilterListIcon />}
+                    </IconButton>
+                  </span>
+                </Tooltip>
                 <AttendanceExportButtons attendances={attendances} />
               </Box>
               {breadcrumbItems}
@@ -370,33 +579,137 @@ export default function Attendances() {
                 setSearchInput={setSearchInput}
                 onSearch={handleSearch}
               />
+              {openFilters && (
+                <>
+                  <Stack spacing={2} sx={{ mt: 2 }}>
+                    {/* Filtros de fecha */}
+                    <AttendanceDateRangeFilter
+                      startDate={filters.startDate}
+                      endDate={filters.endDate}
+                      onStartDateChange={handleStartDateChange}
+                      onEndDateChange={handleEndDateChange}
+                    />
+
+                    {/* Filtros de estado y tipo */}
+                    <Stack direction={isMobile ? "column" : "row"} spacing={1}>
+                      <Box sx={{ flex: 1 }}>
+                        <AttendanceStatusFilter
+                          status={filters.status}
+                          onStatusChange={handleStatusChange}
+                        />
+                      </Box>
+                      <Box sx={{ flex: 1 }}>
+                        <AttendanceTypeFilter
+                          type={filters.type}
+                          onTypeChange={handleTypeChange}
+                        />
+                      </Box>
+                    </Stack>
+
+                    {/* Botones de filtros */}
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      justifyContent="flex-end"
+                    >
+                      {hasActiveFilters && (
+                        <Button
+                          variant="outlined"
+                          startIcon={<ClearIcon />}
+                          onClick={handleClearFilters}
+                          size="small"
+                        >
+                          Limpiar
+                        </Button>
+                      )}
+                      <Button
+                        variant="contained"
+                        startIcon={<FilterListIcon />}
+                        onClick={handleApplyFilters}
+                        size="small"
+                      >
+                        Aplicar Filtros
+                      </Button>
+                    </Stack>
+                  </Stack>
+                </>
+              )}
             </Stack>
           ) : (
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              spacing={2}
-            >
-              <Box sx={{ flex: 1, maxWidth: 400 }}>
-                <AttendanceSearchBar
-                  searchInput={searchInput}
-                  setSearchInput={setSearchInput}
-                  onSearch={handleSearch}
-                />
-              </Box>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleOpenDialog}
-                  sx={{ minWidth: 140 }}
-                >
-                  Nuevo
-                </Button>
-                <AttendanceExportButtons attendances={attendances} />
+            <>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                spacing={2}
+              >
+                <Box sx={{ flex: 1, maxWidth: 400 }}>
+                  <AttendanceSearchBar
+                    searchInput={searchInput}
+                    setSearchInput={setSearchInput}
+                    onSearch={handleSearch}
+                  />
+                </Box>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleOpenDialog}
+                    sx={{ minWidth: 140 }}
+                  >
+                    Nuevo
+                  </Button>
+                  <AttendanceExportButtons attendances={attendances} />
+                </Stack>
               </Stack>
-            </Stack>
+              <Stack spacing={2} sx={{ mt: 2 }}>
+                {/* Filtros de fecha */}
+                <AttendanceDateRangeFilter
+                  startDate={filters.startDate}
+                  endDate={filters.endDate}
+                  onStartDateChange={handleStartDateChange}
+                  onEndDateChange={handleEndDateChange}
+                />
+
+                {/* Filtros de estado y tipo */}
+                <Stack direction={isMobile ? "column" : "row"} spacing={1}>
+                  <Box sx={{ flex: 1 }}>
+                    <AttendanceStatusFilter
+                      status={filters.status}
+                      onStatusChange={handleStatusChange}
+                    />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <AttendanceTypeFilter
+                      type={filters.type}
+                      onTypeChange={handleTypeChange}
+                    />
+                  </Box>
+                </Stack>
+
+                {/* Botones de filtros */}
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  {hasActiveFilters && (
+                    <Button
+                      variant="outlined"
+                      startIcon={<ClearIcon />}
+                      onClick={handleClearFilters}
+                      size="small"
+                    >
+                      Limpiar
+                    </Button>
+                  )}
+                  <Button
+                    variant="contained"
+                    startIcon={<FilterListIcon />}
+                    onClick={handleApplyFilters}
+                    size="small"
+                  >
+                    Aplicar Filtros
+                  </Button>
+                </Stack>
+              </Stack>
+            </>
           )}
         </Box>
       </Card>
