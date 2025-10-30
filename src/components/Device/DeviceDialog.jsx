@@ -1,4 +1,4 @@
-// DepartmentDialog.jsx - Optimizado con mejoras UX
+// DeviceDialog.jsx - Optimizado con mejoras UX
 import {
   Dialog,
   DialogTitle,
@@ -20,7 +20,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import EditIcon from "@mui/icons-material/Edit";
 import { forwardRef, useState, useEffect } from "react";
-import DepartmentForm from "./DepartmentForm";
+import DeviceForm from "./DeviceForm";
 import ConfirmDialog from "../common/ConfirmDialog";
 
 
@@ -28,16 +28,16 @@ const Transition = forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const DepartmentDialog = ({
+const DeviceDialog = ({
   open,
   onClose,
-  editDepartment,
+  editDevice,
   formError,
   onSubmit,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isEdit = Boolean(editDepartment);
+  const isEdit = Boolean(editDevice);
 
   // Estados para mejoras UX
   const [isLoading, setIsLoading] = useState(false);
@@ -139,7 +139,7 @@ const DepartmentDialog = ({
               <SaveIcon color="primary" />
             )}
             <Typography variant="h6" component="span" fontWeight={600}>
-              {isEdit ? "Editar Departamento" : "Nuevo Departamento"}
+              {isEdit ? "Editar Dispositivo" : "Nuevo Dispositivo"}
             </Typography>
           </Box>
           <IconButton
@@ -179,9 +179,9 @@ const DepartmentDialog = ({
             </Alert>
           )}
 
-          <DepartmentForm
+          <DeviceForm
             onSubmit={handleSubmit}
-            defaultValues={editDepartment || {}}
+            defaultValues={editDevice || {}}
             onChange={handleFormChange}
             disabled={isLoading}
           />
@@ -192,7 +192,7 @@ const DepartmentDialog = ({
               <Stack spacing={1.5} sx={{ mt: 3 }}>
                 <Button
                   type="submit"
-                  form="department-form"
+                  form="device-form"
                   variant="contained"
                   size="large"
                   fullWidth
@@ -247,7 +247,7 @@ const DepartmentDialog = ({
             </Button>
             <Button
               type="submit"
-              form="department-form"
+              form="device-form"
               variant="contained"
               disabled={isLoading}
               startIcon={
@@ -284,4 +284,4 @@ const DepartmentDialog = ({
   );
 };
 
-export default DepartmentDialog;
+export default DeviceDialog;

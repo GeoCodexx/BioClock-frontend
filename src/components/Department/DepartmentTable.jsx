@@ -527,7 +527,7 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                 <Box
                   sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}
                 >
-                  <Tooltip title="Editar horario" arrow>
+                  <Tooltip title="Editar departamento" arrow>
                     <IconButton
                       size="small"
                       onClick={() => onEdit && onEdit(department)}
@@ -542,7 +542,7 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                       <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Eliminar horario" arrow>
+                  <Tooltip title="Eliminar departamento" arrow>
                     <IconButton
                       size="small"
                       onClick={() => onDelete && onDelete(department._id)}

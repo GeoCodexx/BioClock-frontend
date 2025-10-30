@@ -22,6 +22,7 @@ import BusinessIcon from "@mui/icons-material/Business";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import FingerprintIcon from "@mui/icons-material/Fingerprint";
 import AssessmentIcon from "@mui/icons-material/Assessment";
+import DevicesIcon from "@mui/icons-material/Devices";
 import { useState } from "react";
 import { ExpandLess, ExpandMore, ReadMore } from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -36,6 +37,7 @@ const menuItems = [
   { text: "Dashboard", path: "/", icon: <DashboardIcon /> },
   { text: "Horarios", path: "/schedules", icon: <EventNoteIcon /> },
   { text: "Departamentos", path: "/departments", icon: <BusinessIcon /> },
+  { text: "Dispositivos", path: "/devices", icon: <DevicesIcon /> },
   { text: "Permisos", path: "/permissions", icon: <VpnKeyIcon /> },
   { text: "Roles", path: "/roles", icon: <VpnKeyIcon /> },
   { text: "Usuarios", path: "/users", icon: <PeopleIcon /> },

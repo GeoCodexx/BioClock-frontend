@@ -6,6 +6,7 @@ import Users from "./pages/Users";
 import Roles from "./pages/Roles";
 import Dashboard from "./pages/Dashboard";
 import Permissions from "./pages/Permissions";
+import Devices from "./pages/Devices";
 import Schedules from "./pages/Schedules";
 import Departments from "./pages/Departments";
 import { ThemeProvider } from "@mui/material/styles";
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="fingerprints" element={<Fingerprint />} />
             <Route path="roles" element={<Roles />} />
             <Route path="permissions" element={<Permissions />} />
+            <Route path="devices" element={<Devices />} />
             <Route path="departments" element={<Departments />} />
             <Route path="schedules" element={<Schedules />} />
             <Route path="attendances" element={<Attendances />} />

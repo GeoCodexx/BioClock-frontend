@@ -1,148 +1,476 @@
-import { useState, useEffect } from 'react';
-import { Typography, CircularProgress, Alert, Dialog, DialogTitle, DialogContent, DialogActions, TablePagination, Button } from '@mui/material';
-import DeviceForm from '../components/Device/DeviceForm';
-import DeviceTable from '../components/Device/DeviceTable';
-import DeviceSearchBar from '../components/Device/DeviceSearchBar';
-import { getPaginatedDevices, createDevice, updateDevice, deleteDevice } from '../services/deviceService';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  Typography,
+  CircularProgress,
+  Alert,
+  TablePagination,
+  Button,
+  Box,
+  Breadcrumbs,
+  Card,
+  Link,
+  Stack,
+  useTheme,
+  useMediaQuery,
+  Divider,
+} from "@mui/material";
+import {
+  getPaginatedDevices,
+  createDevice,
+  updateDevice,
+  deleteDevice,
+} from "../services/deviceService";
+import DeviceTable from "../components/Device/DeviceTable";
+import DeviceSearchBar from "../components/Device/DeviceSearchBar";
+import DeviceExportButtons from "../components/Device/DeviceExportButtons";
+import { Link as RouterLink } from "react-router-dom";
+import HomeIcon from "@mui/icons-material/Home";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import { Add as AddIcon } from "@mui/icons-material";
+import DeviceDialog from "../components/Device/DeviceDialog";
+import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
+import FloatingAddButton from "../components/common/FloatingAddButton";
+import useSnackbarStore from "../store/useSnackbarStore";
+import LoadingOverlay from "../components/common/LoadingOverlay";
 
 export default function Devices() {
-    const [devices, setDevices] = useState([]);
-    const [total, setTotal] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [open, setOpen] = useState(false);
-    const [formError, setFormError] = useState('');
-    const [editDevice, setEditDevice] = useState(null);
-    const [deleteId, setDeleteId] = useState(null);
-    const [deleteError, setDeleteError] = useState('');
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [search, setSearch] = useState('');
-    const [searchInput, setSearchInput] = useState('');
+  const { showSuccess, showError } = useSnackbarStore();
 
-    useEffect(() => {
-        fetchDevices();
-        // eslint-disable-next-line
-    }, [page, rowsPerPage, search]);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
-    const fetchDevices = async () => {
-        setLoading(true);
-        try {
-            const data = await getPaginatedDevices({ search, page: page + 1, limit: rowsPerPage });
-            setDevices(data.devices);
-            setTotal(data.total);
-            console.log(data);
-        } catch (err) {
-            setError('Error al cargar dispositivos');
-        } finally {
-            setLoading(false);
+  const [devices, setDevices] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+
+  // Consolidar estados relacionados
+  const [pagination, setPagination] = useState({
+    page: 0,
+    rowsPerPage: 10,
+    search: "",
+  });
+
+  const [dialog, setDialog] = useState({
+    open: false,
+    editDevice: null,
+    error: "",
+  });
+
+  const [deleteState, setDeleteState] = useState({
+    id: null,
+    error: "",
+  });
+
+  // Evitar llamadas duplicadas eliminando fetchDevices de las dependencias
+  useEffect(() => {
+    const loadDevices = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await getPaginatedDevices({
+          search: pagination.search,
+          page: (pagination.page + 1).toString(),
+          limit: pagination.rowsPerPage.toString(),
+        });
+        setDevices(data.devices);
+        setTotal(data.total);
+      } catch (err) {
+        setError(
+          err.response?.data?.message || "Error al cargar dispositivos"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDevices();
+  }, [pagination.search, pagination.page, pagination.rowsPerPage]);
+
+  // Debounce para búsqueda
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (searchInput !== pagination.search) {
+        setPagination((prev) => ({
+          ...prev,
+          search: searchInput,
+          page: 0,
+        }));
+      }
+    }, 600);
+
+    return () => clearTimeout(handler);
+  }, [searchInput, pagination.search]);
+
+  // Handlers con useCallback
+  const refreshDevices = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getPaginatedDevices({
+        search: pagination.search,
+        page: (pagination.page + 1).toString(),
+        limit: pagination.rowsPerPage.toString(),
+      });
+      setDevices(data.devices);
+      setTotal(data.total);
+    } catch (err) {
+      setError(err.response?.data?.message || "Error al cargar dispositivos");
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.search, pagination.page, pagination.rowsPerPage]);
+
+  const handleSubmit = useCallback(
+    async (data) => {
+      setDialog((prev) => ({ ...prev, error: "" }));
+
+      try {
+        const isEditing = !!dialog.editDevice;
+
+        if (isEditing) {
+          await updateDevice(dialog.editDevice._id, data);
+          showSuccess("Dispositivo actualizado correctamente");
+        } else {
+          await createDevice(data);
+          showSuccess("Dispositivo creado correctamente");
         }
-    };
 
-   
+        setDialog({ open: false, editDevice: null, error: "" });
+        await refreshDevices();
+      } catch (err) {
+        const errorMessage =
+          err.response?.data?.message ||
+          `Error al ${
+            dialog.editDevice ? "actualizar" : "crear"
+          } el dispositivo`;
 
-    const handleRegister = async (data) => {
-        setFormError('');
-        try {
-            if (editDevice) {
-                await updateDevice(editDevice._id, data);
-            } else {
-                await createDevice(data);
-            }
-            setOpen(false);
-            setEditDevice(null);
-            fetchDevices();
-        } catch (err) {
-            setFormError(err.response?.data?.message || 'Error al guardar dispositivo');
-        }
-    };
+        setDialog((prev) => ({ ...prev, error: errorMessage }));
+        showError(errorMessage);
+        console.error("Error en handleSubmit:", err);
+        throw err;
+      }
+    },
+    [dialog.editDevice, showSuccess, showError, refreshDevices]
+  );
 
-    const handleEdit = (device) => {
-        setEditDevice(device);
-        setOpen(true);
-    };
+  const handleEdit = useCallback((device) => {
+    setDialog({
+      open: true,
+      editDevice: device,
+      error: "",
+    });
+  }, []);
 
-    const handleDelete = (deviceId) => {
-        setDeleteId(deviceId);
-        setDeleteError('');
-    };
+  const handleDelete = useCallback((deviceId) => {
+    setDeleteState({
+      id: deviceId,
+      error: "",
+    });
+  }, []);
 
-    const confirmDelete = async () => {
-        try {
-            await deleteDevice(deleteId);
-            setDeleteId(null);
-            setDeleteError('');
-            fetchDevices();
-        } catch (err) {
-            setDeleteError(err.response?.data?.message || 'Error al eliminar dispositivo');
-        }
-    };
+  const confirmDelete = useCallback(async () => {
+    setDeleteState((prev) => ({ ...prev, error: "" }));
+    try {
+      await deleteDevice(deleteState.id);
+      showSuccess("Dispositivo eliminado correctamente");
+      setDeleteState({ id: null, error: "" });
+      await refreshDevices();
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message || "Error al eliminar el dispositivo";
 
-    const handleClose = () => {
-        setOpen(false);
-        setEditDevice(null);
-        setFormError('');
-    };
+      setDeleteState((prev) => ({ ...prev, error: errorMessage }));
+      showError(errorMessage);
+      console.error("Error en confirmDelete:", err);
+    }
+  }, [deleteState.id, showSuccess, showError, refreshDevices]);
 
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-    };
+  const handleClose = useCallback(() => {
+    setDialog({ open: false, editDevice: null, error: "" });
+  }, []);
 
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
-    };
+  const handleChangePage = useCallback((event, newPage) => {
+    setPagination((prev) => ({ ...prev, page: newPage }));
+  }, []);
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        setPage(0);
-        setSearch(searchInput);
-    };
+  const handleChangeRowsPerPage = useCallback((event) => {
+    setPagination((prev) => ({
+      ...prev,
+      rowsPerPage: parseInt(event.target.value, 10),
+      page: 0,
+    }));
+  }, []);
 
-    if (loading) return <CircularProgress sx={{ mt: 4 }} />;
-    if (error) return <Alert severity="error">{error}</Alert>;
+  const handleSearch = useCallback(
+    (e) => {
+      e.preventDefault();
+      setPagination((prev) => ({
+        ...prev,
+        search: searchInput,
+        page: 0,
+      }));
+    },
+    [searchInput]
+  );
 
+  const handleOpenDialog = useCallback(() => {
+    setDialog({ open: true, editDevice: null, error: "" });
+  }, []);
+
+  const handleCloseDelete = useCallback(() => {
+    setDeleteState({ id: null, error: "" });
+  }, []);
+
+  // Memorizar valores reutilizables
+  const breadcrumbItems = useMemo(
+    () => (
+      <Breadcrumbs
+        aria-label="breadcrumb"
+        separator={<NavigateNextIcon fontSize="small" />}
+        sx={isMobile ? { fontSize: "0.875rem" } : undefined}
+      >
+        <Link
+          component={RouterLink}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            color: "inherit",
+            textDecoration: "none",
+            "&:hover": { color: "primary.main" },
+          }}
+        >
+          <HomeIcon fontSize="small" />
+        </Link>
+        <Typography variant="body2" color="text.primary">
+          Dispositivos
+        </Typography>
+      </Breadcrumbs>
+    ),
+    [isMobile]
+  );
+
+  // Memorizar tabla
+  const deviceTableMemo = useMemo(
+    () => (
+      <DeviceTable
+        devices={devices}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+    ),
+    [devices, handleEdit, handleDelete]
+  );
+
+  // Estado de carga inicial
+  if (loading && devices.length === 0) {
     return (
-        <>
-            <Typography variant="h5" gutterBottom>Devices</Typography>
-            <DeviceSearchBar
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+          gap: 2,
+        }}
+      >
+        <CircularProgress size={48} />
+        <Typography variant="body1" color="text.secondary">
+          Cargando dispositivos...
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ width: "100%" }}>
+      {/* HEADER CARD - Título y Breadcrumbs */}
+      <Card
+        sx={{
+          borderRadius: isMobile ? 2 : 3,
+          mb: 2,
+          boxShadow: theme.shadows[1],
+        }}
+      >
+        <Box
+          sx={{
+            px: isMobile ? 2 : 3,
+            py: isMobile ? 1.5 : 2,
+          }}
+        >
+          {isMobile ? (
+            <Stack spacing={1.5}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    Gestión de Dispositivos
+                  </Typography>
+                </Box>
+                <DeviceExportButtons devices={devices} />
+              </Box>
+              {breadcrumbItems}
+            </Stack>
+          ) : (
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                  Gestión de Dispositivos
+                </Typography>
+              </Box>
+              {breadcrumbItems}
+            </Stack>
+          )}
+        </Box>
+      </Card>
+
+      {/* TOOLBAR CARD - Búsqueda y Acciones */}
+      <Card
+        sx={{
+          borderRadius: isMobile ? 2 : 3,
+          mb: 2,
+          boxShadow: theme.shadows[1],
+        }}
+      >
+        <Box
+          sx={{
+            px: isMobile ? 2 : 3,
+            py: isMobile ? 1.5 : 2,
+          }}
+        >
+          {isTablet ? (
+            <Stack spacing={2}>
+              <Stack
+                direction={isMobile ? "column" : "row"}
+                spacing={1}
+                sx={{ width: "100%" }}
+              >
+                <FloatingAddButton onClick={handleOpenDialog} />
+              </Stack>
+              <DeviceSearchBar
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
                 onSearch={handleSearch}
-                onAdd={() => { setOpen(true); setEditDevice(null); }}
-            />
-            <DeviceTable devices={devices} onEdit={handleEdit} onDelete={handleDelete} />
-            <TablePagination
-                component="div"
-                count={total}
-                page={page}
-                onPageChange={handleChangePage}
-                rowsPerPage={rowsPerPage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                labelRowsPerPage="Filas por página"
-            />
-            <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>{editDevice ? 'Editar dispositivo' : 'Registrar dispositivo'}</DialogTitle>
-                <DialogContent>
-                    {formError && <Alert severity="error" sx={{ mb: 2 }}>{formError}</Alert>}
-                    <DeviceForm onSubmit={handleRegister} defaultValues={editDevice || {}} />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Cancelar</Button>
-                    <Button type="submit" form="device-form" variant="contained">{editDevice ? 'Guardar Cambios' : 'Registrar'}</Button>
-                </DialogActions>
-            </Dialog>
-            <Dialog open={!!deleteId} onClose={() => setDeleteId(null)}>
-                <DialogTitle>Confirmar eliminación</DialogTitle>
-                <DialogContent>
-                    {deleteError && <Alert severity="error" sx={{ mb: 2 }}>{deleteError}</Alert>}
-                    <Typography>¿Estás seguro de querer eliminar este dispositivo?</Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDeleteId(null)}>Cancelar</Button>
-                    <Button onClick={confirmDelete} color="error">Eliminar</Button>
-                </DialogActions>
-            </Dialog>
-        </>
-    );
+              />
+            </Stack>
+          ) : (
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              spacing={2}
+            >
+              <Box sx={{ flex: 1, maxWidth: 400 }}>
+                <DeviceSearchBar
+                  searchInput={searchInput}
+                  setSearchInput={setSearchInput}
+                  onSearch={handleSearch}
+                />
+              </Box>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={handleOpenDialog}
+                  sx={{ minWidth: 140 }}
+                >
+                  Nuevo
+                </Button>
+                <DeviceExportButtons devices={devices} />
+              </Stack>
+            </Stack>
+          )}
+        </Box>
+      </Card>
+
+      {/* Mensaje de error global */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: isMobile ? 2 : 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* TABLE CARD */}
+      <Card
+        sx={{
+          borderRadius: isMobile ? 2 : 3,
+          boxShadow: theme.shadows[1],
+          overflow: "hidden",
+        }}
+      >
+        <Box sx={{ position: "relative" }}>
+          <LoadingOverlay show={loading && devices.length > 0} />
+          {deviceTableMemo}
+        </Box>
+
+        {devices.length > 0 && <Divider />}
+
+        <TablePagination
+          component="div"
+          count={total}
+          page={pagination.page}
+          onPageChange={handleChangePage}
+          rowsPerPage={pagination.rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
+          labelDisplayedRows={({ from, to, count }) =>
+            isMobile
+              ? `${from}-${to} de ${count}`
+              : `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+          }
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          sx={{
+            ".MuiTablePagination-toolbar": {
+              flexWrap: isMobile ? "wrap" : "nowrap",
+              minHeight: isMobile ? "auto" : 64,
+              px: isMobile ? 1 : 2,
+            },
+            ".MuiTablePagination-selectLabel": {
+              fontSize: isMobile ? "0.8rem" : "0.875rem",
+            },
+            ".MuiTablePagination-displayedRows": {
+              fontSize: isMobile ? "0.8rem" : "0.875rem",
+            },
+          }}
+        />
+      </Card>
+
+      {/* DIÁLOGOS */}
+      <DeviceDialog
+        open={dialog.open}
+        onClose={handleClose}
+        editDevice={dialog.editDevice}
+        formError={dialog.error}
+        onSubmit={handleSubmit}
+      />
+
+      <DeleteConfirmDialog
+        open={!!deleteState.id}
+        onClose={handleCloseDelete}
+        onConfirm={confirmDelete}
+        deleteError={deleteState.error}
+        itemName="dispositivo"
+      />
+    </Box>
+  );
 }
