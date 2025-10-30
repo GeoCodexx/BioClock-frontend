@@ -19,7 +19,7 @@ export const getFingerprintTemplates = async ({
     const { data } = await api.get("/biometric-templates", {
       params: { search, page, limit, status },
     });
-    //console.log(data);
+    
     return { fingerprints: data.data, total: data.pagination.total };
   } catch (error) {
     handleApiError(error, "Error al obtener las huellas dactilares paginadas");

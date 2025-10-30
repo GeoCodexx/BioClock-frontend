@@ -1,575 +1,691 @@
-import { useEffect, useState } from "react";
-import {
-  TextField,
-  MenuItem,
-  FormControl,
-  Box,
-  FormHelperText,
-  InputLabel,
-  Select,
-  //CircularProgress,
-  FormControlLabel,
-  RadioGroup,
-  FormLabel,
-  Radio,
-  Collapse,
-} from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
-import { getUsers } from "../../services/userService";
+import { useEffect, useState, useCallback } from "react";
+import {
+  Box,
+  TextField,
+  Grid,
+  Typography,
+  Alert,
+  MenuItem,
+  Stack,
+  CircularProgress,
+  Autocomplete,
+  Skeleton,
+  //Chip,
+} from "@mui/material";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-//import { format, parse } from 'date-fns';
-import { es } from "date-fns/locale"; // o el locale que necesites
+import { es } from "date-fns/locale";
+import { getUsers } from "../../services/userService";
+import { getDevices } from "../../services/deviceService";
+import { getSchedules } from "../../services/scheduleService";
+import debounce from "lodash/debounce";
 
-export default function AttendanceForm({
+const AttendanceForm = ({
   onSubmit,
   defaultValues = {},
-  loading = false,
-  setLoadingData,
-  //handleFormStatus,
-}) {
+  onChange,
+  disabled = false,
+  //loading = false,
+  //setLoadingData,
+}) => {
+  // Estados para datos precargados
   const [users, setUsers] = useState([]);
-  const [availableSchedules, setAvailableSchedules] = useState([]);
+  const [devices, setDevices] = useState([]);
+  const [schedules, setSchedules] = useState([]);
+
+  // Estados de carga
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingDevices, setLoadingDevices] = useState(false);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
+
+  // Estados de error
+  const [usersError, setUsersError] = useState(null);
+  const [devicesError, setDevicesError] = useState(null);
+  const [schedulesError, setSchedulesError] = useState(null);
+
+  // Estado para búsqueda de usuarios
+  const [userSearchTerm, setUserSearchTerm] = useState("");
 
   const {
     control,
     handleSubmit,
-    setValue,
+    formState: { errors },
     watch,
     reset,
-    formState: { errors },
+    //setValue,
   } = useForm({
+    /*defaultValues: {
+      userId: defaultValues.userId || null,
+      deviceId: defaultValues.deviceId?._id || defaultValues.deviceId || "",
+      timestamp: defaultValues.timestamp
+        ? new Date(defaultValues.timestamp)
+        : new Date(),
+      type: defaultValues.type || "IN",
+      scheduleId:
+        defaultValues.scheduleId?._id || defaultValues.scheduleId || "",
+      verificationMethod: defaultValues.verificationMethod || "fingerprint",
+      justification: defaultValues.justification || "",
+      notes: defaultValues.notes || "",
+    },*/
     defaultValues: {
-      userId: "",
-      scheduleId: "",
+      userId: null,
+      deviceId: "",
       timestamp: null,
       type: "IN",
-      status: "justified",
+      scheduleId: "",
       verificationMethod: "fingerprint",
-      notes: "",
       justification: "",
-      ...defaultValues,
+      notes: "",
     },
-    mode: "onChange", // Cambiado para validación más temprana
   });
 
-  const isEditing = Boolean(
-    defaultValues && Object.keys(defaultValues).length > 0
+  // Formatear nombre completo del usuario
+  const formatUserName = (user) => {
+    if (!user) return "";
+    const parts = [user.name, user.firstSurname, user.secondSurname].filter(
+      Boolean
+    );
+    return parts.join(" ");
+  };
+
+  // Búsqueda de usuarios con debounce
+  const debouncedSearchUsers = useCallback(
+    debounce(async (searchValue) => {
+      if (!searchValue || searchValue.length < 2) {
+        setUsers([]);
+        return;
+      }
+
+      try {
+        setLoadingUsers(true);
+        setUsersError(null);
+        const data = await getUsers({ search: searchValue, limit: 20 });
+        setUsers(data.data || data);
+      } catch (error) {
+        setUsersError("Error al buscar usuarios");
+        console.error("Error fetching users:", error);
+        setUsers([]);
+      } finally {
+        setLoadingUsers(false);
+      }
+    }, 500),
+    []
   );
 
-  // Cargar datos iniciales si es edición
-  /*useEffect(() => {
-    if (Object.keys(defaultValues).length > 0) {
-      const { userId, scheduleId, timestamp, ...rest } = defaultValues;
-      reset({
-        userId: userId._id,
-        //scheduleId: scheduleId._id,
-        timestamp: new Date(timestamp),
-        ...rest,
-      });
-
-      // Esperar a que el select de scheduleId tenga las opciones cargadas
-      setTimeout(() => {
-        setValue("scheduleId", scheduleId._id);
-      }, 500);
-    }
-  }, [JSON.stringify(defaultValues)]);*/
+  // Cargar usuario por defecto en modo edición
   useEffect(() => {
-    if (isEditing) {
-      const { userId, timestamp, scheduleId, ...rest } = defaultValues;
-      reset({
-        userId: userId._id,
-        timestamp: new Date(timestamp),
-        scheduleId: scheduleId?._id || "",
-        ...rest,
-      });
+    if (defaultValues.userId && typeof defaultValues.userId === "object") {
+      setUsers([defaultValues.userId]);
     }
-  }, [JSON.stringify(defaultValues)]);
+  }, [defaultValues.userId]);
 
-  // Cargar usuarios
+  // Cargar dispositivos
   useEffect(() => {
-    const fetchData = async () => {
-      setLoadingData(true);
-      //handleFormStatus(true);
+    const fetchDevices = async () => {
       try {
-        const usersData = await getUsers();
-        setUsers(usersData);
-        //setDevices(devicesData);
-      } catch (err) {
-        setUsers([]);
-        //setDevices([]);
+        setLoadingDevices(true);
+        setDevicesError(null);
+        const data = await getDevices();
+        setDevices(data.filter((d) => d.status === "active"));
+      } catch (error) {
+        setDevicesError("Error al cargar dispositivos");
+        console.error("Error fetching devices:", error);
       } finally {
-        //handleFormStatus(true);
-        setLoadingData(false);
+        setLoadingDevices(false);
       }
     };
-    fetchData();
+
+    fetchDevices();
   }, []);
 
-  // Observar el usuario seleccionado
-  // Actualizar horarios disponibles cuando cambie el usuario seleccionado
-  const selectedUserId = watch("userId");
-
-  /*useEffect(() => {
-    if (selectedUserId) {
-      // Buscar usuario seleccionado
-      const selectedUser = users.find((u) => u._id === selectedUserId);
-      // Actualizar horarios disponibles
-      setAvailableSchedules(selectedUser?.scheduleIds || []);
-      // Resetear el valor del select de horarios
-      setValue("scheduleId", "");
-    } else {
-      setAvailableSchedules([]);
-      setValue("scheduleId", "");
-    }
-  }, [selectedUserId, users, setValue]);*/
+  // Cargar horarios
   useEffect(() => {
-    if (selectedUserId) {
-      const selectedUser = users.find((u) => u._id === selectedUserId);
-      const schedules = selectedUser?.scheduleIds || [];
-      setAvailableSchedules(schedules);
-
-      // Si NO estamos editando, reseteamos el valor
-      if (!isEditing) {
-        setValue("scheduleId", "");
+    const fetchSchedules = async () => {
+      try {
+        setLoadingSchedules(true);
+        setSchedulesError(null);
+        const data = await getSchedules();
+        setSchedules(data.filter((s) => s.status === "active"));
+      } catch (error) {
+        setSchedulesError("Error al cargar horarios");
+        console.error("Error fetching schedules:", error);
+      } finally {
+        setLoadingSchedules(false);
       }
-    } else {
-      setAvailableSchedules([]);
-      setValue("scheduleId", "");
-    }
-  }, [selectedUserId, users]);
+    };
 
-  // Setear scheduleId automáticamente cuando las opciones estén listas
-  useEffect(() => {
-    if (
-      isEditing &&
-      defaultValues?.scheduleId?._id &&
-      availableSchedules.length > 0 &&
-      availableSchedules.some((s) => s._id === defaultValues.scheduleId._id)
-    ) {
-      setValue("scheduleId", defaultValues.scheduleId._id);
-    }
-  }, [availableSchedules, defaultValues, isEditing]);
+    fetchSchedules();
+  }, []);
 
-  // Controlar cuándo mostrar el formulario
+  // Notificar al componente padre cuando está cargando datos
   /*useEffect(() => {
-    if (isEditing) {
-      const ready =
-        users.length > 0 &&
-        availableSchedules.length > 0 &&
-        !!defaultValues?.scheduleId?._id;
-      handleFormStatus(ready);
-    } else {
-      // En modo registro, basta con que los usuarios estén cargados
-      handleFormStatus(users.length > 0);
+    const isLoading = loadingDevices || loadingSchedules;
+    if (setLoadingData) {
+      setLoadingData(isLoading);
     }
-  }, [users, availableSchedules, defaultValues, isEditing]);*/
+  }, [loadingDevices, loadingSchedules, setLoadingData]);*/
+  useEffect(() => {
+    const allLoaded = !loadingUsers && !loadingSchedules && !loadingDevices;
 
-  /*const onSubmit = (data) => {
-    console.log("Datos enviados:", data);
-  };*/
+    if (allLoaded && Object.keys(defaultValues).length > 0) {
+      reset({
+        userId: defaultValues.userId || null,
+        deviceId: defaultValues.deviceId?._id || defaultValues.deviceId || "",
+        timestamp: defaultValues.timestamp
+          ? new Date(defaultValues.timestamp)
+          : new Date(),
+        type: defaultValues.type || "IN",
+        scheduleId:
+          defaultValues.scheduleId?._id || defaultValues.scheduleId || "",
+        verificationMethod: defaultValues.verificationMethod || "fingerprint",
+        justification: defaultValues.justification || "",
+        notes: defaultValues.notes || "",
+      });
+    }
+  }, [
+    defaultValues,
+    loadingUsers,
+    loadingSchedules,
+    loadingDevices,
+    reset,
+  ]);
+
+  // Detectar cambios en el formulario
+  useEffect(() => {
+    const subscription = watch(() => {
+      if (onChange) {
+        onChange();
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, onChange]);
+
+  // Tipos de asistencia
+  const attendanceTypes = [
+    { value: "IN", label: "Entrada", icon: "🔵" },
+    { value: "OUT", label: "Salida", icon: "🟠" },
+    { value: "BREAK_START", label: "Inicio Descanso", icon: "☕" },
+    { value: "BREAK_END", label: "Fin Descanso", icon: "✅" },
+  ];
+
+  // Métodos de verificación
+  const verificationMethods = [
+    { value: "fingerprint", label: "Huella Digital", icon: "👆" },
+    { value: "rfid", label: "Tarjeta RFID", icon: "💳" },
+    { value: "pin", label: "PIN", icon: "🔢" },
+    { value: "face", label: "Reconocimiento Facial", icon: "👤" },
+    { value: "manual", label: "Manual", icon: "✍️" },
+  ];
+
+  // Si aún se cargan las listas, mostrar un loader o skeleton
+  if (loadingUsers || loadingSchedules || loadingDevices) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Stack spacing={2}>
+          {/* Campos de texto */}
+          <Skeleton variant="rounded" height={36} />
+          <Skeleton variant="rounded" height={36} />
+          <Skeleton variant="rounded" height={36} />
+
+          {/* Selects en dos columnas (roles y departamentos) */}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Skeleton variant="rounded" height={36} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Skeleton variant="rounded" height={36} />
+            </Grid>
+          </Grid>
+
+          {/* Más selects (horarios y dispositivos) */}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Skeleton variant="rounded" height={36} />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Skeleton variant="rounded" height={36} />
+            </Grid>
+          </Grid>
+
+          {/* Botón */}
+          <Skeleton variant="rounded" height={40} width="30%" />
+        </Stack>
+      </Box>
+    );
+  }
 
   return (
-    <>
+    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
       <Box
-        id="attendance-form"
         component="form"
+        id="attendance-form"
         onSubmit={handleSubmit(onSubmit)}
+        noValidate
       >
-        {/* User Field */}
-        <Controller
-          name="userId"
-          control={control}
-          rules={{ required: "Este campo es requerido" }}
-          render={({ field }) => (
-            <FormControl
-              fullWidth
-              margin="normal"
-              error={!!errors.userId}
-              size="small"
-            >
-              <InputLabel id="demo-simple-select-label">Usuario</InputLabel>
-              <Select
-                {...field}
-                label="Usuario"
-                labelId="demo-simple-select-label"
-                disabled={loading || !users.length}
-                value={users.length > 0 ? field.value : ""} // Manejo seguro del valor inicial
-                displayEmpty
-              >
-                {!users.length && (
-                  <MenuItem disabled value="">
-                    <em>
-                      {loading
-                        ? "Cargando usuarios..."
-                        : "No hay usuarios disponibles"}
-                    </em>
-                  </MenuItem>
-                )}
-                {users.map((user) => (
-                  <MenuItem key={user._id} value={user._id}>
-                    {`${user.name} ${user.firstSurname} ${user.secondSurname}`}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.userId && (
-                <FormHelperText>{errors.userId.message}</FormHelperText>
-              )}
-            </FormControl>
-          )}
-        />
+        <Grid container spacing={2.5}>
+          {/* Usuario - Autocomplete con búsqueda */}
+          <Grid size={{ xs: 12 }}>
+            {usersError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {usersError}
+              </Alert>
+            )}
 
-        {/* Schedule Field */}
-        <Controller
-          name="scheduleId"
-          control={control}
-          rules={{ required: "Selecciona un horario" }}
-          render={({ field }) => (
-            <FormControl
-              fullWidth
-              margin="normal"
-              error={!!errors.scheduleId}
-              size="small"
-            >
-              <InputLabel>Horario</InputLabel>
-              <Select
-                {...field}
-                label="Horario"
-                disabled={loading || !availableSchedules.length}
-                value={availableSchedules.length > 0 ? field.value : ""} // Manejo seguro del valor inicial
-                displayEmpty
-              >
-                {/*!availableSchedules.length && (
-                  <MenuItem disabled value="">
-                    <em>
-                      {loading
-                        ? "Cargando horarios..."
-                        : "No hay horarios disponibles"}
-                    </em>
-                  </MenuItem>
-                )*/}
-                {availableSchedules.map((schedule) => (
-                  <MenuItem key={schedule._id} value={schedule._id}>
-                    {schedule.name}
-                  </MenuItem>
-                ))}
-              </Select>
-              {/*errors.scheduleId && (
-                <FormHelperText>{errors.scheduleId.message}</FormHelperText>
-              )*/}
-              {/* Mensaje dinámico debajo del Select */}
-              {loading ? (
-                <FormHelperText>Cargando horarios...</FormHelperText>
-              ) : !availableSchedules.length ? (
-                <FormHelperText>No hay horarios disponibles</FormHelperText>
-              ) : errors.scheduleId ? (
-                <FormHelperText>{errors.scheduleId.message}</FormHelperText>
-              ) : null}
-            </FormControl>
-          )}
-        />
-
-        {/* Type Field*/}
-        <Controller
-          name="type"
-          control={control}
-          render={({ field }) => (
-            <FormControl component="fieldset">
-              <FormLabel component="legend">Tipo de registro</FormLabel>
-              <RadioGroup {...field} row>
-                <FormControlLabel
-                  value="IN"
-                  control={<Radio size="small" />}
-                  label="Entrada"
-                />
-                <FormControlLabel
-                  value="OUT"
-                  control={<Radio size="small" />}
-                  label="Salida"
-                />
-              </RadioGroup>
-            </FormControl>
-          )}
-        />
-
-        {/* Timestamp Field */}
-        <Box sx={{ width: "100%" }}>
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
             <Controller
-              name="timestamp"
+              name="userId"
               control={control}
-              //defaultValue={null}
               rules={{
-                required: "Este campo es obligatorio",
+                required: "El usuario es obligatorio",
                 validate: (value) =>
-                  value instanceof Date && !isNaN(value.getTime())
+                  value && typeof value === "object" && value._id
                     ? true
-                    : "Fecha inválida",
+                    : "Seleccione un usuario válido",
               }}
-              render={({
-                field: { onChange, value },
-                fieldState: { error },
-              }) => (
-                <DateTimePicker
-                  label={`Fecha y hora de ${
-                    watch("type") === "IN" ? "entrada" : "salida"
-                  }`}
-                  value={value}
-                  onChange={onChange}
-                  ampm={false}
-                  //format="dd/mm/yyyy HH:mm"
-                  disableMaskedInput
-                  PopperProps={{
-                    placement: "bottom-start",
-                    disablePortal: true,
+              render={({ field: { onChange, value, ...field } }) => (
+                <Autocomplete
+                  {...field}
+                  options={users}
+                  value={value || null}
+                  onChange={(event, newValue) => {
+                    onChange(newValue);
                   }}
-                  // Forma correcta en MUI v7 + x-date-pickers v8
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      error: Boolean(error),
-                      helperText: error ? error.message : "",
-                      size: "small",
-                    },
+                  onInputChange={(event, newInputValue) => {
+                    setUserSearchTerm(newInputValue);
+                    debouncedSearchUsers(newInputValue);
                   }}
-                  sx={{ width: "100%" }}
+                  getOptionLabel={(option) =>
+                    option ? formatUserName(option) : ""
+                  }
+                  isOptionEqualToValue={(option, value) =>
+                    option._id === value?._id
+                  }
+                  loading={loadingUsers}
+                  disabled={disabled}
+                  noOptionsText={
+                    userSearchTerm.length < 2
+                      ? "Escriba al menos 2 caracteres"
+                      : "No se encontraron usuarios"
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Usuario"
+                      required
+                      size="small"
+                      error={!!errors.userId}
+                      helperText={
+                        errors.userId?.message ||
+                        "Busque por nombre, apellido o DNI"
+                      }
+                      slotProps={{
+                        input: {
+                          ...params.InputProps,
+                          endAdornment: (
+                            <>
+                              {loadingUsers ? (
+                                <CircularProgress color="inherit" size={20} />
+                              ) : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        },
+                      }}
+                    />
+                  )}
+                  renderOption={(props, option) => {
+                    const { key, ...optionProps } = props;
+                    return (
+                      <Box
+                        key={key}
+                        component="li"
+                        {...optionProps}
+                        sx={{ display: "block !important" }}
+                      >
+                        <Stack spacing={0.3}>
+                          <Typography variant="body2" fontWeight="medium">
+                            {formatUserName(option)}
+                          </Typography>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                          >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              DNI: {option.dni || "Sin DNI"}
+                            </Typography>
+                            {option.departmentId?.name && (
+                              <>
+                                <Typography
+                                  variant="caption"
+                                  color="text.disabled"
+                                >
+                                  •
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {option.departmentId.name}
+                                </Typography>
+                              </>
+                            )}
+                          </Stack>
+                        </Stack>
+                      </Box>
+                    );
+                  }}
                 />
               )}
             />
-          </LocalizationProvider>
-        </Box>
+          </Grid>
 
-        {/* Verification Method Field */}
-        <Controller
-          name="verificationMethod"
-          control={control}
-          render={({ field }) => (
-            <FormControl fullWidth margin="normal" size="small">
-              <InputLabel>Método de verificación</InputLabel>
-              <Select
-                {...field}
-                label="Método de verificación"
-                disabled={loading}
-              >
-                <MenuItem value="fingerprint">Huella digital</MenuItem>
-                <MenuItem value="pin">PIN</MenuItem>
-                <MenuItem value="facial">Reconocimiento facial</MenuItem>
-                <MenuItem value="manual">Registro manual</MenuItem>
-              </Select>
-            </FormControl>
-          )}
-        />
-
-        {/* Status Field */}
-        <Controller
-          name="status"
-          control={control}
-          rules={{ required: "Este campo es requerido" }}
-          render={({ field }) => (
-            <FormControl
-              fullWidth
-              margin="normal"
-              error={!!errors.status}
-              size="small"
-            >
-              <InputLabel>Estado</InputLabel>
-              <Select {...field} label="Estado" disabled={loading}>
-                <MenuItem value="on_time">A tiempo</MenuItem>
-                <MenuItem value="late">Tarde</MenuItem>
-                <MenuItem value="absent">Ausente</MenuItem>
-                <MenuItem value="early_leave">Salida temprana</MenuItem>
-                <MenuItem value="justified">Justificado</MenuItem>
-              </Select>
-              {errors.status && (
-                <FormHelperText>{errors.status.message}</FormHelperText>
-              )}
-            </FormControl>
-          )}
-        />
-
-        {/* Justification Field (shown only when status is 'justified') */}
-
-        <Collapse
-          in={watch("status") === "justified"}
-          timeout={300}
-          unmountOnExit
-        >
-          <Box sx={{ mt: 1 }}>
+          {/* Fecha y Hora */}
+          <Grid size={{ xs: 12, md: 6 }}>
             <Controller
-              name="justification"
+              name="timestamp"
               control={control}
               rules={{
-                validate: (value) =>
-                  control._formValues.status !== "justified" ||
-                  value?.trim() !== "" ||
-                  "Debe proporcionar una justificación",
+                required: "La fecha y hora son obligatorias",
+                validate: (value) => {
+                  if (!value) return "Fecha inválida";
+                  if (isNaN(value.getTime())) return "Fecha inválida";
+                  return true;
+                },
+              }}
+              render={({ field }) => (
+                <DateTimePicker
+                  {...field}
+                  label="Fecha y Hora"
+                  disabled={disabled}
+                  format="dd/MM/yyyy HH:mm"
+                  ampm={false}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                      size: "small",
+                      error: !!errors.timestamp,
+                      helperText: errors.timestamp?.message,
+                    },
+                  }}
+                />
+              )}
+            />
+          </Grid>
+
+          {/* Tipo de Asistencia */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Controller
+              name="type"
+              control={control}
+              rules={{
+                required: "El tipo de asistencia es obligatorio",
               }}
               render={({ field }) => (
                 <TextField
                   {...field}
+                  select
+                  label="Tipo"
                   fullWidth
-                  margin="normal"
+                  size="small"
+                  required
+                  disabled={disabled}
+                  error={!!errors.type}
+                  helperText={errors.type?.message}
+                >
+                  {attendanceTypes.map((type) => (
+                    <MenuItem key={type.value} value={type.value}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography>{type.icon}</Typography>
+                        <Typography>{type.label}</Typography>
+                      </Stack>
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
+            />
+          </Grid>
+
+          {/* Dispositivo */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            {devicesError && (
+              <Alert severity="error" sx={{ mb: 1 }}>
+                {devicesError}
+              </Alert>
+            )}
+
+            <Controller
+              name="deviceId"
+              control={control}
+              rules={{
+                required: "El dispositivo es obligatorio",
+              }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  select
+                  label="Dispositivo"
+                  fullWidth
+                  size="small"
+                  required
+                  disabled={disabled || loadingDevices}
+                  error={!!errors.deviceId}
+                  helperText={errors.deviceId?.message}
+                  slotProps={{
+                    input: {
+                      startAdornment: loadingDevices ? (
+                        <CircularProgress size={20} sx={{ mr: 1 }} />
+                      ) : null,
+                    },
+                  }}
+                >
+                  {devices.length === 0 && !loadingDevices ? (
+                    <MenuItem disabled>
+                      <Typography variant="body2" color="text.secondary">
+                        No hay dispositivos disponibles
+                      </Typography>
+                    </MenuItem>
+                  ) : (
+                    devices.map((device) => (
+                      <MenuItem key={device._id} value={device._id}>
+                        <Stack spacing={0.3}>
+                          <Typography variant="body2" fontWeight="medium">
+                            {device.name}
+                          </Typography>
+                          {device.location && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              📍 {device.location}
+                            </Typography>
+                          )}
+                        </Stack>
+                      </MenuItem>
+                    ))
+                  )}
+                </TextField>
+              )}
+            />
+          </Grid>
+
+          {/* Horario */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            {schedulesError && (
+              <Alert severity="error" sx={{ mb: 1 }}>
+                {schedulesError}
+              </Alert>
+            )}
+
+            <Controller
+              name="scheduleId"
+              control={control}
+              rules={{
+                required: "El horario es obligatorio",
+              }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  select
+                  label="Horario"
+                  fullWidth
+                  size="small"
+                  required
+                  disabled={disabled || loadingSchedules}
+                  error={!!errors.scheduleId}
+                  helperText={errors.scheduleId?.message}
+                  slotProps={{
+                    input: {
+                      startAdornment: loadingSchedules ? (
+                        <CircularProgress size={20} sx={{ mr: 1 }} />
+                      ) : null,
+                    },
+                  }}
+                >
+                  {schedules.length === 0 && !loadingSchedules ? (
+                    <MenuItem disabled>
+                      <Typography variant="body2" color="text.secondary">
+                        No hay horarios disponibles
+                      </Typography>
+                    </MenuItem>
+                  ) : (
+                    schedules.map((schedule) => (
+                      <MenuItem key={schedule._id} value={schedule._id}>
+                        <Stack spacing={0.3}>
+                          <Typography variant="body2" fontWeight="medium">
+                            {schedule.name}
+                          </Typography>
+                          {schedule.startTime && schedule.endTime && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              🕐 {schedule.startTime} - {schedule.endTime}
+                            </Typography>
+                          )}
+                        </Stack>
+                      </MenuItem>
+                    ))
+                  )}
+                </TextField>
+              )}
+            />
+          </Grid>
+
+          {/* Método de Verificación */}
+          <Grid size={{ xs: 12 }}>
+            <Controller
+              name="verificationMethod"
+              control={control}
+              rules={{
+                required: "El método de verificación es obligatorio",
+              }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  select
+                  label="Método de Verificación"
+                  fullWidth
+                  size="small"
+                  required
+                  disabled={disabled}
+                  error={!!errors.verificationMethod}
+                  helperText={errors.verificationMethod?.message}
+                >
+                  {verificationMethods.map((method) => (
+                    <MenuItem key={method.value} value={method.value}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography>{method.icon}</Typography>
+                        <Typography>{method.label}</Typography>
+                      </Stack>
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
+            />
+          </Grid>
+
+          {/* Justificación (Opcional) */}
+          <Grid size={{ xs: 12 }}>
+            <Controller
+              name="justification"
+              control={control}
+              rules={{
+                maxLength: {
+                  value: 200,
+                  message: "Máximo 200 caracteres",
+                },
+              }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
                   label="Justificación"
+                  fullWidth
                   multiline
-                  rows={4}
+                  rows={2}
+                  size="small"
+                  disabled={disabled}
                   error={!!errors.justification}
-                  helperText={errors.justification?.message}
-                  disabled={loading}
+                  helperText={
+                    errors.justification?.message ||
+                    "Opcional: Indique el motivo de una tardanza o salida temprana"
+                  }
+                  placeholder="Ej: Cita médica, emergencia familiar, etc."
                 />
               )}
             />
-          </Box>
-        </Collapse>
+          </Grid>
 
-        {/* Notes Field */}
-        <Controller
-          name="notes"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...field}
-              fullWidth
-              margin="normal"
-              label="Notas adicionales"
-              multiline
-              rows={4}
-              disabled={loading}
-              placeholder="Agrega alguna nota..."
+          {/* Notas (Opcional) */}
+          <Grid size={{ xs: 12 }}>
+            <Controller
+              name="notes"
+              control={control}
+              rules={{
+                maxLength: {
+                  value: 300,
+                  message: "Máximo 300 caracteres",
+                },
+              }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  label="Notas Adicionales"
+                  fullWidth
+                  multiline
+                  rows={2}
+                  size="small"
+                  disabled={disabled}
+                  error={!!errors.notes}
+                  helperText={
+                    errors.notes?.message ||
+                    "Opcional: Observaciones o comentarios adicionales"
+                  }
+                  placeholder="Ej: Registro manual por falla del sistema"
+                />
+              )}
             />
-          )}
-        />
-        {/* Submit Button */}
-        {/* <Box mt={3} display="flex" justifyContent="flex-end">
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={loading}
-            startIcon={loading && <CircularProgress size={20} />}
-          >
-            {loading ? "Procesando..." : "Guardar"}
-          </Button>
-        </Box> */}
+          </Grid>
+
+          {/* Información del Estado */}
+          <Grid size={{ xs: 12 }}>
+            <Alert severity="info" sx={{ mt: 1 }}>
+              <Typography variant="caption">
+                ℹ️ El estado de la asistencia (A Tiempo, Tardanza, etc.) se
+                calculará automáticamente según el horario asignado y la hora de
+                registro.
+              </Typography>
+            </Alert>
+          </Grid>
+        </Grid>
       </Box>
-    </>
+    </LocalizationProvider>
   );
+};
 
-  /*return (
-    <form id="user-form" onSubmit={handleSubmit(onSubmit)}>
-      <TextField
-        margin="normal"
-        fullWidth
-        label="Nombre"
-        {...register("name", { required: "Nombre requerido" })}
-        error={!!errors.name}
-        helperText={errors.name?.message}
-      />
-      <TextField
-        margin="normal"
-        fullWidth
-        label="Apellido Paterno"
-        {...register("firstSurname", {
-          required: "Apellido paterno requerido",
-        })}
-        error={!!errors.firstSurname}
-        helperText={errors.firstSurname?.message}
-      />
-      <TextField
-        margin="normal"
-        fullWidth
-        label="Apellido Materno"
-        {...register("secondSurname", {
-          required: "Apellido materno requerido",
-        })}
-        error={!!errors.secondSurname}
-        helperText={errors.secondSurname?.message}
-      />
-      <TextField
-        margin="normal"
-        fullWidth
-        label="DNI"
-        {...register("dni", { required: "DNI requerido" })}
-        error={!!errors.dni}
-        helperText={errors.dni?.message}
-      />
-      <TextField
-        margin="normal"
-        fullWidth
-        label="Teléfono"
-        {...register("phone", { required: "Teléfono requerido" })}
-        error={!!errors.phone}
-        helperText={errors.phone?.message}
-      />
-      <TextField
-        margin="normal"
-        fullWidth
-        label="Email"
-        type="email"
-        {...register("email", { required: "Email requerido" })}
-        error={!!errors.email}
-        helperText={errors.email?.message}
-      />
-      <TextField
-        margin="normal"
-        fullWidth
-        label="Contraseña"
-        type="password"
-        {...register("passwordHash", { required: "Contraseña requerida" })}
-        error={!!errors.passwordHash}
-        helperText={errors.passwordHash?.message}
-      />
-      {roles.length > 0 && (
-        <FormControl fullWidth margin="normal" error={!!errors.roleId}>
-          <InputLabel id="role-label">Rol</InputLabel>
-          <Select
-            labelId="role-label"
-            label="Rol"
-            value={defaultValues.roleId?._id || ""}
-            defaultValue={defaultValues.roleId?._id || ""}
-            {...register("roleId", { required: "Rol requerido" })}
-          >
-            {loadingData ? (
-              <MenuItem value="">
-                <CircularProgress size={20} />
-              </MenuItem>
-            ) : (
-              roles.map((role) => (
-                <MenuItem key={role._id} value={role._id}>
-                  {role.name}
-                </MenuItem>
-              ))
-            )}
-          </Select>
-        </FormControl>
-      )}
-
-      {departments.length > 0 && (
-        <FormControl fullWidth margin="normal" error={!!errors.departmentId}>
-          <InputLabel id="department-label">Departamento</InputLabel>
-          <Select
-            labelId="department-label"
-            label="Departamento"
-            value={defaultValues.departmentId?._id || ""}
-            defaultValue={defaultValues.departmentId?._id || ""}
-            {...register("departmentId", {
-              required: "Departamento requerido",
-            })}
-          >
-            {loadingData ? (
-              <MenuItem value="">
-                <CircularProgress size={20} />
-              </MenuItem>
-            ) : (
-              departments.map((dep) => (
-                <MenuItem key={dep._id} value={dep._id}>
-                  {dep.name}
-                </MenuItem>
-              ))
-            )}
-          </Select>
-        </FormControl>
-      )}
-    </form>
-  );*/
-}
+export default AttendanceForm;

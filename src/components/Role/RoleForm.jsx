@@ -18,7 +18,6 @@ const RoleForm = ({
   defaultValues = {},
   onChange,
   disabled = false,
-  //getPermissions, // Servicio para obtener permisos
 }) => {
   const [permissions, setPermissions] = useState([]);
   const [loadingPermissions, setLoadingPermissions] = useState(true);

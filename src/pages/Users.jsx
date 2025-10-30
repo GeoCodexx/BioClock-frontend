@@ -33,14 +33,14 @@ import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 
-export default function users() {
+export default function Users() {
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
-  const [users, setusers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -75,7 +75,7 @@ export default function users() {
           page: (pagination.page + 1).toString(),
           limit: pagination.rowsPerPage.toString(),
         });
-        setusers(data.users);
+        setUsers(data.users);
         setTotal(data.total);
       } catch (err) {
         setError(err.response?.data?.message || "Error al cargar usuarios");
@@ -103,7 +103,7 @@ export default function users() {
   }, [searchInput, pagination.search]);
 
   // Handlers con useCallback
-  const refreshusers = useCallback(async () => {
+  const refreshUsers = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -112,7 +112,7 @@ export default function users() {
         page: (pagination.page + 1).toString(),
         limit: pagination.rowsPerPage.toString(),
       });
-      setusers(data.users);
+      setUsers(data.users);
       setTotal(data.total);
     } catch (err) {
       setError(err.response?.data?.message || "Error al cargar usuarios");
@@ -137,7 +137,7 @@ export default function users() {
         }
 
         setDialog({ open: false, editUser: null, error: "" });
-        await refreshusers();
+        await refreshUsers();
       } catch (err) {
         const errorMessage =
           err.response?.data?.message ||
@@ -149,7 +149,7 @@ export default function users() {
         throw err;
       }
     },
-    [dialog.editUser, showSuccess, showError, refreshusers]
+    [dialog.editUser, showSuccess, showError, refreshUsers]
   );
 
   const handleEdit = useCallback((user) => {
@@ -173,7 +173,7 @@ export default function users() {
       await deleteUser(deleteState.id);
       showSuccess("Usuario eliminado correctamente");
       setDeleteState({ id: null, error: "" });
-      await refreshusers();
+      await refreshUsers();
     } catch (err) {
       const errorMessage =
         err.response?.data?.message || "Error al eliminar el rol";
@@ -182,7 +182,7 @@ export default function users() {
       showError(errorMessage);
       console.error("Error en confirmDelete:", err);
     }
-  }, [deleteState.id, showSuccess, showError, refreshusers]);
+  }, [deleteState.id, showSuccess, showError, refreshUsers]);
 
   const handleClose = useCallback(() => {
     setDialog({ open: false, editUser: null, error: "" });

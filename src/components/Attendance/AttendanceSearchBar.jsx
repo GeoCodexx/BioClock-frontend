@@ -1,58 +1,79 @@
-import { TextField, IconButton, InputAdornment } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import ClearIcon from "@mui/icons-material/Clear";
-import { useImperativeHandle, useState } from "react";
+import { 
+  Box, 
+  TextField, 
+  InputAdornment, 
+  IconButton,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
+import { Search, Clear } from "@mui/icons-material";
 
-export default function AttendanceSearchBar({ onSearch, ref }) {
-  const [localInput, setLocalInput] = useState("");
+export default function AttendanceSearchBar({
+  searchInput,
+  setSearchInput,
+  onSearch,
+}) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Expone métodos al padre
-  useImperativeHandle(ref, () => ({
-    getValue: () => localInput, // padre puede leer valor
-    clear: () => setLocalInput(""), // padre puede limpiar
-  }));
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      onSearch(localInput);
-    }
-    if (e.key === "Escape") {
-      setLocalInput("");
-      onSearch("");
-    }
+  const handleClear = () => {
+    setSearchInput("");
   };
+
   return (
-    <TextField
-      label="Buscar asistencia"
-      placeholder="Búsqueda por nombre, apellido o DNI"
-      value={localInput}
-      onChange={(e) => setLocalInput(e.target.value)}
-      onKeyDown={handleKeyDown}
-      size="small"
-      slotProps={{
-        input: {
-          endAdornment: (
-            <InputAdornment position="end">
-              {localInput ? (
-                <IconButton
-                  aria-label="clear"
-                  onClick={() => {
-                    setLocalInput("");
-                    onSearch("");
-                  }}
-                  edge="end"
-                  size="small"
-                >
-                  <ClearIcon fontSize="small" />
-                </IconButton>
-              ) : (
-                <SearchIcon />
-              )}
-            </InputAdornment>
-          ),
-        },
-      }}
+    <Box 
+      component="form" 
+      onSubmit={onSearch} 
       sx={{ width: "100%" }}
-    />
+    >
+      <TextField
+        fullWidth
+        label={isMobile ? "Buscar" : "Buscar asistencias"}
+        size="small"
+        placeholder={isMobile ? "Nombre..." : "Buscar por nombre, apellidos o DNI"}
+        value={searchInput}
+        onChange={(e) => setSearchInput(e.target.value)}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search color="action" fontSize="small" />
+              </InputAdornment>
+            ),
+            endAdornment: searchInput && (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  onClick={handleClear}
+                  edge="end"
+                  sx={{
+                    "&:hover": {
+                      bgcolor: theme.palette.action.hover,
+                    },
+                  }}
+                >
+                  <Clear fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          },
+        }}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            bgcolor: theme.palette.background.paper,
+            transition: "all 0.2s ease",
+            "&:hover": {
+              bgcolor: theme.palette.action.hover,
+            },
+            "&.Mui-focused": {
+              bgcolor: theme.palette.background.paper,
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderWidth: 2,
+              },
+            },
+          },
+        }}
+      />
+    </Box>
   );
 }
