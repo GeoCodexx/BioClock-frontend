@@ -1,74 +1,210 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { TextField } from '@mui/material';
+// DeviceForm.jsx - Formulario optimizado con mejores campos
+import { useForm, Controller } from "react-hook-form";
+import { Box, TextField, Grid, InputAdornment } from "@mui/material";
+import DevicesIcon from '@mui/icons-material/Devices';
+import PlaceIcon from "@mui/icons-material/Place";
+import LanIcon from '@mui/icons-material/Lan';
+import { useEffect } from "react";
 
-export default function DeviceForm({ onSubmit, defaultValues = {}, loading }) {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm({ defaultValues });
+const DeviceForm = ({
+  onSubmit,
+  defaultValues = {},
+  onChange,
+  disabled = false,
+}) => {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm({
+    defaultValues: {
+      name: defaultValues.name || "",
+      ipAddress: defaultValues.ipAddress || "",
+      macAddress: defaultValues.macAddress || "",
+      location: defaultValues.location || "",
+    },
+  });
 
-    useEffect(() => {
-        if (Object.keys(defaultValues).length > 0) {
-            reset(defaultValues);
-        }
-    }, [JSON.stringify(defaultValues)]);
+  // Detectar cambios en el formulario
+  useEffect(() => {
+    const subscription = watch(() => {
+      if (onChange) {
+        onChange();
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, onChange]);
 
-    return (
-        <form id="device-form" onSubmit={handleSubmit(onSubmit)}>
-            <TextField
-                margin="normal"
+  return (
+    <Box
+      component="form"
+      id="device-form"
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+    >
+      <Grid container spacing={2.5}>
+        {/* Nombre del Dispositivo */}
+        <Grid size={{ xs: 12 }}>
+          <Controller
+            name="name"
+            control={control}
+            rules={{
+              required: "El nombre del dispositivo es obligatorio",
+              minLength: {
+                value: 3,
+                message: "Mínimo 3 caracteres",
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Nombre del Dispositivo"
                 fullWidth
-                label="ID del dispositivo"
-                {...register('deviceId', { required: 'deviceId requerido' })}
-                error={!!errors.deviceId}
-                helperText={errors.deviceId?.message}
-            />
-            <TextField
-                margin="normal"
-                fullWidth
-                label="Nombre del dispositivo"
-                {...register('name', { required: 'Nombre del dispositivo requerido' })}
+                required
+                disabled={disabled}
                 error={!!errors.name}
                 helperText={errors.name?.message}
-            />
-            <TextField
-                margin="normal"
+                placeholder="Ej: Recursos Humanos PC-01"
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment
+                        position="start"
+                        sx={{ alignSelf: "flex-start", mt: 2 }}
+                      >
+                        <DevicesIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            )}
+          />
+        </Grid>
+
+        {/* Dirección MAC */}
+        <Grid size={{ xs: 12 }}>
+          <Controller
+            name="macAddress"
+            control={control}
+            rules={{
+              required: "La dirección MAC es obliatoria",
+              minLength: {
+                value: 7,
+                message: "Mínimo 17 caracteres",
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Dirección MAC"
                 fullWidth
-                label="Ubicación"
-                {...register('location', { required: 'Ubicación requerida' })}
-                error={!!errors.location}
-                helperText={errors.location?.message}
-            />
-            <TextField
-                margin="normal"
+                required
+                disabled={disabled}
+                error={!!errors.name}
+                helperText={errors.name?.message}
+                placeholder="Ej: 11:22:33:44:55:66"
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment
+                        position="start"
+                        sx={{ alignSelf: "flex-start", mt: 2 }}
+                      >
+                        <LanIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            )}
+          />
+        </Grid>
+
+        {/* Dirección IP */}
+        <Grid size={{ xs: 12 }}>
+          <Controller
+            name="ipAddress"
+            control={control}
+            rules={{
+              required: "La dirección IP es obliatoria",
+              minLength: {
+                value: 7,
+                message: "Mínimo 7 caracteres",
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Dirección IP"
                 fullWidth
-                label="IP"
-                {...register('ipAddress', { required: 'IP requerida' })}
+                required
+                disabled={disabled}
                 error={!!errors.ipAddress}
                 helperText={errors.ipAddress?.message}
-            />
-            <TextField
-                margin="normal"
+                placeholder="Ej: 192.168.1.10"
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment
+                        position="start"
+                        sx={{ alignSelf: "flex-start", mt: 2 }}
+                      >
+                        <LanIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            )}
+          />
+        </Grid>
+
+        {/* Ubicación */}
+        <Grid size={{ xs: 12 }}>
+          <Controller
+            name="location"
+            control={control}
+            rules={{
+              required: "La ubicación es obligatoria",
+              minLength: {
+                value: 5,
+                message: "Mínimo 5 caracteres",
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Ubicación"
                 fullWidth
-                label="MAC"
-                {...register('macAddress', { required: 'MAC requerida' })}
-                error={!!errors.macAddress}
-                helperText={errors.macAddress?.message}
-            />
-            <TextField
-                margin="normal"
-                fullWidth
-                label="Usuario registrador"
-                {...register('registeredBy', { required: 'Usuario registrador requerido' })}
-                error={!!errors.registeredBy}
-                helperText={errors.registeredBy?.message}
-            />
-            <TextField
-                margin="normal"
-                fullWidth
-                label="Estado"
-                {...register('status', { required: 'Estado requerido' })}
-                error={!!errors.status}
-                helperText={errors.status?.message}
-            />
-        </form>
-    );
-}
+                multiline
+                rows={3}
+                required
+                disabled={disabled}
+                error={!!errors.location}
+                helperText={errors.location?.message}
+                placeholder="Detalles de la ubicación del dispositivo"
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment
+                        position="start"
+                        sx={{ alignSelf: "flex-start", mt: 2 }}
+                      >
+                        <PlaceIcon color="action" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            )}
+          />
+        </Grid>
+      </Grid>
+      
+    </Box>
+  );
+};
+
+export default DeviceForm;

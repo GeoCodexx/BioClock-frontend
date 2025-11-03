@@ -36,7 +36,7 @@ const DepartmentForm = ({
   return (
     <Box
       component="form"
-      id="schedule-form"
+      id="department-form"
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >

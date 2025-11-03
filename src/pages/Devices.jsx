@@ -32,8 +32,17 @@ import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
+import useAuthStore from "../store/useAuthStore";
+
+const generateDeviceId = () => {
+  const now = new Date();
+  const formattedDate = now.toISOString().replace(/[-:]/g, '').split('.')[0];
+  //Ejmplo reconstrucción fecha: Dev-'2025-11-03T16:55:10.828Z'
+  return `Dev_${formattedDate}`;
+};
 
 export default function Devices() {
+  const { user } = useAuthStore();
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
@@ -78,9 +87,7 @@ export default function Devices() {
         setDevices(data.devices);
         setTotal(data.total);
       } catch (err) {
-        setError(
-          err.response?.data?.message || "Error al cargar dispositivos"
-        );
+        setError(err.response?.data?.message || "Error al cargar dispositivos");
       } finally {
         setLoading(false);
       }
@@ -128,13 +135,22 @@ export default function Devices() {
       setDialog((prev) => ({ ...prev, error: "" }));
 
       try {
+        // Agregar las propiedades faltantes
+        const newData = {
+          ...data,
+          deviceId: generateDeviceId(),
+          registeredBy: user ? user.id :null,
+        };
+
         const isEditing = !!dialog.editDevice;
 
         if (isEditing) {
-          await updateDevice(dialog.editDevice._id, data);
+          await updateDevice(dialog.editDevice._id, newData);
+          //console.log(newData);
           showSuccess("Dispositivo actualizado correctamente");
         } else {
-          await createDevice(data);
+          await createDevice(newData);
+          //console.log(newData);
           showSuccess("Dispositivo creado correctamente");
         }
 

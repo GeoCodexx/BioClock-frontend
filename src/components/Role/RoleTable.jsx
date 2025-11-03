@@ -187,7 +187,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
           component={Paper}
           sx={{
             borderRadius: 2,
-            boxShadow: theme.shadows[2],
+            //boxShadow: theme.shadows[2],
             overflow: "hidden",
           }}
         >
@@ -460,7 +460,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
       component={Paper}
       sx={{
         borderRadius: 2,
-        boxShadow: theme.shadows[2],
+        //boxShadow: theme.shadows[2],
         overflow: "hidden",
       }}
     >
