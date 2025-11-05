@@ -87,7 +87,7 @@ export default function Attendances() {
     type: "",
   });
 
-  //Estado para mostrar u olcultar filtros mobile
+  //Estado para mostrar u ocultar filtros mobile
   const [openFilters, setOpenFilters] = useState(false);
 
   // Carga de datos llamando a la API

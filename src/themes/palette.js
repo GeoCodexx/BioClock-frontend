@@ -25,7 +25,8 @@ const colors = {
     },
     warning: {
       light: '#FFF8E1',
-      main: '#FFE57F',
+      //main: '#FFE57F',
+      main: '#FFC107',
       dark: '#FFC107'
     }
   };
