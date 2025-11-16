@@ -16,13 +16,14 @@ import {
   useTheme,
   Fade,
   alpha,
+  useMediaQuery,
 } from "@mui/material";
 
 // icons
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+//import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import useAuthStore from "../../../../store/useAuthStore";
 
 const ProfileSection = () => {
@@ -32,6 +33,7 @@ const ProfileSection = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleLogout = async () => {
     try {
@@ -84,8 +86,8 @@ const ProfileSection = () => {
           <Avatar
             src="/static/images/avatar.jpg"
             sx={{
-              width: 36,
-              height: 36,
+              width: isMobile ? 24 : 36,
+              height: isMobile ? 24 : 36,
               bgcolor: theme.palette.primary.main,
               color: theme.palette.primary.contrastText,
               border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
@@ -184,7 +186,7 @@ const ProfileSection = () => {
                           height: 52,
                           bgcolor: theme.palette.primary.main,
                           color: theme.palette.primary.contrastText,
-                         /* boxShadow: `0 4px 14px ${alpha(
+                          /* boxShadow: `0 4px 14px ${alpha(
                             theme.palette.primary.main,
                             0.3
                           )}`,*/

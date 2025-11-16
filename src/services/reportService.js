@@ -17,9 +17,13 @@ export const getDailyReport = async (params) => {
   }
 };
 
-export const getUserHistoryReport = async (params) => {
-  const res = await api.get(`/reports/user-report`, { params });
-  return res.data;
+export const getGeneralReport = async (params) => {
+  try {
+    const { data } = await api.get("/reports/general-report", { params });
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al obtener reporte general de asistencias paginadas");
+  }
 };
 
 /*export const getUserHistoryReport = async (userId, startDate, endDate) => {

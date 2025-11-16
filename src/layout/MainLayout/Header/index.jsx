@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import {
   AppBar,
   Box,
@@ -6,123 +7,250 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
+  alpha,
+  Tooltip,
+  Fade,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-//import LogoBitel from "../../../assets/images/bitel_logo.png";
+
+// Logo (descomenta y ajusta la ruta según tu proyecto)
+// import LogoBitel from "../../../assets/images/bitel_logo.png";
+// O importa tu logo así:
+// import Logo from "@/assets/logo.png";
 
 // Componentes personalizados
 import NotificationSection from "./NotificationSection";
 import ProfileSection from "./ProfileSection";
 
-const Header = ({ toggleTheme, isDarkMode, handleDrawerToggle }) => {
+// Componente de botón de tema memoizado
+const ThemeToggleButton = memo(({ toggleTheme, isDarkMode }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   return (
-    <AppBar
-      position="fixed"
+    <Tooltip
+      title={isDarkMode ? "Modo claro" : "Modo oscuro"}
+      arrow
+      TransitionComponent={Fade}
+    >
+      <IconButton
+        onClick={toggleTheme}
+        color="inherit"
+        aria-label={`Cambiar a modo ${isDarkMode ? "claro" : "oscuro"}`}
+        sx={{
+          bgcolor: alpha(
+            theme.palette.mode === "dark" ? "#fff" : "#000",
+            theme.palette.mode === "dark" ? 0.1 : 0.05
+          ),
+          transition: "all 0.3s ease",
+          "&:hover": {
+            bgcolor: alpha(
+              theme.palette.mode === "dark" ? "#fff" : "#000",
+              theme.palette.mode === "dark" ? 0.15 : 0.1
+            ),
+            transform: "rotate(180deg)",
+          },
+        }}
+      >
+        {isDarkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+      </IconButton>
+    </Tooltip>
+  );
+});
+
+ThemeToggleButton.displayName = "ThemeToggleButton";
+
+// Componente de Logo memoizado
+const Logo = memo(({ src, alt = "Logo", size = "medium" }) => {
+  const dimensions = {
+    small: { height: 32, maxWidth: 80 }, // Mobile
+    medium: { height: 40, maxWidth: 120 }, // Desktop
+    large: { height: 48, maxWidth: 140 }, // Extra grande
+  };
+
+  const { height, maxWidth } = dimensions[size] || dimensions.medium;
+
+  return (
+    <Box
+      component="img"
+      src={src}
+      alt={alt}
       sx={{
-        zIndex: "auto", //isMobile ? "auto" : theme.zIndex.drawer + 1,
-        bgcolor: theme.palette.background.paper,
-        color: theme.palette.text.primary,
-        boxShadow: "none",
-        width: "100%",
-        //pt: 0,
+        height,
+        maxWidth,
+        width: "auto",
+        objectFit: "contain",
+        transition: "transform 0.2s ease",
+        "&:hover": {
+          transform: "scale(1.05)",
+        },
+      }}
+    />
+  );
+});
+
+Logo.displayName = "Logo";
+
+// Componente de Vista Mobile memoizado
+const MobileView = memo(({ handleDrawerToggle, logoSrc }) => (
+  <>
+    {/* Menú hamburguesa - Izquierda */}
+    <IconButton
+      color="inherit"
+      aria-label="abrir menú de navegación"
+      onClick={handleDrawerToggle}
+      edge="start"
+      sx={{
+        transition: "transform 0.2s ease",
+        "&:hover": {
+          transform: "scale(1.1)",
+        },
       }}
     >
-      <Toolbar sx={{ justifyContent: "space-between" }}>
-        {isMobile ? (
-          // Vista Mobile
-          <>
-            {/* Menú hamburguesa - Izquierda */}
-            <IconButton
-              color="inherit"
-              aria-label="toggle drawer"
-              onClick={handleDrawerToggle}
-              edge="start"
-              sx={{
-                bgcolor:
-                  theme.palette.mode === "dark"
-                    ? "rgba(255,255,255,0.1)"
-                    : "rgba(0,0,0,0.05)",
-                "&:hover": {
-                  bgcolor:
-                    theme.palette.mode === "dark"
-                      ? "rgba(255,255,255,0.15)"
-                      : "rgba(0,0,0,0.1)",
-                },
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
+      <MenuIcon />
+    </IconButton>
 
-            {/* Título corto - Centro */}
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              sx={{
-                flexGrow: 1,
-                textAlign: "center",
-                px: 2,
-              }}
-            >
-              SISCAB
-            </Typography>
+    {/* Logo y Título - Centro */}
+    <Box
+      sx={{
+        flexGrow: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 1.5,
+        px: 2,
+      }}
+    >
+      {logoSrc && <Logo src={logoSrc} alt="Logo SISCAB" size="small" />}
+      <Typography
+        variant="h6"
+        fontWeight="bold"
+        sx={{
+          background: (theme) =>
+            `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
+        SISCAB
+      </Typography>
+    </Box>
 
-            {/* Avatar - Derecha */}
-            <ProfileSection />
-          </>
-        ) : (
-          // Vista Desktop
-          <>
-            {/* Logo - Izquierda */}
-            {/* <Box sx={{ display: "flex", alignItems: "center" }}>
-              <img src={LogoBitel} alt="logo" width="130px" />
-            </Box> */}
+    {/* Avatar - Derecha */}
+    <ProfileSection />
+  </>
+));
 
-            {/* Título completo - Centro */}
-            <Typography
-              variant="h5"
-              fontWeight="bold"
-              sx={{
-                flexGrow: 1,
-                textAlign: "center",
-                px: 3,
-              }}
-            >
-              Sistema de Control de Asistencia Biométrico
-            </Typography>
+MobileView.displayName = "MobileView";
 
-            {/* Botones - Derecha */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <IconButton
-                onClick={toggleTheme}
-                color="inherit"
-                sx={{
-                  bgcolor:
-                    theme.palette.mode === "dark"
-                      ? "rgba(255,255,255,0.1)"
-                      : "rgba(0,0,0,0.05)",
-                  "&:hover": {
-                    bgcolor:
-                      theme.palette.mode === "dark"
-                        ? "rgba(255,255,255,0.15)"
-                        : "rgba(0,0,0,0.1)",
-                  },
-                }}
-              >
-                {isDarkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-              </IconButton>
-              <NotificationSection />
-              <ProfileSection />
-            </Box>
-          </>
-        )}
-      </Toolbar>
-    </AppBar>
+// Componente de Vista Desktop memoizado
+const DesktopView = memo(({ toggleTheme, isDarkMode, logoSrc }) => {
+  const theme = useTheme();
+
+  return (
+    <>
+      {/* Logo - Izquierda */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        {logoSrc && <Logo src={logoSrc} alt="Logo SISCAB" size="large" />}
+      </Box>
+
+      {/* Título completo - Centro */}
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 2,
+          px: 3,
+        }}
+      >
+        <Typography
+          variant="h5"
+          fontWeight="bold"
+          component="h1"
+          sx={{
+            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            letterSpacing: "0.5px",
+          }}
+        >
+          Sistema de Control de Asistencia Biométrico
+        </Typography>
+      </Box>
+
+      {/* Botones - Derecha */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+        }}
+      >
+        <ThemeToggleButton toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
+        <NotificationSection />
+        <ProfileSection />
+      </Box>
+    </>
   );
-};
+});
+
+DesktopView.displayName = "DesktopView";
+
+// Componente Principal del Header
+const Header = memo(
+  ({ toggleTheme, isDarkMode, handleDrawerToggle, logoSrc }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+    // Memoizar estilos del AppBar
+    const appBarStyles = useMemo(
+      () => ({
+        zIndex: isMobile ? theme.zIndex.drawer - 1 : theme.zIndex.drawer + 1,
+        bgcolor: theme.palette.background.paper,
+        color: theme.palette.text.primary,
+        boxShadow: `0 1px 3px ${alpha(theme.palette.common.black, 0.08)}`,
+        width: "100%",
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        transition: "all 0.3s ease",
+      }),
+      [isMobile, theme]
+    );
+
+    // Memoizar estilos del Toolbar
+    const toolbarStyles = useMemo(
+      () => ({
+        justifyContent: "space-between",
+        minHeight: isMobile ? 56 : 64,
+        px: isMobile ? 1.5 : 3,
+      }),
+      [isMobile]
+    );
+
+    return (
+      <AppBar position="fixed" sx={appBarStyles}>
+        <Toolbar sx={toolbarStyles}>
+          {isMobile ? (
+            <MobileView
+              handleDrawerToggle={handleDrawerToggle} /*logoSrc={logoSrc}*/
+            />
+          ) : (
+            <DesktopView
+              toggleTheme={toggleTheme}
+              isDarkMode={isDarkMode}
+              logoSrc={logoSrc}
+            />
+          )}
+        </Toolbar>
+      </AppBar>
+    );
+  }
+);
+
+Header.displayName = "Header";
 
 export default Header;

@@ -98,8 +98,8 @@ const PageHeader = memo(({ date, isMobile }) => {
         mb: 3,
         border: "1px solid",
         borderColor: "divider",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        color: "white",
+        /*background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        color: "white",*/
       }}
     >
       <CardContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>
@@ -124,17 +124,17 @@ const PageHeader = memo(({ date, isMobile }) => {
                     )}
                     size="small"
                     sx={{
-                      bgcolor: "rgba(255,255,255,0.2)",
-                      color: "white",
+                     /* bgcolor: "rgba(255,255,255,0.2)",
+                      color: "white",*/
                       fontWeight: 500,
                     }}
                   />
                 )}
               </Box>
             </Stack>
-            <Box sx={{ "& a, & p": { color: "rgba(255,255,255,0.9)" } }}>
+            {/* <Box sx={{ "& a, & p": { color: "rgba(255,255,255,0.9)" } }}>
               {breadcrumbs}
-            </Box>
+            </Box> */}
           </Stack>
         ) : (
           <Stack
@@ -158,7 +158,7 @@ const PageHeader = memo(({ date, isMobile }) => {
                 </Typography>
               )}
             </Box>
-            <Box sx={{ "& a, & p": { color: "rgba(255,255,255,0.9)" } }}>
+            <Box /*sx={{ "& a, & p": { color: "rgba(255,255,255,0.9)" } }}*/ >
               {breadcrumbs}
             </Box>
           </Stack>
@@ -242,7 +242,7 @@ const FiltersCard = memo(
                 <Select
                   value={scheduleId}
                   label="Turno"
-                  disabled={schedules.length === 0 || !hasRecords}
+                  disabled={schedules.length === 0}
                   onChange={onScheduleChange}
                 >
                   <MenuItem value="">
@@ -264,7 +264,6 @@ const FiltersCard = memo(
                 <Select
                   value={status}
                   label="Estado"
-                  disabled={!hasRecords}
                   onChange={onStatusChange}
                 >
                   {STATUS_OPTIONS.map((option) => (

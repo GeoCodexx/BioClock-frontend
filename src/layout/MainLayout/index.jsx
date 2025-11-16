@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Box, Container, useTheme, useMediaQuery } from "@mui/material";
 import { Outlet } from "react-router-dom";
+import Logo from "../../assets/images/bitel_logo.png";
 
 // Componentes del layout
 import Header from "./Header";
@@ -34,6 +35,7 @@ const MainLayout = () => {
         toggleTheme={toggleTheme}
         isDarkMode={isDarkMode}
         handleDrawerToggle={handleDrawerToggle}
+        logoSrc={Logo}  // ← Pasa el logo aquí
       />
       <Sidebar
         isOpen={isDrawerOpen}

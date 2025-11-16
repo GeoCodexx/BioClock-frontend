@@ -1,16 +1,28 @@
-import { Button, Stack, Tooltip, useMediaQuery, useTheme } from "@mui/material";
 import {
-  Download as DownloadIcon,
-  PictureAsPdf as PictureAsPdfIcon,
+  Button,
+  IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Stack,
+  Tooltip,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
+import {
+  //Download as DownloadIcon,
   Description as DescriptionIcon,
+  FileDownload as FileDownloadIcon,
+  PictureAsPdf as PictureAsPdfIcon,
 } from "@mui/icons-material";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
-//import { useState } from "react";
+import { useState } from "react";
 
 // Configuración de mapeo de estados
 const STATUS_LABELS = {
@@ -24,13 +36,25 @@ const STATUS_LABELS = {
   justified: "Justificado",
 };
 
-export default function DailyReportExportButtons({ records, date }) {
+export default function GeneralReportExportButtons({ records, date }) {
+  const [exporting, setExporting] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  //const [exporting, setExporting] = useState(false);
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   // Exportar a Excel
   const handleExportExcel = async () => {
-    //setExporting(true);
+    setExporting(true);
     try {
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Reporte Diario");
@@ -161,14 +185,14 @@ export default function DailyReportExportButtons({ records, date }) {
       saveAs(new Blob([buffer]), fileName);
     } catch (error) {
       console.error("Error exporting to Excel:", error);
-    } /*finally {
+    } finally {
       setExporting(false);
-    }*/
+    }
   };
 
   // Exportar a PDF
   const handleExportPDF = () => {
-    //setExporting(true);
+    setExporting(true);
     try {
       const doc = new jsPDF("landscape", "mm", "a4");
 
@@ -187,7 +211,7 @@ export default function DailyReportExportButtons({ records, date }) {
       doc.text(
         `Fecha: ${
           date
-            ? format(parseISO(date), "d 'de' MMMM 'de' yyyy", { locale: es })
+            ? format(new Date(date), "d 'de' MMMM 'de' yyyy", { locale: es })
             : "—"
         }`,
         14,
@@ -306,32 +330,11 @@ export default function DailyReportExportButtons({ records, date }) {
       doc.save(fileName);
     } catch (error) {
       console.error("Error exporting to PDF:", error);
-    } /*finally {
+    } finally {
       setExporting(false);
-    }*/
+    }
   };
 
-  // return (
-  //   <Stack direction="row" spacing={2}>
-  //     <Button
-  //       variant="outlined"
-  //       startIcon={<DownloadIcon />}
-  //       onClick={handleExportExcel}
-  //       disabled={!records || records.length === 0}
-  //     >
-  //       {exporting ? "Exportando..." : "Exportar Excel"}
-  //     </Button>
-  //     <Button
-  //       variant="outlined"
-  //       color="error"
-  //       startIcon={<PictureAsPdfIcon />}
-  //       onClick={handleExportPDF}
-  //       disabled={!records || records.length === 0}
-  //     >
-  //       {exporting ? "Exportando..." : "Exportar PDF"}
-  //     </Button>
-  //   </Stack>
-  // );
   // Validar si hay asistencias disponibles
   const isDisabled = !records || records.length === 0;
 
@@ -401,4 +404,26 @@ export default function DailyReportExportButtons({ records, date }) {
       </Tooltip>
     </Stack>
   );
+
+  // return (
+  //   <Stack direction="row" spacing={2}>
+  //     <Button
+  //       variant="outlined"
+  //       startIcon={<DownloadIcon />}
+  //       onClick={handleExportExcel}
+  //       disabled={!records || records.length === 0}
+  //     >
+  //       {exporting ? "Exportando..." : "Exportar Excel"}
+  //     </Button>
+  //     <Button
+  //       variant="outlined"
+  //       color="error"
+  //       startIcon={<PictureAsPdfIcon />}
+  //       onClick={handleExportPDF}
+  //       disabled={!records || records.length === 0}
+  //     >
+  //       {exporting ? "Exportando..." : "Exportar PDF"}
+  //     </Button>
+  //   </Stack>
+  // );
 }

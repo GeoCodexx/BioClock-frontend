@@ -15,8 +15,9 @@ import theme from "./themes";
 import Fingerprint from "./pages/Fingerprints";
 import Attendances from "./pages/Attendances";
 import DailyReport from "./pages/DailyReport";
-import UserHistoryReport from "./pages/UserHistoryReport";
+//import UserHistoryReport from "./pages/UserHistoryReport";
 import GlobalSnackbar from "./components/GlobalSnackbar";
+import GeneralReportPage from "./pages/GeneralReport";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -50,7 +51,7 @@ export default function App() {
             <Route path="schedules" element={<Schedules />} />
             <Route path="attendances" element={<Attendances />} />
             <Route path="reports/daily" element={<DailyReport />} />
-            <Route path="reports/general" element={<UserHistoryReport />} />
+            <Route path="reports/general" element={<GeneralReportPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" />} />
