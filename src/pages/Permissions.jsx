@@ -3,7 +3,6 @@ import {
   Typography,
   CircularProgress,
   Alert,
-  TablePagination,
   Button,
   Box,
   Breadcrumbs,
@@ -32,6 +31,7 @@ import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
+import { SafeTablePagination } from "../components/common/SafeTablePagination";
 
 export default function Permissions() {
   const { showSuccess, showError } = useSnackbarStore();
@@ -429,7 +429,7 @@ export default function Permissions() {
 
         {permissions.length > 0 && <Divider />}
 
-        <TablePagination
+        <SafeTablePagination
           component="div"
           count={total}
           page={pagination.page}

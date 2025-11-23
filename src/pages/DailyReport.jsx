@@ -7,7 +7,6 @@ import {
   FormControl,
   InputLabel,
   InputAdornment,
-  TablePagination,
   Grid,
   Card,
   CardContent,
@@ -38,6 +37,7 @@ import SummaryCards from "../components/Reports/DailyReport/SummaryCards";
 import DailyReportExportButtons from "../components/Reports/DailyReport/DailyReportExportButtons";
 import AttendanceDetailDialog from "../components/Reports/DailyReport/AttendanceDetailDialog";
 import { SafeSelect } from "../components/common/SafeSelect";
+import { SafeTablePagination } from "../components/common/SafeTablePagination";
 
 // Constantes
 const STATUS_OPTIONS = [
@@ -490,7 +490,7 @@ export default function DailyReportPage() {
               // >
               <>
                 <Divider />
-                <TablePagination
+                <SafeTablePagination
                   component="div"
                   count={data.pagination.totalRecords}
                   page={page}

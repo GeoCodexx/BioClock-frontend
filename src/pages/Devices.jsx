@@ -3,7 +3,6 @@ import {
   Typography,
   CircularProgress,
   Alert,
-  TablePagination,
   Button,
   Box,
   Breadcrumbs,
@@ -33,6 +32,7 @@ import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import useAuthStore from "../store/useAuthStore";
+import { SafeTablePagination } from "../components/common/SafeTablePagination";
 
 const generateDeviceId = () => {
   const now = new Date();
@@ -441,7 +441,7 @@ export default function Devices() {
 
         {devices.length > 0 && <Divider />}
 
-        <TablePagination
+        <SafeTablePagination
           component="div"
           count={total}
           page={pagination.page}

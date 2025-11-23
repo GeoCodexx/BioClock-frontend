@@ -7,7 +7,6 @@ import {
   FormControl,
   InputLabel,
   InputAdornment,
-  TablePagination,
   Grid,
   Card,
   CardContent,
@@ -49,6 +48,7 @@ import "jspdf-autotable";
 import GeneralReportTable from "../components/Reports/GeneralReport/GeneralReportTable";
 import GeneralReportExportButtons from "../components/Reports/GeneralReport/GeneralReportExportButtons";
 import { SafeSelect } from "../components/common/SafeSelect";
+import { SafeTablePagination } from "../components/common/SafeTablePagination";
 
 // Constantes
 const STATUS_OPTIONS = [
@@ -927,7 +927,7 @@ export default function GeneralReportPage() {
             {hasRecords && (
               <>
                 <Divider />
-                <TablePagination
+                <SafeTablePagination
                   component="div"
                   count={data.pagination.totalRecords}
                   page={page}

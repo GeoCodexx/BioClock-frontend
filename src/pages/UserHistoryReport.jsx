@@ -8,7 +8,6 @@ import {
   FormControl,
   InputLabel,
   InputAdornment,
-  TablePagination,
   Grid,
   Card,
   CardContent,
@@ -39,6 +38,7 @@ import UserReportTable from "../components/Reports/UserReport/UserReportTable";
 import SummaryCards from "../components/Reports/DailyReport/SummaryCards";
 import UserReportExportButtons from "../components/Reports/UserReport/UserReportExportButtons";
 import AttendanceCalendarView from "../components/Reports/UserReport/AttendanceCalendarView";
+import { SafeTablePagination } from "../components/common/SafeTablePagination";
 
 // Opciones de estado para el filtro
 const STATUS_OPTIONS = [
@@ -468,7 +468,7 @@ export default function UserHistoryReport() {
                   />
 
                   {/* Paginación */}
-                  <TablePagination
+                  <SafeTablePagination
                     component="div"
                     count={data.pagination.totalRecords}
                     page={page}

@@ -3,7 +3,6 @@ import {
   Typography,
   CircularProgress,
   Alert,
-  TablePagination,
   Box,
   Breadcrumbs,
   Card,
@@ -28,6 +27,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
+import { SafeTablePagination } from "../components/common/SafeTablePagination";
 
 export default function Fingerprints() {
   const { showSuccess, showError } = useSnackbarStore();
@@ -463,7 +463,7 @@ export default function Fingerprints() {
 
         {fingerprints.length > 0 && <Divider />}
 
-        <TablePagination
+        <SafeTablePagination
           component="div"
           count={total}
           page={pagination.page}

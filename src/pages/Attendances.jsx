@@ -41,6 +41,7 @@ import AttendanceTypeFilter from "../components/Attendance/AttendanceTypeFilter"
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import ClearIcon from "@mui/icons-material/Clear";
+import { SafeTablePagination } from "../components/common/SafeTablePagination";
 //import SearchIcon from "@mui/icons-material/Search";
 //import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
@@ -736,7 +737,7 @@ export default function Attendances() {
 
         {attendances.length > 0 && <Divider />}
 
-        <TablePagination
+        <SafeTablePagination
           component="div"
           count={total}
           page={pagination.page}
