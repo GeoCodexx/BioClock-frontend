@@ -4,7 +4,6 @@ import {
   Typography,
   TextField,
   MenuItem,
-  Select,
   FormControl,
   InputLabel,
   InputAdornment,
@@ -12,11 +11,7 @@ import {
   Grid,
   Card,
   CardContent,
-  CircularProgress,
   Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
   Breadcrumbs,
   Link,
   useTheme,
@@ -42,6 +37,7 @@ import { getSchedules } from "../services/scheduleService";
 import SummaryCards from "../components/Reports/DailyReport/SummaryCards";
 import DailyReportExportButtons from "../components/Reports/DailyReport/DailyReportExportButtons";
 import AttendanceDetailDialog from "../components/Reports/DailyReport/AttendanceDetailDialog";
+import { SafeSelect } from "../components/common/SafeSelect";
 
 // Constantes
 const STATUS_OPTIONS = [
@@ -239,7 +235,7 @@ const FiltersCard = memo(
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Turno</InputLabel>
-                <Select
+                <SafeSelect
                   value={scheduleId}
                   label="Turno"
                   disabled={schedules.length === 0}
@@ -253,7 +249,7 @@ const FiltersCard = memo(
                       {schedule.name}
                     </MenuItem>
                   ))}
-                </Select>
+                </SafeSelect>
               </FormControl>
             </Grid>
 
@@ -261,7 +257,7 @@ const FiltersCard = memo(
             <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Estado</InputLabel>
-                <Select
+                <SafeSelect
                   value={status}
                   label="Estado"
                   onChange={onStatusChange}
@@ -271,7 +267,7 @@ const FiltersCard = memo(
                       {option.label}
                     </MenuItem>
                   ))}
-                </Select>
+                </SafeSelect>
               </FormControl>
             </Grid>
           </Grid>

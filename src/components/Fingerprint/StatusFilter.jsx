@@ -1,10 +1,11 @@
 import { FormControl, Select, MenuItem, InputAdornment } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import { SafeSelect } from "../common/SafeSelect";
 
 export default function StatusFilter({ value, onChange }) {
   return (
     <FormControl size="small" sx={{ minWidth: 150 }}>
-      <Select
+      <SafeSelect
         value={value}
         onChange={(e) => onChange(e.target.value)}
         displayEmpty
@@ -27,7 +28,7 @@ export default function StatusFilter({ value, onChange }) {
         <MenuItem value="pending">Pendiente</MenuItem>
         <MenuItem value="approved">Aprobado</MenuItem>
         <MenuItem value="rejected">Rechazado</MenuItem>
-      </Select>
+      </SafeSelect>
     </FormControl>
   );
 }

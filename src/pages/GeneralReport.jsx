@@ -4,7 +4,6 @@ import {
   Typography,
   TextField,
   MenuItem,
-  Select,
   FormControl,
   InputLabel,
   InputAdornment,
@@ -22,11 +21,6 @@ import {
   Fade,
   Chip,
   Divider,
-  /*IconButton,
-  Menu,
-  ListItemIcon,
-  ListItemText,
-  Button,*/
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -54,10 +48,11 @@ import jsPDF from "jspdf";*/
 import "jspdf-autotable";
 import GeneralReportTable from "../components/Reports/GeneralReport/GeneralReportTable";
 import GeneralReportExportButtons from "../components/Reports/GeneralReport/GeneralReportExportButtons";
+import { SafeSelect } from "../components/common/SafeSelect";
 
 // Constantes
 const STATUS_OPTIONS = [
-  { value: "", label: "Todos los estados" },
+  //{ value: "", label: "Todos los estados" },
   { value: "complete", label: "Completo" },
   { value: "late", label: "Tardanza" },
   { value: "early_leave", label: "Salida temprana" },
@@ -621,11 +616,14 @@ const FiltersCard = memo(
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Turno</InputLabel>
-                  <Select
+                  <SafeSelect
                     value={scheduleId}
                     label="Turno"
                     disabled={schedules.length === 0}
                     onChange={onScheduleChange}
+                    MenuProps={{
+                      disableScrollLock: true, // Previene que MUI bloquee el scroll
+                    }}
                   >
                     <MenuItem value="">
                       <em>Todos los turnos</em>
@@ -635,7 +633,7 @@ const FiltersCard = memo(
                         {schedule.name}
                       </MenuItem>
                     ))}
-                  </Select>
+                  </SafeSelect>
                 </FormControl>
               </Grid>
 
@@ -643,17 +641,20 @@ const FiltersCard = memo(
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <FormControl fullWidth size="small">
                   <InputLabel>Estado</InputLabel>
-                  <Select
+                  <SafeSelect
                     value={status}
                     label="Estado"
                     onChange={onStatusChange}
                   >
+                    <MenuItem value="">
+                      <em>Todos los estados</em>
+                    </MenuItem>
                     {STATUS_OPTIONS.map((option) => (
                       <MenuItem key={option.value} value={option.value}>
                         {option.label}
                       </MenuItem>
                     ))}
-                  </Select>
+                  </SafeSelect>
                 </FormControl>
               </Grid>
 
