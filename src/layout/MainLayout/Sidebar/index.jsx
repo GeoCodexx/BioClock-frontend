@@ -47,6 +47,7 @@ const menuItems = [
     icon: <FingerprintIcon />,
   },
   { text: "Asistencias", path: "/attendances", icon: <EventNoteIcon /> },
+  { text: "Mi Asistencia", path: "/myattendances", icon: <EventNoteIcon /> },
   {
     text: "Reportes",
     icon: <AssessmentIcon />,

@@ -18,6 +18,7 @@ import DailyReport from "./pages/DailyReport";
 //import UserHistoryReport from "./pages/UserHistoryReport";
 import GlobalSnackbar from "./components/GlobalSnackbar";
 import GeneralReportPage from "./pages/GeneralReport";
+import MyAttendances from "./pages/MyAttendances";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="departments" element={<Departments />} />
             <Route path="schedules" element={<Schedules />} />
             <Route path="attendances" element={<Attendances />} />
+            <Route path="myattendances" element={<MyAttendances />} />
             <Route path="reports/daily" element={<DailyReport />} />
             <Route path="reports/general" element={<GeneralReportPage />} />
           </Route>
