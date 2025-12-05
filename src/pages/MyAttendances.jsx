@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, memo, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -50,9 +50,12 @@ import {
   alpha,
   Fade,
   Skeleton,
+  CardContent,
 } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import { Link } from "react-router-dom";
+import { getMyAttendance } from "../services/reportService";
+import AttendanceWeekView from "../components/MyAttendace/AttendanceWeekView";
 
 // Datos de ejemplo
 const mockData = [
@@ -254,10 +257,32 @@ const StatusChip = ({ status, label, color }) => (
 const MyAttendances = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  //const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [selectedDay, setSelectedDay] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState({});
+
+  // Fetch de datos
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getMyAttendance();
+      setData(response);
+      console.log(response);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // Obtener el día de hoy
   const today = useMemo(() => new Date(), []);
@@ -279,10 +304,10 @@ const MyAttendances = () => {
   }, []);
 
   // Obtener registros de hoy
-  const todayRecords = useMemo(() => {
+  /*const todayRecords = useMemo(() => {
     const todayStr = format(today, "yyyy-MM-dd");
     return attendanceByDate[todayStr] || [];
-  }, [today, attendanceByDate]);
+  }, [today, attendanceByDate]);*/
 
   // Calcular estadísticas de la semana
   const weekStats = useMemo(() => {
@@ -342,6 +367,16 @@ const MyAttendances = () => {
   // Configuración de colores/etiquetas por estado
   const statusConfig = useMemo(
     () => ({
+      on_time: {
+        sx: {
+          bgcolor: alpha(theme.palette.success.main, 0.1),
+          color: theme.palette.success.dark,
+          border: `2px solid ${theme.palette.success.main}`,
+        },
+        label: "A Tiempo",
+        Icon: CheckCircle,
+        colorHex: "#10b981",
+      },
       complete: {
         sx: {
           bgcolor: alpha(theme.palette.success.main, 0.1),
@@ -351,6 +386,26 @@ const MyAttendances = () => {
         label: "Completo",
         Icon: CheckCircle,
         colorHex: "#10b981",
+      },
+      late: {
+        sx: {
+          bgcolor: alpha(theme.palette.warning.main, 0.1),
+          color: theme.palette.warning.dark,
+          border: `2px solid ${theme.palette.warning.main}`,
+        },
+        label: "Tardanza",
+        Icon: ErrorIcon,
+        colorHex: "#f59e0b",
+      },
+      early: {
+        sx: {
+          bgcolor: alpha(theme.palette.info.main, 0.1),
+          color: theme.palette.info.dark,
+          border: `2px solid ${theme.palette.info.main}`,
+        },
+        label: "Temprano",
+        Icon: InfoIcon,
+        colorHex: "#3b82f6",
       },
       justified: {
         sx: {
@@ -364,13 +419,23 @@ const MyAttendances = () => {
       },
       incomplete: {
         sx: {
-          bgcolor: alpha(theme.palette.warning.main, 0.1),
-          color: theme.palette.warning.dark,
-          border: `2px solid ${theme.palette.warning.main}`,
+          bgcolor: alpha(theme.palette.error.main, 0.1),
+          color: theme.palette.error.dark,
+          border: `2px solid ${theme.palette.error.main}`,
         },
         label: "Incompleto",
         Icon: ErrorIcon,
-        colorHex: "#f59e0b",
+        colorHex: "#f44336",
+      },
+      early_exit: {
+        sx: {
+          bgcolor: alpha(theme.palette.error.main, 0.1),
+          color: theme.palette.error.dark,
+          border: `2px solid ${theme.palette.error.main}`,
+        },
+        label: "Salida Temprana",
+        Icon: ErrorIcon,
+        colorHex: "#f44336",
       },
       absent: {
         sx: {
@@ -501,62 +566,120 @@ const MyAttendances = () => {
     [isMobile]
   );
 
-  return (
-    <Box sx={{ width: "100%", p: { xs: 2, sm: 3 } }}>
-      {/* Header */}
-      <Card
-        //elevation={0}
-        /*sx={{
-          borderRadius: 3,
-          mb: 3,
-          border: `1px solid ${theme.palette.divider}`,
-          background: `linear-gradient(135deg, ${alpha(
-            theme.palette.primary.main,
-            0.05
-          )} 0%, ${alpha(theme.palette.primary.light, 0.02)} 100%)`,
-        }}*/
-        sx={{
-          borderRadius: isMobile ? 2 : 3,
-          mb: 2,
-          boxShadow: theme.shadows[1],
-        }}
+  // Componente Header memoizado
+  const PageHeader = memo(({ date, isMobile }) => {
+    const breadcrumbs = (
+      <Breadcrumbs
+        aria-label="breadcrumb"
+        separator={<NavigateNextIcon fontSize="small" />}
+        sx={{ fontSize: isMobile ? "0.813rem" : "0.875rem" }}
       >
-        <Box
+        <Link
+          component={RouterLink}
+          to="/"
           sx={{
-            px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 2,
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            color: "text.secondary",
+            textDecoration: "none",
+            transition: "color 0.2s",
+            "&:hover": {
+              color: "primary.main",
+            },
           }}
         >
+          <HomeIcon fontSize="small" />
+          {!isMobile && <Typography variant="body2">Inicio</Typography>}
+        </Link>
+        <Typography variant="body2" color="text.primary" fontWeight={500}>
+          Mi Asistencia
+        </Typography>
+      </Breadcrumbs>
+    );
+
+    return (
+      <Card
+        elevation={0}
+        sx={{
+          borderRadius: 3,
+          mb: 3,
+          border: "1px solid",
+          borderColor: "divider",
+          //background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          //color: "white",
+        }}
+      >
+        <CardContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>
           {isMobile ? (
-            <Stack spacing={1.5}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 1,
-                }}
+            <Stack spacing={2}>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="flex-start"
+                spacing={1}
               >
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Mi Asistencia
-                </Typography>
-              </Box>
-              {breadcrumbItems}
+                <Box flex={1}>
+                  <Typography variant="h6" fontWeight={700} gutterBottom>
+                    Mi Asistencia
+                  </Typography>
+                  {date && (
+                    <Chip
+                      label={format(
+                        new Date(date + "T00:00:00"),
+                        "d 'de' MMMM 'de' yyyy",
+                        { locale: es }
+                      )}
+                      size="small"
+                      sx={{
+                        //bgcolor: "rgba(255,255,255,0.2)",
+                        //color: "white",
+                        fontWeight: 500,
+                      }}
+                    />
+                  )}
+                </Box>
+              </Stack>
+              {/* <Box sx={{ "& a, & p": { color: "rgba(255,255,255,0.9)" } }}>
+              {breadcrumbs}
+            </Box> */}
             </Stack>
           ) : (
             <Stack
               direction="row"
               justifyContent="space-between"
               alignItems="center"
+              spacing={2}
             >
-              <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                Mi Asistencia
-              </Typography>
-              {breadcrumbItems}
+              <Box>
+                <Typography variant="h5" fontWeight={700} gutterBottom>
+                  Mi Asistencia
+                </Typography>
+                {date && (
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    📅{" "}
+                    {format(
+                      new Date(date + "T00:00:00"),
+                      "EEEE, d 'de' MMMM 'de' yyyy",
+                      { locale: es }
+                    )}
+                  </Typography>
+                )}
+              </Box>
+              <Box /*sx={{ "& a, & p": { color: "rgba(255,255,255,0.9)" } }}*/>
+                {breadcrumbs}
+              </Box>
             </Stack>
           )}
-        </Box>
+        </CardContent>
       </Card>
+    );
+  });
+
+  return (
+    <Box sx={{ width: "100%", p: { xs: 2, sm: 3 } }}>
+      {/* Header */}
+      <PageHeader date={""} isMobile={isMobile} />
 
       <Grid container spacing={{ xs: 2, sm: 3 }}>
         {/* Hoy */}
@@ -588,9 +711,9 @@ const MyAttendances = () => {
               </Box>
             </Stack>
 
-            {todayRecords.length > 0 ? (
+            {data.periods?.today?.records.length > 0 ? (
               <Stack spacing={2}>
-                {todayRecords.map((record, idx) => (
+                {data.periods?.today?.records.map((record, idx) => (
                   <Card
                     key={idx}
                     variant="outlined"
@@ -616,11 +739,7 @@ const MyAttendances = () => {
                         </Typography>
                         <Chip
                           icon={
-                            statusConfig[
-                              record.shiftStatus === "late"
-                                ? "incomplete"
-                                : record.shiftStatus
-                            ]?.Icon
+                            statusConfig[record.shiftStatus]?.Icon
                               ? React.createElement(
                                   statusConfig[
                                     record.shiftStatus === "late"
@@ -631,69 +750,82 @@ const MyAttendances = () => {
                                 )
                               : null
                           }
-                          label={
-                            statusConfig[
-                              record.shiftStatus === "late"
-                                ? "incomplete"
-                                : record.shiftStatus
-                            ]?.label
-                          }
+                          label={statusConfig[record.shiftStatus]?.label}
                           size="small"
                           sx={{
-                            ...statusConfig[
-                              record.shiftStatus === "late"
-                                ? "incomplete"
-                                : record.shiftStatus
-                            ]?.sx,
+                            ...statusConfig[record.shiftStatus]?.sx,
                             fontWeight: 600,
                             fontSize: "0.75rem",
                           }}
-                          color={
-                            statusConfig[
-                              record.shiftStatus === "late"
-                                ? "incomplete"
-                                : record.shiftStatus
-                            ]?.sx.color
-                          }
+                          color={statusConfig[record.shiftStatus]?.sx.color}
                         />
                       </Stack>
 
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 6 }}>
                           <Stack spacing={0.5}>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Entrada
-                            </Typography>
+                            <Box display="flex" alignItems="center">
+                              <Login
+                                fontSize="small"
+                                sx={{ mr: 1, color: "success.main" }}
+                              />
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Entrada
+                              </Typography>
+                            </Box>
+
                             <Typography
                               variant="h6"
                               fontWeight={700}
-                              color="success.main"
+                              //color="success.main"
                             >
                               {record.checkIn
                                 ? formatTime(record.checkIn.timestamp)
                                 : "--:--"}
                             </Typography>
+                            <Typography
+                              variant="caption"
+                              fontWeight={700}
+                              color="textDisabled"
+                            >
+                              {record.checkIn &&
+                                statusConfig[record.checkIn.status]?.label}
+                            </Typography>
                           </Stack>
                         </Grid>
                         <Grid size={{ xs: 6 }}>
                           <Stack spacing={0.5}>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              Salida
-                            </Typography>
+                            <Box display="flex" alignItems="center">
+                              <Logout
+                                fontSize="small"
+                                sx={{ mr: 1, color: "error.main" }}
+                              />
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Salida
+                              </Typography>
+                            </Box>
                             <Typography
                               variant="h6"
                               fontWeight={700}
-                              color="error.main"
+                              //color="error.main"
                             >
                               {record.checkOut
                                 ? formatTime(record.checkOut.timestamp)
                                 : "--:--"}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              fontWeight={700}
+                              color="textDisabled"
+                            >
+                              {record.checkOut &&
+                                statusConfig[record.checkOut.status]?.label}
                             </Typography>
                           </Stack>
                         </Grid>
@@ -755,168 +887,7 @@ const MyAttendances = () => {
 
         {/* Semana Actual */}
         <Grid size={{ xs: 12, md: 6 }}>
-          <Paper
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              p: { xs: 2, sm: 3 },
-              height: "100%",
-              border: `1px solid ${theme.palette.divider}`,
-              transition: "box-shadow 0.3s",
-              "&:hover": {
-                boxShadow: theme.shadows[4],
-              },
-            }}
-          >
-            <Stack direction="row" alignItems="center" spacing={1.5} mb={3}>
-              <Avatar sx={{ bgcolor: "secondary.main", width: 40, height: 40 }}>
-                <TrendingUp />
-              </Avatar>
-              <Box>
-                <Typography variant="h6" fontWeight={700}>
-                  Semana Actual
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {format(getCurrentWeek[0], "d MMM", { locale: es })} -{" "}
-                  {format(getCurrentWeek[6], "d MMM", { locale: es })}
-                </Typography>
-              </Box>
-            </Stack>
-
-            {/* Días de la semana */}
-            <Grid container spacing={1.5} justifyContent="center" mb={3}>
-              {getCurrentWeek.map((day, idx) => {
-                const status = getDayStatus(day);
-                const cfg = statusConfig[status];
-                const dayName = format(day, "EEE", {
-                  locale: es,
-                }).toUpperCase();
-                const dayNumber = format(day, "d");
-                const isDayToday = isToday(day);
-
-                return (
-                  <Grid key={idx}>
-                    <Tooltip title={cfg.label} arrow placement="top">
-                      <Stack alignItems="center" spacing={1}>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontWeight: isDayToday ? 700 : 600,
-                            color: isDayToday
-                              ? "primary.main"
-                              : "text.secondary",
-                            fontSize: "0.7rem",
-                          }}
-                        >
-                          {dayName}
-                        </Typography>
-
-                        <Button
-                          onClick={() => handleDayClick(day)}
-                          variant={
-                            status === "absent" ? "outlined" : "contained"
-                          }
-                          sx={{
-                            width: { xs: 44, sm: 56 },
-                            height: { xs: 44, sm: 56 },
-                            minWidth: 0,
-                            borderRadius: 2,
-                            ...cfg.sx,
-                            boxShadow: status !== "absent" ? 2 : "none",
-                            "&:hover": {
-                              transform: "scale(1.08)",
-                              boxShadow: status !== "absent" ? 4 : "none",
-                            },
-                            transition: "all 0.2s ease",
-                          }}
-                        >
-                          <Typography variant="body1" fontWeight={700}>
-                            {dayNumber}
-                          </Typography>
-                        </Button>
-
-                        {React.createElement(cfg.Icon, {
-                          sx: {
-                            fontSize: 18,
-                            color: cfg.sx.color,
-                          },
-                        })}
-                      </Stack>
-                    </Tooltip>
-                  </Grid>
-                );
-              })}
-            </Grid>
-
-            {/* Estadísticas de la semana */}
-            <Divider sx={{ my: 2 }} />
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 4 }}>
-                <Box textAlign="center">
-                  <Typography
-                    variant="h5"
-                    fontWeight={700}
-                    color="success.main"
-                  >
-                    {weekStats.complete}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Completos
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 4 }}>
-                <Box textAlign="center">
-                  <Typography
-                    variant="h5"
-                    fontWeight={700}
-                    color="warning.main"
-                  >
-                    {weekStats.late}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Tardanzas
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 4 }}>
-                <Box textAlign="center">
-                  <Typography variant="h5" fontWeight={700} color="error.main">
-                    {weekStats.absent}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Ausencias
-                  </Typography>
-                </Box>
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    mb={0.5}
-                  >
-                    Total horas trabajadas
-                  </Typography>
-                  <Typography
-                    variant="h5"
-                    fontWeight={700}
-                    color="primary.main"
-                  >
-                    {weekStats.totalHours}
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Paper>
+          <AttendanceWeekView data={data} />
         </Grid>
 
         {/* Calendario */}

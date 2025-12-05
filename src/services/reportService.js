@@ -26,6 +26,15 @@ export const getGeneralReport = async (params) => {
   }
 };
 
+export const getMyAttendance = async () => {
+  try {
+    const { data } = await api.get("/reports/my-attendance");
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al obtener asistencias de usuario en sesión");
+  }
+};
+
 /*export const getUserHistoryReport = async (userId, startDate, endDate) => {
   const res = await api.get(`/reports/daily/${userId}`, {
     params: { startDate, endDate },
