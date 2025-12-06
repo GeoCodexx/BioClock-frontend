@@ -7,9 +7,9 @@ import {
   format,
   startOfWeek,
   addDays,
-  isToday,
+  //isToday,
   parseISO,
-  isSameDay,
+  //isSameDay,
 } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -56,6 +56,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import { Link } from "react-router-dom";
 import { getMyAttendance } from "../services/reportService";
 import AttendanceWeekView from "../components/MyAttendace/AttendanceWeekView";
+import AttendanceMonthCalendar from "../components/MyAttendace/AttendanceMonthCalendar";
 
 // Datos de ejemplo
 const mockData = [
@@ -265,7 +266,7 @@ const MyAttendances = () => {
   const [data, setData] = useState({});
 
   // Fetch de datos
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -278,11 +279,11 @@ const MyAttendances = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   // Obtener el día de hoy
   const today = useMemo(() => new Date(), []);
@@ -310,7 +311,7 @@ const MyAttendances = () => {
   }, [today, attendanceByDate]);*/
 
   // Calcular estadísticas de la semana
-  const weekStats = useMemo(() => {
+  /*const weekStats = useMemo(() => {
     let complete = 0;
     let late = 0;
     let absent = 0;
@@ -335,10 +336,10 @@ const MyAttendances = () => {
     const minutes = totalMinutes % 60;
 
     return { complete, late, absent, totalHours: `${hours}h ${minutes}m` };
-  }, [getCurrentWeek, attendanceByDate]);
+  }, [getCurrentWeek, attendanceByDate]);*/
 
   // Función para obtener el estado de un día
-  const getDayStatus = useCallback(
+  /*const getDayStatus = useCallback(
     (date) => {
       const dateStr = format(date, "yyyy-MM-dd");
       const records = attendanceByDate[dateStr];
@@ -362,7 +363,7 @@ const MyAttendances = () => {
       return "absent";
     },
     [attendanceByDate]
-  );
+  );*/
 
   // Configuración de colores/etiquetas por estado
   const statusConfig = useMemo(
@@ -741,11 +742,7 @@ const MyAttendances = () => {
                           icon={
                             statusConfig[record.shiftStatus]?.Icon
                               ? React.createElement(
-                                  statusConfig[
-                                    record.shiftStatus === "late"
-                                      ? "incomplete"
-                                      : record.shiftStatus
-                                  ].Icon,
+                                  statusConfig[record.shiftStatus]?.Icon,
                                   { sx: { fontSize: 16 } }
                                 )
                               : null
@@ -892,7 +889,8 @@ const MyAttendances = () => {
 
         {/* Calendario */}
         <Grid size={{ xs: 12 }}>
-          <Paper
+          <AttendanceMonthCalendar data={data} />
+          {/* <Paper
             elevation={0}
             sx={{
               borderRadius: 3,
@@ -961,7 +959,7 @@ const MyAttendances = () => {
                 }}
               />
             </Box>
-          </Paper>
+          </Paper> */}
         </Grid>
       </Grid>
 

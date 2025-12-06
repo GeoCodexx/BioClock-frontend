@@ -90,11 +90,11 @@ const AttendanceWeekView = ({ data = mockData }) => {
         Icon: CheckCircle,
         colorHex: "#10b981",
       },
-      complete: {
+      /*complete: {
         label: "Completo",
         Icon: CheckCircle,
         colorHex: "#10b981",
-      },
+      },*/
       late: {
         label: "Tardanza",
         Icon: ErrorIcon,
@@ -558,8 +558,9 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
         sx={{
           p: 2.5,
           borderRadius: 2,
-          border: `2px solid ${config.colorHex}`,
-          bgcolor: alpha(config.colorHex, 0.05),
+          //border: `2px solid ${config.colorHex}`,
+          border: `2px solid ${theme.palette.divider}`,
+          //bgcolor: alpha(config.colorHex, 0.05),
           mb: 2,
         }}
       >
@@ -577,12 +578,17 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
             </Typography>
           </Stack>
           <Chip
-            icon={React.createElement(config.Icon, { sx: { fontSize: 18 } })}
+            icon={React.createElement(config.Icon, {
+              sx: { fontSize: 18},
+            })}
+            color={config.colorHex}
             label={config.label}
             size="small"
             sx={{
-              bgcolor: config.colorHex,
-              color: "white",
+              bgcolor: alpha(config.colorHex, 0.15),
+              //color: "white",
+              color: config.colorHex,
+              border: `1px solid ${config.colorHex}`,
               fontWeight: 600,
             }}
           />
