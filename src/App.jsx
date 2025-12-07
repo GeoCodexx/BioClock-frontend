@@ -45,8 +45,8 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="users" element={<Users />} />
             <Route path="fingerprints" element={<Fingerprint />} />
-            <Route path="roles" element={<Roles />} />
-            <Route path="permissions" element={<Permissions />} />
+            <Route path="users/roles" element={<Roles />} />
+            <Route path="users/permissions" element={<Permissions />} />
             <Route path="devices" element={<Devices />} />
             <Route path="departments" element={<Departments />} />
             <Route path="schedules" element={<Schedules />} />

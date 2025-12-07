@@ -34,13 +34,10 @@ const drawerWidth = 260;
 const collapsedWidth = 80;
 
 const menuItems = [
-  { text: "Dashboard", path: "/", icon: <DashboardIcon /> },
+  { text: "Panel Estadístico", path: "/", icon: <DashboardIcon /> },
   { text: "Horarios", path: "/schedules", icon: <EventNoteIcon /> },
   { text: "Departamentos", path: "/departments", icon: <BusinessIcon /> },
   { text: "Dispositivos", path: "/devices", icon: <DevicesIcon /> },
-  { text: "Permisos", path: "/permissions", icon: <VpnKeyIcon /> },
-  { text: "Roles", path: "/roles", icon: <VpnKeyIcon /> },
-  { text: "Usuarios", path: "/users", icon: <PeopleIcon /> },
   {
     text: "Huellas Dactilares",
     path: "/fingerprints",
@@ -48,6 +45,15 @@ const menuItems = [
   },
   { text: "Asistencias", path: "/attendances", icon: <EventNoteIcon /> },
   { text: "Mi Asistencia", path: "/myattendances", icon: <EventNoteIcon /> },
+    {
+    text: "Gestión de Usuarios",
+    icon: <PeopleIcon />,
+    children: [
+      { text: "Permisos", path: "users/permissions", icon: <VpnKeyIcon /> },
+      { text: "Roles", path: "users/roles", icon: <VpnKeyIcon /> },
+      { text: "Usuarios", path: "/users", icon: <PeopleIcon /> },
+    ],
+  },
   {
     text: "Reportes",
     icon: <AssessmentIcon />,
