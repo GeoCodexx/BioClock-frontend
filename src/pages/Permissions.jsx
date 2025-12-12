@@ -242,12 +242,17 @@ export default function Permissions() {
           sx={{
             display: "flex",
             alignItems: "center",
-            color: "inherit",
+            gap: 0.5,
+            color: "text.secondary",
             textDecoration: "none",
-            "&:hover": { color: "primary.main" },
+            transition: "color 0.2s",
+            "&:hover": {
+              color: "primary.main",
+            },
           }}
         >
           <HomeIcon fontSize="small" />
+          {!isMobile && <Typography variant="body2">Inicio</Typography>}
         </Link>
         <Typography variant="body2" color="text.primary">
           Permisos
@@ -303,7 +308,7 @@ export default function Permissions() {
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 2,
+            py: isMobile ? 2.5 : 4,
           }}
         >
           {isMobile ? (

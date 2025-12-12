@@ -166,7 +166,7 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
         position: 'relative',
         overflow: 'hidden',
-        '&::before': {
+        /*'&::before': {
           content: '""',
           position: 'absolute',
           top: 0,
@@ -174,7 +174,7 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
           right: 0,
           height: '4px',
           background: `linear-gradient(90deg, ${colors.join(', ')})`,
-        }
+        }*/
       }}
     >
       <CardContent sx={{ p: 4 }}>
@@ -301,7 +301,7 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                  <Box
+                  {/* <Box
                     sx={{
                       width: 32,
                       height: 32,
@@ -317,7 +317,7 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
                     }}
                   >
                     {statusConfig[item.status]?.icon}
-                  </Box>
+                  </Box> */}
                   <Typography variant="body2" sx={{ fontWeight: 600, color: '#666', flex: 1 }}>
                     {item.label}
                   </Typography>

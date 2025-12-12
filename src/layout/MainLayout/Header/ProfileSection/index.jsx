@@ -86,11 +86,12 @@ const ProfileSection = () => {
           <Avatar
             src="/static/images/avatar.jpg"
             sx={{
-              width: isMobile ? 24 : 36,
-              height: isMobile ? 24 : 36,
+              width: /*isMobile ? 24 :*/ 36,
+              height: /*isMobile ? 24 :*/ 36,
               bgcolor: theme.palette.primary.main,
               color: theme.palette.primary.contrastText,
               border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              //fontSize: "1rem",
               transition: "all 0.3s ease",
               "&:hover": {
                 transform: "scale(1.05)",
@@ -102,6 +103,9 @@ const ProfileSection = () => {
             }}
           >
             {isAuthenticated && user ? user.name.charAt(0) : ""}
+            {/*isAuthenticated && user
+              ? (user.name?.[0] + user.firstSurname?.[0]).toUpperCase()
+              : ""*/}
           </Avatar>
           {/* <Typography
             variant="subtitle1"

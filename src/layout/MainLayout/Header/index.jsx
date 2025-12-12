@@ -213,7 +213,7 @@ const Header = memo(
         zIndex: isMobile ? theme.zIndex.drawer - 1 : theme.zIndex.drawer + 1,
         bgcolor: theme.palette.background.paper,
         color: theme.palette.text.primary,
-        boxShadow: `0 1px 3px ${alpha(theme.palette.common.black, 0.08)}`,
+       // boxShadow: `0 1px 3px ${alpha(theme.palette.common.black, 0.08)}`,
         width: "100%",
         borderBottom: `1px solid ${theme.palette.divider}`,
         transition: "all 0.3s ease",
@@ -232,7 +232,7 @@ const Header = memo(
     );
 
     return (
-      <AppBar position="fixed" sx={appBarStyles}>
+      <AppBar position="fixed" sx={appBarStyles} elevation={0}>
         <Toolbar sx={toolbarStyles}>
           {isMobile ? (
             <MobileView

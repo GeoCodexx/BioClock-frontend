@@ -27,7 +27,6 @@ import {
 } from "@mui/icons-material";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import { Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Paper,
@@ -51,9 +50,10 @@ import {
   Fade,
   Skeleton,
   CardContent,
+  Link,
 } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
-import { Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import { getMyAttendance } from "../services/reportService";
 import AttendanceWeekView from "../components/MyAttendace/AttendanceWeekView";
 import AttendanceMonthCalendar from "../components/MyAttendace/AttendanceMonthCalendar";
@@ -510,63 +510,6 @@ const MyAttendances = () => {
     setTimeout(() => setSelectedDay(null), 200);
   }, []);
 
-  /*const breadcrumbItems = useMemo(
-    () => (
-      <Breadcrumbs
-        aria-label="breadcrumb"
-        separator={<NavigateNextIcon fontSize="small" />}
-        sx={{ fontSize: isMobile ? "0.875rem" : "1rem" }}
-      >
-        <Link
-          component={RouterLink}
-          to="/"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            color: "text.secondary",
-            textDecoration: "none",
-            "&:hover": { color: "primary.main" },
-            transition: "color 0.2s",
-          }}
-        >
-          <HomeIcon sx={{ mr: 0.5 }} fontSize="small" />
-          {!isMobile && "Inicio"}
-        </Link>
-        <Typography variant="body2" color="text.primary" fontWeight={600}>
-          Mi Asistencia
-        </Typography>
-      </Breadcrumbs>
-    ),
-    [isMobile]
-  );*/
-  const breadcrumbItems = useMemo(
-    () => (
-      <Breadcrumbs
-        aria-label="breadcrumb"
-        separator={<NavigateNextIcon fontSize="small" />}
-        sx={isMobile ? { fontSize: "0.875rem" } : undefined}
-      >
-        <Link
-          component={RouterLink}
-          to="/"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            color: "inherit",
-            textDecoration: "none",
-            "&:hover": { color: "primary.main" },
-          }}
-        >
-          <HomeIcon fontSize="small" />
-        </Link>
-        <Typography variant="body2" color="text.primary">
-          Mi Asistencia
-        </Typography>
-      </Breadcrumbs>
-    ),
-    [isMobile]
-  );
-
   // Componente Header memoizado
   const PageHeader = memo(({ date, isMobile }) => {
     const breadcrumbs = (
@@ -601,14 +544,14 @@ const MyAttendances = () => {
 
     return (
       <Card
-        elevation={0}
+        elevation={1}
         sx={{
           borderRadius: 3,
           mb: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          //background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          //color: "white",
+          /*border: "1px solid",
+        borderColor: "divider",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        color: "white",*/
         }}
       >
         <CardContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>
@@ -633,8 +576,8 @@ const MyAttendances = () => {
                       )}
                       size="small"
                       sx={{
-                        //bgcolor: "rgba(255,255,255,0.2)",
-                        //color: "white",
+                        /* bgcolor: "rgba(255,255,255,0.2)",
+                      color: "white",*/
                         fontWeight: 500,
                       }}
                     />

@@ -134,7 +134,7 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
 
       <Box sx={{ position: 'relative', zIndex: 1 }}>
         {/* Header: Ícono y Badge de tendencia */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Box /*sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}*/>
           <Box
             sx={{
               width: 64,
@@ -144,7 +144,7 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
               justifyContent: 'center',
               borderRadius: 3,
               background: color,
-              boxShadow: `0 8px 24px ${color}40`,
+              //boxShadow: `0 8px 24px ${color}40`,
               position: 'relative',
               overflow: 'hidden',
               transition: 'all 0.3s ease',
@@ -169,7 +169,7 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
             {icon}
           </Box>
 
-          <Box
+          {/* <Box
             sx={{
               px: 1.5,
               py: 0.75,
@@ -202,12 +202,13 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
                 strokeLinecap="round"
               />
             </Box>
-          </Box>
+          </Box> */}
         </Box>
 
         {/* Contador */}
         <Typography
           variant="h2"
+          align="center"
           sx={{
             fontWeight: 800,
             mb: 1.5,
@@ -225,9 +226,10 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
         </Typography>
 
         {/* Footer: Título y Progress Ring */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Typography
             variant="body2"
+            align="center"
             sx={{
               color: 'text.secondary',
               fontWeight: 600,
@@ -240,7 +242,7 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
           </Typography>
 
           {/* Progress Ring SVG */}
-          <Box
+          {/* <Box
             component="svg"
             sx={{ width: 36, height: 36 }}
             viewBox="0 0 36 36"
@@ -269,7 +271,7 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
                 transition: 'stroke-dashoffset 0.5s ease',
               }}
             />
-          </Box>
+          </Box> */}
         </Box>
       </Box>
     </Card>

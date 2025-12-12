@@ -229,18 +229,23 @@ export default function Schedules() {
         sx={isMobile ? { fontSize: "0.875rem" } : undefined}
       >
         <Link
-          component={RouterLink}
-          to="/"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            color: "inherit",
-            textDecoration: "none",
-            "&:hover": { color: "primary.main" },
-          }}
-        >
-          <HomeIcon fontSize="small" />
-        </Link>
+        component={RouterLink}
+        to="/"
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
+          color: "text.secondary",
+          textDecoration: "none",
+          transition: "color 0.2s",
+          "&:hover": {
+            color: "primary.main",
+          },
+        }}
+      >
+        <HomeIcon fontSize="small" />
+        {!isMobile && <Typography variant="body2">Inicio</Typography>}
+      </Link>
         <Typography variant="body2" color="text.primary">
           Horarios
         </Typography>
@@ -295,7 +300,7 @@ export default function Schedules() {
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 2,
+            py: isMobile ? 2.5 : 3,
           }}
         >
           {isMobile ? (

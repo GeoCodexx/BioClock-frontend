@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import StatisticsCard from "../components/dashboard/StatisticsCard";
 import AttendanceChart from "../components/dashboard/AttendanceChart";
-import RecentActivity from "../components/dashboard/RecentActivity";
+//import RecentActivity from "../components/dashboard/RecentActivity";
 import DepartmentDistribution from "../components/dashboard/DepartmentDistribution";
 
 // Iconos
@@ -71,14 +71,14 @@ const Dashboard = () => {
   const PageHeader = memo(({ date, isMobile }) => {
     return (
       <Card
-        elevation={0}
+        elevation={1}
         sx={{
           borderRadius: 3,
           mb: 3,
-          border: "1px solid",
+         /* border: "1px solid",
           borderColor: "divider",
-          //background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          //color: "white",
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          color: "white",*/
         }}
       >
         <CardContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>
@@ -258,7 +258,7 @@ const Dashboard = () => {
 
       {/* Gráficos y Tablas */}
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 7 }}>
+        <Grid size={{ xs: 12, md: 7 }} /*display={"flex"}*/>
           <AttendanceChart weeklyAttendances={weeklyAttendances} />
         </Grid>
         <Grid size={{ xs: 12, md: 5 }}>

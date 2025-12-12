@@ -26,9 +26,9 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { format } from "date-fns";
+import HomeIcon from "@mui/icons-material/Home";
 import {
   Search as SearchIcon,
-  HomeOutlined as HomeIcon,
   NavigateNext as NavigateNextIcon,
   FilterList as FilterListIcon,
   /*Download as DownloadIcon,
@@ -467,12 +467,12 @@ const PageHeader = memo(({ date, isMobile }) => {
 
   return (
     <Card
-      elevation={0}
+      elevation={1}
       sx={{
         borderRadius: 3,
         mb: 3,
-        border: "1px solid",
-        borderColor: "divider",
+        //border: "1px solid",
+        //borderColor: "divider",
         //background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
         //color: "white",
       }}

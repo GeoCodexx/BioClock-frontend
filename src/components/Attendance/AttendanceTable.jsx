@@ -44,7 +44,12 @@ import {
   Error as ErrorIcon,
 } from "@mui/icons-material";
 
-const AttendanceTable = ({ attendances = [], onEdit, onDelete, loading = false }) => {
+const AttendanceTable = ({
+  attendances = [],
+  onEdit,
+  onDelete,
+  loading = false,
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("timestamp");
@@ -180,13 +185,15 @@ const AttendanceTable = ({ attendances = [], onEdit, onDelete, loading = false }
     switch (type) {
       case "IN":
         return {
-          color: theme.palette.info.main,
-          bgcolor: alpha(theme.palette.info.main, 0.15),
+          color: theme.palette.success.main,
+          bgcolor: "transparent",
+          //bgcolor: alpha(theme.palette.info.main, 0.15),
         };
       case "OUT":
         return {
-          color: theme.palette.warning.main,
-          bgcolor: alpha(theme.palette.warning.main, 0.15),
+          color: theme.palette.error.main,
+          bgcolor: "transparent",
+          //bgcolor: alpha(theme.palette.warning.main, 0.15),
         };
       default:
         return {
@@ -607,7 +614,8 @@ const AttendanceTable = ({ attendances = [], onEdit, onDelete, loading = false }
                                     HORARIO:
                                   </Typography>
                                   <Typography variant="body2">
-                                    {attendance.scheduleId?.name || "Sin horario"}
+                                    {attendance.scheduleId?.name ||
+                                      "Sin horario"}
                                   </Typography>
                                 </Stack>
 
@@ -631,7 +639,8 @@ const AttendanceTable = ({ attendances = [], onEdit, onDelete, loading = false }
                                   </Typography>
                                   <Chip
                                     label={
-                                      attendance.verificationMethod === "fingerprint"
+                                      attendance.verificationMethod ===
+                                      "fingerprint"
                                         ? "Huella Digital"
                                         : attendance.verificationMethod || "—"
                                     }
@@ -1062,7 +1071,8 @@ const AttendanceTable = ({ attendances = [], onEdit, onDelete, loading = false }
                               </Stack>
                               <Chip
                                 label={
-                                  attendance.verificationMethod === "fingerprint"
+                                  attendance.verificationMethod ===
+                                  "fingerprint"
                                     ? "Huella Digital"
                                     : attendance.verificationMethod === "rfid"
                                     ? "Tarjeta RFID"

@@ -152,7 +152,7 @@ const AttendanceChart = ({ weeklyAttendances }) => {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
         position: 'relative',
         overflow: 'hidden',
-        '&::before': {
+        /*'&::before': {
           content: '""',
           position: 'absolute',
           top: 0,
@@ -160,7 +160,7 @@ const AttendanceChart = ({ weeklyAttendances }) => {
           right: 0,
           height: '4px',
           background: 'linear-gradient(90deg, #2196F3 0%, #673AB7 50%, #F44336 100%)',
-        }
+        }*/
       }}
     >
       <CardContent sx={{ p: 4 }}>
