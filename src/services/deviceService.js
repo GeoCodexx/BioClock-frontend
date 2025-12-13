@@ -63,6 +63,11 @@ export const getPaginatedDevices = async ({
     const { data } = await api.get("/devices/paginated", {
       params: { search, page, limit },
     });
+    const formattedData = data.devices.map((s, i) => ({
+      ...s,
+      index: (page - 1) * limit + i + 1,
+    }));
+    data.devices = formattedData;
     return data;
   } catch (error) {
     handleApiError(error, "Error al obtener dispositivos paginados");

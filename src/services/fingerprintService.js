@@ -19,6 +19,12 @@ export const getFingerprintTemplates = async ({
     const { data } = await api.get("/biometric-templates", {
       params: { search, page, limit, status },
     });
+
+    const formattedData = data.data.map((s, i) => ({
+      ...s,
+      index: (page - 1) * limit + i + 1,
+    }));
+    data.data = formattedData;
     
     return { fingerprints: data.data, total: data.pagination.total };
   } catch (error) {

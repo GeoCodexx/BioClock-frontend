@@ -63,6 +63,11 @@ export const getPaginatedSchedules = async ({
     const { data } = await api.get("/schedules/paginated", {
       params: { search, page, limit },
     });
+    const formattedData = data.schedules.map((s, i) => ({
+      ...s,
+      index: (page - 1) * limit + i + 1,
+    }));
+    data.schedules = formattedData;
     return data;
   } catch (error) {
     handleApiError(error, "Error al obtener los horarios paginados");

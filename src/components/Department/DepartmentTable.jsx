@@ -35,7 +35,7 @@ import PlaceIcon from "@mui/icons-material/Place";
 const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [orderBy, setOrderBy] = useState("name");
+  const [orderBy, setOrderBy] = useState("index");
   const [order, setOrder] = useState("asc");
   //const [openRows, setOpenRows] = useState({});
   const [openRowId, setOpenRowId] = useState(null);
@@ -81,6 +81,12 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
 
   // Configuración de columnas
   const columns = [
+    {
+      id: "index",
+      label: "#",
+      sortable: true,
+      minWidth: 50,
+    },
     {
       id: "name",
       label: "Nombre",
@@ -248,7 +254,6 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                         <Box>
                           <Typography
                             variant="body2"
-                            fontWeight={600}
                             sx={{ mb: 0.5 }}
                           >
                             {department.name || "—"}
@@ -467,11 +472,18 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
             >
               <TableCell>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography variant="body2">
+                    {department.index || "—"}
+                  </Typography>
+                </Box>
+              </TableCell>
+              <TableCell>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   {/* <EventIcon
                     fontSize="small"
                     sx={{ color: theme.palette.primary.main }}
                   /> */}
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography variant="body2">
                     {department.name || "—"}
                   </Typography>
                 </Box>

@@ -84,12 +84,12 @@ const FingerprintTable = ({
   fingerprints = [],
   onApprove,
   onReject,
-  onDelete
+  onDelete,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [orderBy, setOrderBy] = useState("createdAt");
-  const [order, setOrder] = useState("desc");
+  const [orderBy, setOrderBy] = useState("index");
+  const [order, setOrder] = useState("asc");
   const [openRowId, setOpenRowId] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedFingerprint, setSelectedFingerprint] = useState(null);
@@ -133,6 +133,12 @@ const FingerprintTable = ({
 
   // Configuración de columnas
   const columns = [
+    {
+      id: "index",
+      label: "#",
+      sortable: true,
+      minWidth: 50,
+    },
     {
       id: "userId.dni",
       label: "DNI",
@@ -322,7 +328,7 @@ const FingerprintTable = ({
                         <Box>
                           <Typography
                             variant="body2"
-                            fontWeight={600}
+                            //fontWeight={600}
                             sx={{ mb: 0.5 }}
                           >
                             {formatters.fullName(fingerprint.userId)}
@@ -657,9 +663,20 @@ const FingerprintTable = ({
                       : alpha(theme.palette.grey[500], 0.02),
                 }}
               >
+                {/* Indice */}
+                <TableCell align="center">
+                  <Typography variant="body2">
+                    {fingerprint.index || "—"}
+                  </Typography>
+                </TableCell>
                 {/* DNI */}
                 <TableCell>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography
+                    variant="body2"
+                  >
+                    {fingerprint.userId?.dni || "—"}
+                  </Typography>
+                  {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <BadgeIcon
                       fontSize="small"
                       sx={{ color: theme.palette.primary.main }}
@@ -674,7 +691,7 @@ const FingerprintTable = ({
                     >
                       {fingerprint.userId?.dni || "—"}
                     </Typography>
-                  </Box>
+                  </Box> */}
                 </TableCell>
 
                 {/* Usuario */}
@@ -799,20 +816,20 @@ const FingerprintTable = ({
                     //   —
                     // </Typography>
                     <Tooltip title="Eliminar huella" arrow>
-                        <IconButton
-                          size="small"
-                          onClick={() => onDelete && onDelete(fingerprint._id)}
-                          sx={{
-                            color: theme.palette.error.main,
-                            bgcolor: alpha(theme.palette.error.main, 0.08),
-                            "&:hover": {
-                              bgcolor: alpha(theme.palette.error.main, 0.15),
-                            },
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                      <IconButton
+                        size="small"
+                        onClick={() => onDelete && onDelete(fingerprint._id)}
+                        sx={{
+                          color: theme.palette.error.main,
+                          bgcolor: alpha(theme.palette.error.main, 0.08),
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.error.main, 0.15),
+                          },
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
                   )}
                 </TableCell>
               </TableRow>

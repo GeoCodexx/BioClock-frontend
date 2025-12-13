@@ -402,7 +402,7 @@ export default function Fingerprints() {
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 2,
+            py: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (

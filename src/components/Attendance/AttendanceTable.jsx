@@ -40,6 +40,7 @@ import {
   Login as LoginIcon,
   Logout as LogoutIcon,
   CheckCircle as CheckCircleIcon,
+  Info as InfoIcon,
   Warning as WarningIcon,
   Error as ErrorIcon,
 } from "@mui/icons-material";
@@ -153,6 +154,7 @@ const AttendanceTable = ({
       on_time: "A Tiempo",
       late: "Tardanza",
       early: "Temprano",
+      early_exit: "Salida Temprana",
       absent: "Ausente",
       justified: "Justificado",
       pending: "Pendiente",
@@ -209,9 +211,11 @@ const AttendanceTable = ({
       case "on_time":
         return <CheckCircleIcon fontSize="small" />;
       case "late":
-        return <ErrorIcon fontSize="small" />;
+        return <WarningIcon fontSize="small" />;
       case "early":
-        return <CheckCircleIcon fontSize="small" />;
+        return <InfoIcon fontSize="small" />;
+      case "early_exit":
+        return <ErrorIcon fontSize="small" />;
       case "justified":
         return <CheckCircleIcon fontSize="small" />;
       default:
@@ -229,23 +233,23 @@ const AttendanceTable = ({
         };
       case "late":
         return {
-          color: theme.palette.error.main,
-          bgcolor: alpha(theme.palette.error.main, 0.15),
+          color: theme.palette.warning.main,
+          bgcolor: alpha(theme.palette.warning.main, 0.15),
         };
       case "early":
-        return {
-          color: theme.palette.info.main,
-          bgcolor: alpha(theme.palette.info.main, 0.15),
-        };
-      case "justified":
         return {
           color: theme.palette.secondary.main,
           bgcolor: alpha(theme.palette.secondary.main, 0.15),
         };
+      case "justified":
+        return {
+          color: theme.palette.info.main,
+          bgcolor: alpha(theme.palette.info.main, 0.15),
+        };
       default:
         return {
-          color: theme.palette.warning.main,
-          bgcolor: alpha(theme.palette.warning.main, 0.15),
+          color: theme.palette.error.main,
+          bgcolor: alpha(theme.palette.error.main, 0.15),
         };
     }
   };

@@ -75,7 +75,7 @@ const Dashboard = () => {
         sx={{
           borderRadius: 3,
           mb: 3,
-         /* border: "1px solid",
+          /* border: "1px solid",
           borderColor: "divider",
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
           color: "white",*/
@@ -257,10 +257,11 @@ const Dashboard = () => {
       </Grid> */}
 
       {/* Gráficos y Tablas */}
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 7 }} /*display={"flex"}*/>
+      <Grid container spacing={3} alignItems={"stretch"}>
+        <Grid size={{ xs: 12, md: 7 }}>
           <AttendanceChart weeklyAttendances={weeklyAttendances} />
         </Grid>
+
         <Grid size={{ xs: 12, md: 5 }}>
           <DepartmentDistribution attendanceByStatus={attendanceByStatus} />
         </Grid>

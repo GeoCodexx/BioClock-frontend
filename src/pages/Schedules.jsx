@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, memo } from "react";
+import { useState, useEffect, useCallback, useMemo} from "react";
 import {
   Typography,
   CircularProgress,
@@ -356,7 +356,7 @@ export default function Schedules() {
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 2,
+            py: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (

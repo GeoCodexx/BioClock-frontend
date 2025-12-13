@@ -63,6 +63,11 @@ export const getPaginatedDepartments = async ({
     const { data } = await api.get("/departments/paginated", {
       params: { search, page, limit },
     });
+    const formattedData = data.departments.map((s, i) => ({
+      ...s,
+      index: (page - 1) * limit + i + 1,
+    }));
+    data.departments = formattedData;
     return data;
   } catch (error) {
     handleApiError(error, "Error al obtener los departamentos paginados");

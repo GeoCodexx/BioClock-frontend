@@ -152,6 +152,7 @@ const AttendanceChart = ({ weeklyAttendances }) => {
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
         position: 'relative',
         overflow: 'hidden',
+        height: '100%',
         /*'&::before': {
           content: '""',
           position: 'absolute',
