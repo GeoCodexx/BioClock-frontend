@@ -62,6 +62,11 @@ export const getPaginatedRoles = async ({
     const { data } = await api.get("/roles/paginated", {
       params: { search, page, limit },
     });
+    const formattedData = data.roles.map((s, i) => ({
+      ...s,
+      index: (page - 1) * limit + i + 1,
+    }));
+    data.roles = formattedData;
     return data;
   } catch (error) {
     handleApiError(error, "Error al obtener los departamentos paginados");

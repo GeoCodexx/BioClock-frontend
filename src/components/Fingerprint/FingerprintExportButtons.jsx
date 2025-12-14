@@ -23,9 +23,11 @@ import "jspdf-autotable";
 
 // ============ UTILIDADES ============
 const formatters = {
-  fullName: (user) => 
-    user ? `${user.name} ${user.firstSurname} ${user.secondSurname || ""}`.trim() : "—",
-  
+  fullName: (user) =>
+    user
+      ? `${user.name} ${user.firstSurname} ${user.secondSurname || ""}`.trim()
+      : "—",
+
   finger: (finger) => {
     const fingerMap = {
       pulgar_derecho: "Pulgar derecho",
@@ -41,7 +43,7 @@ const formatters = {
     };
     return fingerMap[finger] || finger?.replace(/_/g, " ") || "—";
   },
-  
+
   date: (dateString) => {
     if (!dateString) return "—";
     return new Date(dateString).toLocaleDateString("es-ES", {
@@ -50,7 +52,7 @@ const formatters = {
       year: "numeric",
     });
   },
-  
+
   status: (status) => {
     const statusMap = {
       approved: "Aprobado",
@@ -70,7 +72,7 @@ const formatters = {
   },
 };
 
-const getFileName = (extension) => 
+const getFileName = (extension) =>
   `huellas_dactilares_${new Date().toISOString().split("T")[0]}.${extension}`;
 
 // ============ COMPONENTE PRINCIPAL ============
@@ -82,22 +84,24 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
   const open = Boolean(anchorEl);
 
   // Validación y transformación de datos
-  const isDisabled = useMemo(() => 
-    !fingerprints || fingerprints.length === 0, 
+  const isDisabled = useMemo(
+    () => !fingerprints || fingerprints.length === 0,
     [fingerprints]
   );
 
-  const formattedData = useMemo(() => 
-    fingerprints.map((fp) => ({
-      dni: fp.userId?.dni || "—",
-      usuario: formatters.fullName(fp.userId),
-      dedo: formatters.finger(fp.finger),
-      dispositivo: fp.deviceId?.name || "—",
-      aprobador: fp.approvedBy ? formatters.fullName(fp.approvedBy) : "—",
-      fecha: formatters.date(fp.createdAt),
-      estado: formatters.status(fp.status),
-      estadoRaw: fp.status,
-    })),
+  const formattedData = useMemo(
+    () =>
+      fingerprints.map((fp) => ({
+        index: fp.index || "—",
+        dni: fp.userId?.dni || "—",
+        usuario: formatters.fullName(fp.userId),
+        dedo: formatters.finger(fp.finger),
+        dispositivo: fp.deviceId?.name || "—",
+        aprobador: fp.approvedBy ? formatters.fullName(fp.approvedBy) : "—",
+        fecha: formatters.date(fp.createdAt),
+        estado: formatters.status(fp.status),
+        estadoRaw: fp.status,
+      })),
     [fingerprints]
   );
 
@@ -148,10 +152,11 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
 
           if (rowNumber > 1) {
             const dataRow = formattedData[rowNumber - 2];
-            
+
             cell.alignment = {
               vertical: "middle",
-              horizontal: colNumber === 1 || colNumber === 6 ? "center" : "left",
+              horizontal:
+                colNumber === 1 || colNumber === 6 ? "center" : "left",
               wrapText: true,
             };
             row.height = 22;
@@ -194,7 +199,10 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
       worksheet.getCell(`A${lastRow}`).value = "Total de registros:";
       worksheet.getCell(`A${lastRow}`).font = { bold: true };
       worksheet.getCell(`B${lastRow}`).value = fingerprints.length;
-      worksheet.getCell(`B${lastRow}`).font = { bold: true, color: { argb: "FF1976D2" } };
+      worksheet.getCell(`B${lastRow}`).font = {
+        bold: true,
+        color: { argb: "FF1976D2" },
+      };
 
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
@@ -242,6 +250,7 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
 
       // Preparar datos
       const tableData = formattedData.map((row) => [
+        row.index,
         row.dni,
         row.usuario,
         row.dedo,
@@ -254,10 +263,21 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
       // Tabla
       doc.autoTable({
         startY: 42,
-        head: [["DNI", "Usuario", "Dedo", "Dispositivo", "Aprobador", "Fecha", "Estado"]],
+        head: [
+          [
+            "#",
+            "DNI",
+            "Usuario",
+            "Dedo",
+            "Dispositivo",
+            "Aprobador",
+            "Fecha",
+            "Estado",
+          ],
+        ],
         body: tableData,
         styles: {
-          fontSize: 8,
+          fontSize: 9,
           cellPadding: 3,
           lineColor: [200, 200, 200],
           lineWidth: 0.1,
@@ -267,25 +287,37 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
           textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",
-          fontSize: 9,
+          fontSize: 10,
         },
         columnStyles: {
-          0: { cellWidth: 20, halign: "center", font: "courier", fontStyle: "bold" },
-          1: { cellWidth: 50 },
-          2: { cellWidth: 30 },
-          3: { cellWidth: 40 },
-          4: { cellWidth: 50 },
-          5: { cellWidth: 20, halign: "center" },
-          6: { cellWidth: 25, halign: "center", fontStyle: "bold" },
+          0: { cellWidth: 12, halign: "center" },
+          1: {
+            cellWidth: 24,
+            halign: "center",
+            font: "courier",
+            fontStyle: "bold",
+          },
+          2: { cellWidth: 53 },
+          3: { cellWidth: 34 },
+          4: { cellWidth: 41 },
+          5: { cellWidth: 53 },
+          6: { cellWidth: 26, halign: "center" },
+          7: { cellWidth: 26, halign: "center", fontStyle: "bold" },
         },
         alternateRowStyles: {
           fillColor: [245, 247, 250],
         },
         didDrawCell: (data) => {
           // DNI con fondo especial
-          if (data.column.index === 0 && data.section === "body") {
+          if (data.column.index === 1 && data.section === "body") {
             doc.setFillColor(227, 242, 253);
-            doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, "F");
+            doc.rect(
+              data.cell.x,
+              data.cell.y,
+              data.cell.width,
+              data.cell.height,
+              "F"
+            );
             doc.setTextColor(13, 71, 161);
             doc.setFont("courier", "bold");
             doc.text(
@@ -297,10 +329,10 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
           }
 
           // Estado con colores
-          if (data.column.index === 6 && data.section === "body") {
+          if (data.column.index === 7 && data.section === "body") {
             const status = formattedData[data.row.index]?.estadoRaw;
             const colors = formatters.statusColor(status);
-            
+
             const bgColors = {
               approved: [232, 245, 233],
               pending: [255, 243, 224],
@@ -316,7 +348,13 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
             const textColor = textColors[status] || [117, 117, 117];
 
             doc.setFillColor(...bgColor);
-            doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, "F");
+            doc.rect(
+              data.cell.x,
+              data.cell.y,
+              data.cell.width,
+              data.cell.height,
+              "F"
+            );
             doc.setTextColor(...textColor);
             doc.setFont(undefined, "bold");
             doc.text(
@@ -363,7 +401,9 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
   if (isMobile) {
     return (
       <>
-        <Tooltip title={isDisabled ? "No hay registros para exportar" : "Exportar"}>
+        <Tooltip
+          title={isDisabled ? "No hay registros para exportar" : "Exportar"}
+        >
           <span>
             <IconButton
               onClick={handleClick}
@@ -371,7 +411,9 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
               sx={{
                 bgcolor: theme.palette.background.paper,
                 "&:hover": { bgcolor: theme.palette.action.hover },
-                "&:disabled": { bgcolor: theme.palette.action.disabledBackground },
+                "&:disabled": {
+                  bgcolor: theme.palette.action.disabledBackground,
+                },
               }}
             >
               <FileDownloadIcon />
@@ -385,18 +427,26 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
           transformOrigin={{ horizontal: "right", vertical: "top" }}
           anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
           slotProps={{
-            paper: { sx: { mt: 1, minWidth: 200, boxShadow: theme.shadows[4] } },
+            paper: {
+              sx: { mt: 1, minWidth: 200, boxShadow: theme.shadows[4] },
+            },
           }}
         >
           <MenuItem onClick={handleExportExcel}>
             <ListItemIcon>
-              <DescriptionIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
+              <DescriptionIcon
+                fontSize="small"
+                sx={{ color: theme.palette.success.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a Excel</ListItemText>
           </MenuItem>
           <MenuItem onClick={handleExportPDF}>
             <ListItemIcon>
-              <PictureAsPdfIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
+              <PictureAsPdfIcon
+                fontSize="small"
+                sx={{ color: theme.palette.error.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a PDF</ListItemText>
           </MenuItem>
@@ -408,14 +458,19 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
   if (isTablet) {
     return (
       <Stack direction="row" spacing={1}>
-        <Tooltip title={isDisabled ? "No hay registros" : "Exportar a Excel"} arrow>
+        <Tooltip
+          title={isDisabled ? "No hay registros" : "Exportar a Excel"}
+          arrow
+        >
           <span>
             <IconButton
               onClick={handleExportExcel}
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
                 color: theme.palette.success.main,
                 border: `1px solid ${theme.palette.success.light}`,
                 "&:hover": { bgcolor: theme.palette.success.light + "40" },
@@ -429,14 +484,19 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title={isDisabled ? "No hay registros" : "Exportar a PDF"} arrow>
+        <Tooltip
+          title={isDisabled ? "No hay registros" : "Exportar a PDF"}
+          arrow
+        >
           <span>
             <IconButton
               onClick={handleExportPDF}
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
                 color: theme.palette.error.main,
                 border: `1px solid ${theme.palette.error.light}`,
                 "&:hover": { bgcolor: theme.palette.error.light + "40" },
@@ -456,7 +516,14 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
 
   return (
     <Stack direction="row" spacing={1.5}>
-      <Tooltip title={isDisabled ? "No hay registros para exportar" : "Descargar en formato Excel"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay registros para exportar"
+            : "Descargar en formato Excel"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -470,7 +537,9 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
               },
             }}
           >
@@ -478,7 +547,14 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
           </Button>
         </span>
       </Tooltip>
-      <Tooltip title={isDisabled ? "No hay registros para exportar" : "Descargar en formato PDF"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay registros para exportar"
+            : "Descargar en formato PDF"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -492,7 +568,9 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
               },
             }}
           >

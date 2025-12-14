@@ -45,24 +45,16 @@ import {
 const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [orderBy, setOrderBy] = useState("name");
+  const [orderBy, setOrderBy] = useState("index");
   const [order, setOrder] = useState("asc");
   //const [openRows, setOpenRows] = useState({});
   const [openRowId, setOpenRowId] = useState(null); //Para permitir solo una fila abierta
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  // Toggle row collapse
-  /*const handleRowToggle = (userId) => {
-    setOpenRows((prev) => ({
-      ...prev,
-      [userId]: !prev[userId],
-    }));
-  };*/
-
   const handleRowToggle = (userId) => {
-  setOpenRowId((prev) => (prev === userId ? null : userId));
-};
+    setOpenRowId((prev) => (prev === userId ? null : userId));
+  };
 
   // Menu de acciones (mobile)
   const handleMenuOpen = (event, user) => {
@@ -125,6 +117,14 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
       minWidth: 50,
       align: "center",
     },
+        {
+      id: "index",
+      label: "#",
+      sortable: true,
+      minWidth: 50,
+      align: "center",
+    },
+
     { id: "name", label: "Usuario", sortable: true, minWidth: 200 },
     {
       id: "dni",
@@ -301,61 +301,39 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
 
                       {/* Información del Usuario */}
                       <TableCell sx={{ py: 1.5 }}>
-                        <Stack
-                          direction="row"
-                          spacing={1.5}
-                          alignItems="center"
-                        >
-                          <Avatar
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              bgcolor: alpha(theme.palette.primary.main, 0.15),
-                              color: theme.palette.primary.main,
-                              fontWeight: 600,
-                              fontSize: "0.875rem",
-                            }}
+                        <Stack spacing={0.5} flex={1}>
+                          <Typography variant="body2">{fullName}</Typography>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                            flexWrap="wrap"
                           >
-                            {getInitials(user)}
-                          </Avatar>
-                          <Stack spacing={0.5} flex={1}>
-                            <Typography variant="body2" fontWeight={600}>
-                              {fullName}
-                            </Typography>
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              alignItems="center"
-                              flexWrap="wrap"
-                            >
-                              <Chip
-                                label={
+                            <Chip
+                              label={
+                                user.status === "active" ? "Activo" : "Inactivo"
+                              }
+                              size="small"
+                              sx={{
+                                height: 20,
+                                fontSize: "0.7rem",
+                                fontWeight: 600,
+                                bgcolor:
                                   user.status === "active"
-                                    ? "Activo"
-                                    : "Inactivo"
-                                }
-                                size="small"
-                                sx={{
-                                  height: 20,
-                                  fontSize: "0.7rem",
-                                  fontWeight: 600,
-                                  bgcolor:
-                                    user.status === "active"
-                                      ? alpha(theme.palette.success.main, 0.15)
-                                      : alpha(theme.palette.error.main, 0.15),
-                                  color:
-                                    user.status === "active"
-                                      ? theme.palette.success.main
-                                      : theme.palette.error.main,
-                                }}
-                              />
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {user.roleId?.name || "Sin rol"}
-                              </Typography>
-                            </Stack>
+                                    ? alpha(theme.palette.success.main, 0.15)
+                                    : alpha(theme.palette.error.main, 0.15),
+                                color:
+                                  user.status === "active"
+                                    ? theme.palette.success.main
+                                    : theme.palette.error.main,
+                              }}
+                            />
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {user.roleId?.name || "Sin rol"}
+                            </Typography>
                           </Stack>
                         </Stack>
                       </TableCell>
@@ -709,6 +687,7 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                     },
                   }}
                 >
+                  
                   {/* Botón Expandir/Colapsar */}
                   <TableCell align="center" sx={{ py: 2 }}>
                     <IconButton
@@ -729,6 +708,10 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                       )}
                     </IconButton>
                   </TableCell>
+                  {/* Indice */}
+                  <TableCell>
+                    <Typography variant="body2">{user.index || "—"}</Typography>
+                  </TableCell>
 
                   {/* Usuario */}
                   <TableCell>
@@ -745,21 +728,13 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                       >
                         {getInitials(user)}
                       </Avatar>
-                      <Typography variant="body2" fontWeight={600}>
-                        {fullName}
-                      </Typography>
+                      <Typography variant="body2">{fullName}</Typography>
                     </Stack>
                   </TableCell>
 
                   {/* DNI */}
                   <TableCell align="center">
-                    <Typography
-                      variant="body2"
-                      fontWeight={600}
-                      color="text.secondary"
-                    >
-                      {user.dni || "—"}
-                    </Typography>
+                    <Typography variant="body2">{user.dni || "—"}</Typography>
                   </TableCell>
 
                   {/* Email */}

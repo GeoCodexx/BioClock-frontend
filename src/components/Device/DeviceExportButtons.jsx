@@ -36,7 +36,7 @@ export default function DeviceExportButtons({ devices }) {
     setAnchorEl(null);
   };
 
-  // Función para formatear el nombre completo del aprobador
+  // Función para formatear el nombre completo
   const formatFullName = (user) => {
     const parts = [user.name, user.firstSurname, user.secondSurname].filter(
       Boolean
@@ -171,19 +171,22 @@ export default function DeviceExportButtons({ devices }) {
   // Exportar a PDF
   const handleExportPDF = () => {
     try {
-      const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth();
+      // Crear PDF en orientación HORIZONTAL para más espacio
+      const doc = new jsPDF("landscape", "mm", "a4");
+      const pageWidth = doc.internal.pageSize.getWidth(); // ~297mm en horizontal
+      const margins = 14;
+      const availableWidth = pageWidth - margins * 2; // ~269mm disponibles
 
       // Título
       doc.setFontSize(20);
       doc.setTextColor(25, 118, 210);
       doc.setFont(undefined, "bold");
-      doc.text("Listado de Dispositivos", 14, 22);
+      doc.text("Listado de Dispositivos", margins, 22);
 
       // Línea decorativa
       doc.setDrawColor(25, 118, 210);
       doc.setLineWidth(0.5);
-      doc.line(14, 25, pageWidth - 14, 25);
+      doc.line(margins, 25, pageWidth - margins, 25);
 
       // Información del reporte
       doc.setFontSize(9);
@@ -197,24 +200,30 @@ export default function DeviceExportButtons({ devices }) {
           hour: "2-digit",
           minute: "2-digit",
         })}`,
-        14,
+        margins,
         32
       );
-      doc.text(`Total de dispositivos: ${devices.length}`, 14, 37);
+      doc.text(`Total de dispositivos: ${devices.length}`, margins, 37);
 
       // Preparar datos de la tabla
       const tableData = devices.map((dev) => [
+        dev.index || "—",
+        dev.deviceId || "—",
         dev.name || "—",
+        dev.ipAddress || "—",
+        dev.macAddress || "—",
         dev.location || "Sin ubicación",
+        formatFullName(dev.registeredBy),
         dev.status === "active" ? "Activo" : "Inactivo",
       ]);
 
-      // Tabla principal
+      // Tabla principal con anchos optimizados para A4 horizontal
       doc.autoTable({
         startY: 42,
         head: [
           [
-            "deviceId",
+            "#",
+            "Device ID",
             "Nombre",
             "Dirección IP",
             "Dirección MAC",
@@ -225,10 +234,11 @@ export default function DeviceExportButtons({ devices }) {
         ],
         body: tableData,
         styles: {
-          fontSize: 9,
-          cellPadding: 5,
+          fontSize: 8,
+          cellPadding: 3,
           lineColor: [200, 200, 200],
           lineWidth: 0.1,
+          overflow: "linebreak",
         },
         headStyles: {
           fillColor: [25, 118, 210],
@@ -236,19 +246,24 @@ export default function DeviceExportButtons({ devices }) {
           fontStyle: "bold",
           halign: "center",
           valign: "middle",
-          fontSize: 10,
+          fontSize: 9,
         },
         columnStyles: {
-          0: { cellWidth: 60, fontStyle: "bold" }, // Nombre
-          1: { cellWidth: 80 }, // Ubicación
-          2: { cellWidth: 35, halign: "center" }, // Estado
+          0: { cellWidth: 10, halign: "center" }, // #
+          1: { cellWidth: 32, halign: "center", fontSize: 7 }, // Device ID
+          2: { cellWidth: 45, fontStyle: "bold" }, // Nombre
+          3: { cellWidth: 28, halign: "center", fontSize: 7 }, // IP
+          4: { cellWidth: 32, halign: "center", fontSize: 7 }, // MAC
+          5: { cellWidth: 52 }, // Ubicación
+          6: { cellWidth: 48 }, // Registrador
+          7: { cellWidth: 22, halign: "center" }, // Estado
         },
         alternateRowStyles: {
           fillColor: [245, 247, 250],
         },
         didDrawCell: (data) => {
           // Colorear la celda de Estado
-          if (data.column.index === 2 && data.section === "body") {
+          if (data.column.index === 7 && data.section === "body") {
             const status = data.cell.raw;
             if (status === "Activo") {
               doc.setFillColor(232, 245, 233);
@@ -260,7 +275,7 @@ export default function DeviceExportButtons({ devices }) {
                 "F"
               );
               doc.setTextColor(46, 125, 50);
-              doc.setFontSize(9);
+              doc.setFontSize(8);
               doc.setFont(undefined, "bold");
               doc.text(
                 status,
@@ -278,7 +293,7 @@ export default function DeviceExportButtons({ devices }) {
                 "F"
               );
               doc.setTextColor(211, 47, 47);
-              doc.setFontSize(9);
+              doc.setFontSize(8);
               doc.setFont(undefined, "bold");
               doc.text(
                 status,
@@ -289,7 +304,7 @@ export default function DeviceExportButtons({ devices }) {
             }
           }
         },
-        margin: { top: 42, left: 14, right: 14 },
+        margin: { top: 42, left: margins, right: margins },
       });
 
       // Footer con número de página
@@ -304,9 +319,9 @@ export default function DeviceExportButtons({ devices }) {
         doc.setDrawColor(200, 200, 200);
         doc.setLineWidth(0.1);
         doc.line(
-          14,
+          margins,
           doc.internal.pageSize.getHeight() - 15,
-          pageWidth - 14,
+          pageWidth - margins,
           doc.internal.pageSize.getHeight() - 15
         );
 

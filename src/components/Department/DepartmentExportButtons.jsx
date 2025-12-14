@@ -131,14 +131,19 @@ export default function DepartmentExportButtons({ departments }) {
       worksheet.getCell(`A${lastRow}`).value = "Total de departamentos:";
       worksheet.getCell(`A${lastRow}`).font = { bold: true };
       worksheet.getCell(`B${lastRow}`).value = departments.length;
-      worksheet.getCell(`B${lastRow}`).font = { bold: true, color: { argb: "FF1976D2" } };
+      worksheet.getCell(`B${lastRow}`).font = {
+        bold: true,
+        color: { argb: "FF1976D2" },
+      };
 
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      
-      const fileName = `departamentos_${new Date().toISOString().split("T")[0]}.xlsx`;
+
+      const fileName = `departamentos_${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`;
       saveAs(blob, fileName);
       handleClose();
     } catch (error) {
@@ -152,17 +157,18 @@ export default function DepartmentExportButtons({ departments }) {
     try {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
+      const margins = 14; // Márgenes izquierdo y derecho
 
       // Título
       doc.setFontSize(20);
       doc.setTextColor(25, 118, 210);
       doc.setFont(undefined, "bold");
-      doc.text("Listado de Departamentos", 14, 22);
+      doc.text("Listado de Departamentos", margins, 22);
 
       // Línea decorativa
       doc.setDrawColor(25, 118, 210);
       doc.setLineWidth(0.5);
-      doc.line(14, 25, pageWidth - 14, 25);
+      doc.line(margins, 25, pageWidth - margins, 25);
 
       // Información del reporte
       doc.setFontSize(9);
@@ -179,10 +185,11 @@ export default function DepartmentExportButtons({ departments }) {
         14,
         32
       );
-      doc.text(`Total de departamentos: ${departments.length}`, 14, 37);
+      doc.text(`Total de departamentos: ${departments.length}`, margins, 37);
 
       // Preparar datos de la tabla
       const tableData = departments.map((dept) => [
+        dept.index || "—",
         dept.name || "—",
         dept.location || "Sin ubicación",
         dept.status === "active" ? "Activo" : "Inactivo",
@@ -191,7 +198,7 @@ export default function DepartmentExportButtons({ departments }) {
       // Tabla principal
       doc.autoTable({
         startY: 42,
-        head: [["Nombre", "Ubicación", "Estado"]],
+        head: [["#", "Nombre", "Ubicación", "Estado"]],
         body: tableData,
         styles: {
           fontSize: 9,
@@ -208,16 +215,17 @@ export default function DepartmentExportButtons({ departments }) {
           fontSize: 10,
         },
         columnStyles: {
-          0: { cellWidth: 60, fontStyle: "bold" }, // Nombre
-          1: { cellWidth: 80 }, // Ubicación
-          2: { cellWidth: 35, halign: "center" }, // Estado
+          0: { cellWidth: 10, halign: "center" }, // # - reducido
+          1: { cellWidth: 60, fontStyle: "bold" }, // Nombre
+          2: { cellWidth: 80 }, // Ubicación
+          3: { cellWidth: 32, halign: "center" }, // Estado
         },
         alternateRowStyles: {
           fillColor: [245, 247, 250],
         },
         didDrawCell: (data) => {
           // Colorear la celda de Estado
-          if (data.column.index === 2 && data.section === "body") {
+          if (data.column.index === 3 && data.section === "body") {
             const status = data.cell.raw;
             if (status === "Activo") {
               doc.setFillColor(232, 245, 233);
@@ -258,7 +266,7 @@ export default function DepartmentExportButtons({ departments }) {
             }
           }
         },
-        margin: { top: 42, left: 14, right: 14 },
+        margin: { top: 42, left: margins, right: margins },
       });
 
       // Footer con número de página
@@ -268,12 +276,17 @@ export default function DepartmentExportButtons({ departments }) {
         doc.setFontSize(8);
         doc.setTextColor(150);
         doc.setFont(undefined, "normal");
-        
+
         // Línea superior del footer
         doc.setDrawColor(200, 200, 200);
         doc.setLineWidth(0.1);
-        doc.line(14, doc.internal.pageSize.getHeight() - 15, pageWidth - 14, doc.internal.pageSize.getHeight() - 15);
-        
+        doc.line(
+          14,
+          doc.internal.pageSize.getHeight() - 15,
+          pageWidth - 14,
+          doc.internal.pageSize.getHeight() - 15
+        );
+
         // Número de página
         doc.text(
           `Página ${i} de ${pageCount}`,
@@ -283,7 +296,9 @@ export default function DepartmentExportButtons({ departments }) {
         );
       }
 
-      const fileName = `departamentos_${new Date().toISOString().split("T")[0]}.pdf`;
+      const fileName = `departamentos_${
+        new Date().toISOString().split("T")[0]
+      }.pdf`;
       doc.save(fileName);
       handleClose();
     } catch (error) {
@@ -299,7 +314,9 @@ export default function DepartmentExportButtons({ departments }) {
   if (isMobile) {
     return (
       <>
-        <Tooltip title={isDisabled ? "No hay departamentos para exportar" : "Exportar"}>
+        <Tooltip
+          title={isDisabled ? "No hay departamentos para exportar" : "Exportar"}
+        >
           <span>
             <IconButton
               onClick={handleClick}
@@ -336,13 +353,19 @@ export default function DepartmentExportButtons({ departments }) {
         >
           <MenuItem onClick={handleExportExcel}>
             <ListItemIcon>
-              <DescriptionIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
+              <DescriptionIcon
+                fontSize="small"
+                sx={{ color: theme.palette.success.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a Excel</ListItemText>
           </MenuItem>
           <MenuItem onClick={handleExportPDF}>
             <ListItemIcon>
-              <PictureAsPdfIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
+              <PictureAsPdfIcon
+                fontSize="small"
+                sx={{ color: theme.palette.error.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a PDF</ListItemText>
           </MenuItem>
@@ -355,14 +378,19 @@ export default function DepartmentExportButtons({ departments }) {
   if (isTablet) {
     return (
       <Stack direction="row" spacing={1}>
-        <Tooltip title={isDisabled ? "No hay departamentos" : "Exportar a Excel"} arrow>
+        <Tooltip
+          title={isDisabled ? "No hay departamentos" : "Exportar a Excel"}
+          arrow
+        >
           <span>
             <IconButton
               onClick={handleExportExcel}
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
                 color: theme.palette.success.main,
                 border: `1px solid ${theme.palette.success.light}`,
                 "&:hover": {
@@ -378,14 +406,19 @@ export default function DepartmentExportButtons({ departments }) {
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title={isDisabled ? "No hay departamentos" : "Exportar a PDF"} arrow>
+        <Tooltip
+          title={isDisabled ? "No hay departamentos" : "Exportar a PDF"}
+          arrow
+        >
           <span>
             <IconButton
               onClick={handleExportPDF}
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
                 color: theme.palette.error.main,
                 border: `1px solid ${theme.palette.error.light}`,
                 "&:hover": {
@@ -408,7 +441,14 @@ export default function DepartmentExportButtons({ departments }) {
   // =============== VERSIÓN DESKTOP ===============
   return (
     <Stack direction="row" spacing={1.5}>
-      <Tooltip title={isDisabled ? "No hay departamentos para exportar" : "Descargar lista en formato Excel"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay departamentos para exportar"
+            : "Descargar lista en formato Excel"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -422,7 +462,9 @@ export default function DepartmentExportButtons({ departments }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
               },
             }}
           >
@@ -430,7 +472,14 @@ export default function DepartmentExportButtons({ departments }) {
           </Button>
         </span>
       </Tooltip>
-      <Tooltip title={isDisabled ? "No hay departamentos para exportar" : "Descargar lista en formato PDF"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay departamentos para exportar"
+            : "Descargar lista en formato PDF"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -444,7 +493,9 @@ export default function DepartmentExportButtons({ departments }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
               },
             }}
           >

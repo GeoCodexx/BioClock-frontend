@@ -29,7 +29,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import DescriptionIcon from "@mui/icons-material/Description";
-import PinIcon from '@mui/icons-material/Pin';
+import PinIcon from "@mui/icons-material/Pin";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -37,7 +37,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [orderBy, setOrderBy] = useState("code");
+  const [orderBy, setOrderBy] = useState("index");
   const [order, setOrder] = useState("asc");
   //const [openRows, setOpenRows] = useState({});
   const [openRowId, setOpenRowId] = useState(null);
@@ -52,8 +52,8 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
     }));
   };*/
   const handleRowToggle = (permissionId) => {
-  setOpenRowId((prev) => (prev === permissionId ? null : permissionId));
-};
+    setOpenRowId((prev) => (prev === permissionId ? null : permissionId));
+  };
 
   // Menu de acciones (mobile)
   const handleMenuOpen = (event, permission) => {
@@ -82,6 +82,12 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
 
   // Configuración de columnas
   const columns = [
+    {
+      id: "index",
+      label: "#",
+      sortable: true,
+      minWidth: 50,
+    },
     {
       id: "name",
       label: "Nombre",
@@ -245,11 +251,7 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
                       {/* Código del Permiso */}
                       <TableCell sx={{ py: 1.5 }}>
                         <Box>
-                          <Typography
-                            variant="body2"
-                            fontWeight={600}
-                            sx={{ mb: 0.5 }}
-                          >
+                          <Typography variant="body2" sx={{ mb: 0.5 }}>
                             {permission.name || "—"}
                           </Typography>
                           <Stack
@@ -352,7 +354,7 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
                               <Divider />
 
                               {/* Código */}
-                             <Box sx={{ py: 2, px: 2 }}>
+                              <Box sx={{ py: 2, px: 2 }}>
                                 <Stack spacing={2}>
                                   <Box>
                                     <Stack
@@ -381,8 +383,7 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
                                       variant="body2"
                                       color="text.primary"
                                     >
-                                      {permission.code ||
-                                        "Sin Código"}
+                                      {permission.code || "Sin Código"}
                                     </Typography>
                                   </Box>
                                 </Stack>
@@ -508,6 +509,11 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
                     : alpha(theme.palette.grey[500], 0.02),
               }}
             >
+              <TableCell>
+                <Typography variant="body2">
+                  {permission.index || "—"}
+                </Typography>
+              </TableCell>
               <TableCell>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   {/* <EventIcon

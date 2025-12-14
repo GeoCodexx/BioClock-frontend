@@ -38,7 +38,7 @@ import {
 const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [orderBy, setOrderBy] = useState("name");
+  const [orderBy, setOrderBy] = useState("index");
   const [order, setOrder] = useState("asc");
   //const [openRows, setOpenRows] = useState({});
   const [openRowId, setOpenRowId] = useState(null);
@@ -85,6 +85,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
 
   // Configuración de columnas
   const columns = [
+    { id: "index", label: "#", sortable: true, minWidth: 50 },
     { id: "name", label: "Nombre", sortable: true, minWidth: 180 },
     { id: "description", label: "Descripción", sortable: false, minWidth: 250 },
     {
@@ -249,9 +250,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                       {/* Información del Rol */}
                       <TableCell sx={{ py: 1.5 }}>
                         <Stack spacing={0.5}>
-                          <Typography variant="body2" fontWeight={600}>
-                            {role.name}
-                          </Typography>
+                          <Typography variant="body2">{role.name}</Typography>
                           <Stack
                             direction="row"
                             spacing={1}
@@ -526,6 +525,12 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                       : alpha(theme.palette.grey[500], 0.02),
                 }}
               >
+                {/* Indice */}
+                <TableCell>
+                  <Typography variant="body2">
+                    {role.index || "—"}
+                  </Typography>
+                </TableCell>
                 {/* Nombre */}
                 <TableCell>
                   <Stack direction="row" alignItems="center" spacing={1}>
@@ -533,7 +538,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                       fontSize="small"
                       sx={{ color: theme.palette.primary.main }}
                     /> */}
-                    <Typography variant="body2" fontWeight={600}>
+                    <Typography variant="body2">
                       {role.name || "—"}
                     </Typography>
                   </Stack>

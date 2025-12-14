@@ -31,9 +31,9 @@ const SUMMARY_CONFIG = [
     getValue: (data) => data.pagination.totalRecords,
   },
   {
-    id: "complete",
-    label: "Completo",
-    subtitle: "A tiempo",
+    id: "on_time",
+    label: "A tiempo",
+    //subtitle: "A tiempo",
     icon: CheckCircleIcon,
     color: "success",
     getValue: (records) =>
@@ -47,8 +47,7 @@ const SUMMARY_CONFIG = [
     getValue: (records) =>
       records.filter(
         (r) =>
-          r.shiftStatus === "late" ||
-          r.shiftStatus === "late_and_early_leave"
+          r.shiftStatus === "late" || r.shiftStatus === "late_and_early_leave"
       ).length,
   },
   {
@@ -58,23 +57,15 @@ const SUMMARY_CONFIG = [
     icon: ErrorOutlineIcon,
     color: "error",
     getValue: (records) =>
-      records.filter(
-        (r) =>
-          r.shiftStatus === "incomplete_no_entry" ||
-          r.shiftStatus === "incomplete_no_exit"
-      ).length,
+      records.filter((r) => r.shiftStatus === "incomplete").length,
   },
   {
-    id: "early_leave",
+    id: "early_exit",
     label: "Salida Temprana",
     icon: ExitToAppIcon,
     color: "warning",
     getValue: (records) =>
-      records.filter(
-        (r) =>
-          r.shiftStatus === "early_leave" ||
-          r.shiftStatus === "late_and_early_leave"
-      ).length,
+      records.filter((r) => r.shiftStatus === "early_exit").length,
   },
   {
     id: "absent",
@@ -101,10 +92,10 @@ const SUMMARY_CONFIG = [
     getValue: (records, total) => {
       const present = records.filter(
         (r) =>
-          r.shiftStatus === "complete" ||
+          r.shiftStatus === "on_time" ||
           r.shiftStatus === "late" ||
-          r.shiftStatus === "early_leave" ||
-          r.shiftStatus === "late_and_early_leave"
+          r.shiftStatus === "early_exit" ||
+          r.shiftStatus === "justified"
       ).length;
       return total > 0 ? ((present / total) * 100).toFixed(1) : 0;
     },

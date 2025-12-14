@@ -33,8 +33,8 @@ import {
 
 // Configuración de estados con sus colores y iconos
 const STATUS_CONFIG = {
-  complete: {
-    label: "Completo",
+  on_time: {
+    label: "A tiempo",
     color: "success",
     icon: CheckCircle,
   },
@@ -43,23 +43,18 @@ const STATUS_CONFIG = {
     color: "warning",
     icon: Warning,
   },
-  early_leave: {
+  early: {
+    label: "Entrada temprana",
+    color: "warning",
+    icon: AccessTime,
+  },
+  early_exit: {
     label: "Salida temprana",
     color: "warning",
     icon: AccessTime,
   },
-  late_and_early_leave: {
-    label: "Tardanza y salida temprana",
-    color: "error",
-    icon: ErrorOutline,
-  },
-  incomplete_no_entry: {
-    label: "Sin entrada",
-    color: "error",
-    icon: ErrorOutline,
-  },
-  incomplete_no_exit: {
-    label: "Sin salida",
+  incomplete: {
+    label: "Incompleto",
     color: "error",
     icon: ErrorOutline,
   },
@@ -75,10 +70,38 @@ const STATUS_CONFIG = {
   },
 };
 
+const STATUS_CHIP_STYLES = {
+  on_time: {
+    backgroundColor: "#B9F6CA", // #B9F6CA - Verde suave
+    color: "#00C853", // #00C853 - Verde oscuro
+  },
+  late: {
+    backgroundColor: "#FFF8E1", // #FFF8E1 - Amarillo suave
+    color: "#FFC107", // #FFC107 - Amarillo oscuro
+  },
+  early: {
+    backgroundColor: "#EDE7F6", // #EDE7F6 - Púrpura suave
+    color: "#5E35B1", // #5E35B1 - Púrpura oscuro
+  },
+  early_exit: {
+    backgroundColor: "#FAEBEB", // #EF9A9A - Rojo suave
+    color: "#C62828", // #C62828 - Rojo oscuro
+  },
+  justified: {
+    backgroundColor: "#E3F2FD", // #E3F2FD - Azul suave
+    color: "#1E88E5 ", // #1E88E5 - Azul oscuro
+  },
+  absent: {
+    backgroundColor: "#EF9A9A", // #EF9A9A - Rojo suave
+    color: "#C62828", // #C62828 - Rojo oscuro
+  },
+};
+
 // Mapeo de estados a etiquetas descriptivas
 const TIME_STATUS_LABELS = {
   late: "Tarde",
-  early_leave: "Temprano",
+  early: "Entrada temprana",
+  early_exit: "Salida temprana",
   on_time: "A tiempo",
   justified: "Justificado",
 };
@@ -98,14 +121,15 @@ const StatusChip = memo(({ status, size = "small" }) => {
 
   return (
     <Chip
-      icon={<Icon sx={{ fontSize: size === "small" ? 18 : 20 }} />}
+      //icon={<Icon sx={{ fontSize: size === "small" ? 18 : 20 }} />}
       label={config.label}
       size={size}
       sx={{
         fontWeight: 500,
         bgcolor: alpha(colorValue, 0.1),
         color: colorValue,
-        border: "none",
+        //border: "none",
+        border: `1px solid ${alpha(colorValue, 0.5)}`,
         "& .MuiChip-icon": {
           color: colorValue,
         },
@@ -137,25 +161,30 @@ const TimeDisplay = memo(({ timestamp, showStatus, status }) => {
 
   return (
     <Stack spacing={0.5}>
-      <Typography variant="body2" fontWeight={600}>
+      <Typography variant="body2" /*fontWeight={600}*/>
         {formattedTime}
       </Typography>
       {statusLabel && (
         <Chip
           label={statusLabel}
           size="small"
-          color={
-            status === "late" || status === "early_leave"
+          /*color={
+            status === "late"
               ? "warning"
+              : status === "early"
+              ? "secondary"
+              : status === "early_exit"
+              ? "error"
               : status === "justified"
               ? "info"
               : "success"
-          }
+          }*/
           sx={{
             height: 20,
             fontSize: "0.688rem",
             fontWeight: 500,
             "& .MuiChip-label": { px: 1 },
+            ...STATUS_CHIP_STYLES[status],
           }}
         />
       )}

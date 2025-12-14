@@ -53,23 +53,20 @@ import { SafeTablePagination } from "../components/common/SafeTablePagination";
 // Constantes
 const STATUS_OPTIONS = [
   //{ value: "", label: "Todos los estados" },
-  { value: "complete", label: "Completo" },
+  { value: "on_time", label: "A tiempo" },
   { value: "late", label: "Tardanza" },
-  { value: "early_leave", label: "Salida temprana" },
-  { value: "late_and_early_leave", label: "Tardanza y salida temprana" },
-  { value: "incomplete_no_entry", label: "Sin entrada" },
-  { value: "incomplete_no_exit", label: "Sin salida" },
+  { value: "early", label: "Temprano" },
+  { value: "early_exit", label: "Salida temprana" },
+  { value: "incomplete", label: "Incompleto" },
   { value: "absent", label: "Ausente" },
   { value: "justified", label: "Justificado" },
 ];
 
 const STATUS_LABELS = {
-  complete: "Completo",
+  on_time: "A tiempo",
   late: "Tardanza",
-  early_leave: "Salida temprana",
-  late_and_early_leave: "Tardanza y salida temprana",
-  incomplete_no_entry: "Sin entrada",
-  incomplete_no_exit: "Sin salida",
+  early_exit: "Salida temprana",
+  imcomplete: "Incompleto",
   absent: "Ausente",
   justified: "Justificado",
 };

@@ -25,7 +25,6 @@ export const getFingerprintTemplates = async ({
       index: (page - 1) * limit + i + 1,
     }));
     data.data = formattedData;
-    
     return { fingerprints: data.data, total: data.pagination.total };
   } catch (error) {
     handleApiError(error, "Error al obtener las huellas dactilares paginadas");

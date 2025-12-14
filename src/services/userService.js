@@ -17,6 +17,11 @@ export const getPaginatedUsers = async ({
     const { data } = await api.get("/users/paginated", {
       params: { search, page, limit },
     });
+    const formattedData = data.users.map((s, i) => ({
+      ...s,
+      index: (page - 1) * limit + i + 1,
+    }));
+    data.users = formattedData;
     return data;
   } catch (error) {
     handleApiError(error, "Error al obtener los usuarios paginados");

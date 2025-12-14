@@ -166,14 +166,19 @@ export default function ScheduleExportButtons({ schedules }) {
       worksheet.getCell(`A${lastRow}`).value = "Total de horarios:";
       worksheet.getCell(`A${lastRow}`).font = { bold: true };
       worksheet.getCell(`B${lastRow}`).value = schedules.length;
-      worksheet.getCell(`B${lastRow}`).font = { bold: true, color: { argb: "FF1976D2" } };
+      worksheet.getCell(`B${lastRow}`).font = {
+        bold: true,
+        color: { argb: "FF1976D2" },
+      };
 
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      
-      const fileName = `horarios_${new Date().toISOString().split("T")[0]}.xlsx`;
+
+      const fileName = `horarios_${
+        new Date().toISOString().split("T")[0]
+      }.xlsx`;
       saveAs(blob, fileName);
       handleClose();
     } catch (error) {
@@ -183,21 +188,200 @@ export default function ScheduleExportButtons({ schedules }) {
   };
 
   // Exportar a PDF
+  // const handleExportPDF = () => {
+  //   try {
+  //     const doc = new jsPDF();
+  //     const pageWidth = doc.internal.pageSize.getWidth();
+
+  //     // Título
+  //     doc.setFontSize(20);
+  //     doc.setTextColor(25, 118, 210);
+  //     doc.setFont(undefined, "bold");
+  //     doc.text("Listado de Horarios", 14, 22);
+
+  //     // Línea decorativa
+  //     doc.setDrawColor(25, 118, 210);
+  //     doc.setLineWidth(0.5);
+  //     doc.line(14, 25, pageWidth - 14, 25);
+
+  //     // Información del reporte
+  //     doc.setFontSize(9);
+  //     doc.setTextColor(100);
+  //     doc.setFont(undefined, "normal");
+  //     doc.text(
+  //       `Fecha de generación: ${new Date().toLocaleDateString("es-ES", {
+  //         year: "numeric",
+  //         month: "long",
+  //         day: "numeric",
+  //         hour: "2-digit",
+  //         minute: "2-digit",
+  //       })}`,
+  //       14,
+  //       32
+  //     );
+  //     doc.text(`Total de horarios: ${schedules.length}`, 14, 37);
+
+  //     // Preparar datos de la tabla
+  //     const tableData = schedules.map((schedule) => [
+  //       schedule.index || "—",
+  //       schedule.name || "—",
+  //       formatDays(schedule.days),
+  //       schedule.startTime || "—",
+  //       schedule.endTime || "—",
+  //       `${schedule.toleranceMinutes || 0} min`,
+  //       schedule.status === "active" ? "Activo" : "Inactivo",
+  //     ]);
+
+  //     // Tabla principal
+  //     doc.autoTable({
+  //       startY: 42,
+  //       head: [
+  //         [
+  //           "#",
+  //           "Nombre",
+  //           "Días Laborales",
+  //           "Entrada",
+  //           "Salida",
+  //           "Tolerancia",
+  //           "Estado",
+  //         ],
+  //       ],
+  //       body: tableData,
+  //       styles: {
+  //         fontSize: 8,
+  //         cellPadding: 4,
+  //         lineColor: [200, 200, 200],
+  //         lineWidth: 0.1,
+  //       },
+  //       headStyles: {
+  //         fillColor: [25, 118, 210],
+  //         textColor: [255, 255, 255],
+  //         fontStyle: "bold",
+  //         halign: "center",
+  //         valign: "middle",
+  //         fontSize: 9,
+  //       },
+  //       columnStyles: {
+  //         0: { cellWidth: 12, halign: "center" }, // Index
+  //         1: { cellWidth: 35, fontStyle: "bold" }, // Nombre
+  //         2: { cellWidth: 45 }, // Días
+  //         3: {
+  //           cellWidth: 21,
+  //           halign: "center",
+  //           fontStyle: "bold",
+  //           textColor: [21, 101, 192],
+  //         }, // Entrada
+  //         4: {
+  //           cellWidth: 21,
+  //           halign: "center",
+  //           fontStyle: "bold",
+  //           textColor: [21, 101, 192],
+  //         }, // Salida
+  //         5: { cellWidth: 25, halign: "center", textColor: [117, 117, 117] }, // Tolerancia
+  //         6: { cellWidth: 21, halign: "center" }, // Estado
+  //       },
+  //       alternateRowStyles: {
+  //         fillColor: [245, 247, 250],
+  //       },
+  //       didDrawCell: (data) => {
+  //         // Colorear la celda de Estado
+  //         if (data.column.index === 5 && data.section === "body") {
+  //           const status = data.cell.raw;
+  //           if (status === "Activo") {
+  //             doc.setFillColor(232, 245, 233);
+  //             doc.rect(
+  //               data.cell.x,
+  //               data.cell.y,
+  //               data.cell.width,
+  //               data.cell.height,
+  //               "F"
+  //             );
+  //             doc.setTextColor(46, 125, 50);
+  //             doc.setFontSize(8);
+  //             doc.setFont(undefined, "bold");
+  //             doc.text(
+  //               status,
+  //               data.cell.x + data.cell.width / 2,
+  //               data.cell.y + data.cell.height / 2,
+  //               { align: "center", baseline: "middle" }
+  //             );
+  //           } else if (status === "Inactivo") {
+  //             doc.setFillColor(255, 235, 238);
+  //             doc.rect(
+  //               data.cell.x,
+  //               data.cell.y,
+  //               data.cell.width,
+  //               data.cell.height,
+  //               "F"
+  //             );
+  //             doc.setTextColor(211, 47, 47);
+  //             doc.setFontSize(8);
+  //             doc.setFont(undefined, "bold");
+  //             doc.text(
+  //               status,
+  //               data.cell.x + data.cell.width / 2,
+  //               data.cell.y + data.cell.height / 2,
+  //               { align: "center", baseline: "middle" }
+  //             );
+  //           }
+  //         }
+  //       },
+  //       margin: { top: 42, left: 14, right: 14 },
+  //     });
+
+  //     // Footer con número de página
+  //     const pageCount = doc.internal.getNumberOfPages();
+  //     for (let i = 1; i <= pageCount; i++) {
+  //       doc.setPage(i);
+  //       doc.setFontSize(8);
+  //       doc.setTextColor(150);
+  //       doc.setFont(undefined, "normal");
+
+  //       // Línea superior del footer
+  //       doc.setDrawColor(200, 200, 200);
+  //       doc.setLineWidth(0.1);
+  //       doc.line(
+  //         14,
+  //         doc.internal.pageSize.getHeight() - 15,
+  //         pageWidth - 14,
+  //         doc.internal.pageSize.getHeight() - 15
+  //       );
+
+  //       // Número de página
+  //       doc.text(
+  //         `Página ${i} de ${pageCount}`,
+  //         pageWidth / 2,
+  //         doc.internal.pageSize.getHeight() - 10,
+  //         { align: "center" }
+  //       );
+  //     }
+
+  //     const fileName = `horarios_${new Date().toISOString().split("T")[0]}.pdf`;
+  //     doc.save(fileName);
+  //     handleClose();
+  //   } catch (error) {
+  //     console.error("Error al exportar PDF:", error);
+  //     alert("Error al exportar a PDF. Por favor, intente nuevamente.");
+  //   }
+  // };
+  // Exportar a PDF
   const handleExportPDF = () => {
     try {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
+      const margins = 14; // Márgenes izquierdo y derecho
+      const availableWidth = pageWidth - margins * 2; // ~182mm para A4
 
       // Título
       doc.setFontSize(20);
       doc.setTextColor(25, 118, 210);
       doc.setFont(undefined, "bold");
-      doc.text("Listado de Horarios", 14, 22);
+      doc.text("Listado de Horarios", margins, 22);
 
       // Línea decorativa
       doc.setDrawColor(25, 118, 210);
       doc.setLineWidth(0.5);
-      doc.line(14, 25, pageWidth - 14, 25);
+      doc.line(margins, 25, pageWidth - margins, 25);
 
       // Información del reporte
       doc.setFontSize(9);
@@ -211,13 +395,14 @@ export default function ScheduleExportButtons({ schedules }) {
           hour: "2-digit",
           minute: "2-digit",
         })}`,
-        14,
+        margins,
         32
       );
-      doc.text(`Total de horarios: ${schedules.length}`, 14, 37);
+      doc.text(`Total de horarios: ${schedules.length}`, margins, 37);
 
       // Preparar datos de la tabla
       const tableData = schedules.map((schedule) => [
+        schedule.index || "—",
         schedule.name || "—",
         formatDays(schedule.days),
         schedule.startTime || "—",
@@ -226,14 +411,24 @@ export default function ScheduleExportButtons({ schedules }) {
         schedule.status === "active" ? "Activo" : "Inactivo",
       ]);
 
-      // Tabla principal
+      // Tabla principal con anchos ajustados para A4
       doc.autoTable({
         startY: 42,
-        head: [["Nombre", "Días Laborales", "Entrada", "Salida", "Tolerancia", "Estado"]],
+        head: [
+          [
+            "#",
+            "Nombre",
+            "Días Laborales",
+            "Entrada",
+            "Salida",
+            "Tolerancia",
+            "Estado",
+          ],
+        ],
         body: tableData,
         styles: {
           fontSize: 8,
-          cellPadding: 4,
+          cellPadding: 3,
           lineColor: [200, 200, 200],
           lineWidth: 0.1,
         },
@@ -246,19 +441,30 @@ export default function ScheduleExportButtons({ schedules }) {
           fontSize: 9,
         },
         columnStyles: {
-          0: { cellWidth: 35, fontStyle: "bold" }, // Nombre
-          1: { cellWidth: 45 }, // Días
-          2: { cellWidth: 25, halign: "center", fontStyle: "bold", textColor: [21, 101, 192] }, // Entrada
-          3: { cellWidth: 25, halign: "center", fontStyle: "bold", textColor: [21, 101, 192] }, // Salida
-          4: { cellWidth: 25, halign: "center", textColor: [117, 117, 117] }, // Tolerancia
-          5: { cellWidth: 25, halign: "center" }, // Estado
+          0: { cellWidth: 10, halign: "center" }, // # - reducido
+          1: { cellWidth: 38, fontStyle: "bold" }, // Nombre - ajustado
+          2: { cellWidth: 52 }, // Días Laborales - mayor espacio
+          3: {
+            cellWidth: 20,
+            halign: "center",
+            fontStyle: "bold",
+            textColor: [21, 101, 192],
+          }, // Entrada
+          4: {
+            cellWidth: 20,
+            halign: "center",
+            fontStyle: "bold",
+            textColor: [21, 101, 192],
+          }, // Salida
+          5: { cellWidth: 22, halign: "center", textColor: [117, 117, 117] }, // Tolerancia
+          6: { cellWidth: 20, halign: "center" }, // Estado
         },
         alternateRowStyles: {
           fillColor: [245, 247, 250],
         },
         didDrawCell: (data) => {
-          // Colorear la celda de Estado
-          if (data.column.index === 5 && data.section === "body") {
+          // Colorear la celda de Estado (columna 6, no 5)
+          if (data.column.index === 6 && data.section === "body") {
             const status = data.cell.raw;
             if (status === "Activo") {
               doc.setFillColor(232, 245, 233);
@@ -299,7 +505,7 @@ export default function ScheduleExportButtons({ schedules }) {
             }
           }
         },
-        margin: { top: 42, left: 14, right: 14 },
+        margin: { top: 42, left: margins, right: margins },
       });
 
       // Footer con número de página
@@ -309,12 +515,17 @@ export default function ScheduleExportButtons({ schedules }) {
         doc.setFontSize(8);
         doc.setTextColor(150);
         doc.setFont(undefined, "normal");
-        
+
         // Línea superior del footer
         doc.setDrawColor(200, 200, 200);
         doc.setLineWidth(0.1);
-        doc.line(14, doc.internal.pageSize.getHeight() - 15, pageWidth - 14, doc.internal.pageSize.getHeight() - 15);
-        
+        doc.line(
+          margins,
+          doc.internal.pageSize.getHeight() - 15,
+          pageWidth - margins,
+          doc.internal.pageSize.getHeight() - 15
+        );
+
         // Número de página
         doc.text(
           `Página ${i} de ${pageCount}`,
@@ -340,7 +551,9 @@ export default function ScheduleExportButtons({ schedules }) {
   if (isMobile) {
     return (
       <>
-        <Tooltip title={isDisabled ? "No hay horarios para exportar" : "Exportar"}>
+        <Tooltip
+          title={isDisabled ? "No hay horarios para exportar" : "Exportar"}
+        >
           <span>
             <IconButton
               onClick={handleClick}
@@ -377,13 +590,19 @@ export default function ScheduleExportButtons({ schedules }) {
         >
           <MenuItem onClick={handleExportExcel}>
             <ListItemIcon>
-              <DescriptionIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
+              <DescriptionIcon
+                fontSize="small"
+                sx={{ color: theme.palette.success.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a Excel</ListItemText>
           </MenuItem>
           <MenuItem onClick={handleExportPDF}>
             <ListItemIcon>
-              <PictureAsPdfIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
+              <PictureAsPdfIcon
+                fontSize="small"
+                sx={{ color: theme.palette.error.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a PDF</ListItemText>
           </MenuItem>
@@ -396,14 +615,19 @@ export default function ScheduleExportButtons({ schedules }) {
   if (isTablet) {
     return (
       <Stack direction="row" spacing={1}>
-        <Tooltip title={isDisabled ? "No hay horarios" : "Exportar a Excel"} arrow>
+        <Tooltip
+          title={isDisabled ? "No hay horarios" : "Exportar a Excel"}
+          arrow
+        >
           <span>
             <IconButton
               onClick={handleExportExcel}
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
                 color: theme.palette.success.main,
                 border: `1px solid ${theme.palette.success.light}`,
                 "&:hover": {
@@ -419,14 +643,19 @@ export default function ScheduleExportButtons({ schedules }) {
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title={isDisabled ? "No hay horarios" : "Exportar a PDF"} arrow>
+        <Tooltip
+          title={isDisabled ? "No hay horarios" : "Exportar a PDF"}
+          arrow
+        >
           <span>
             <IconButton
               onClick={handleExportPDF}
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
                 color: theme.palette.error.main,
                 border: `1px solid ${theme.palette.error.light}`,
                 "&:hover": {
@@ -449,7 +678,14 @@ export default function ScheduleExportButtons({ schedules }) {
   // =============== VERSIÓN DESKTOP ===============
   return (
     <Stack direction="row" spacing={1.5}>
-      <Tooltip title={isDisabled ? "No hay horarios para exportar" : "Descargar lista en formato Excel"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay horarios para exportar"
+            : "Descargar lista en formato Excel"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -463,7 +699,9 @@ export default function ScheduleExportButtons({ schedules }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
               },
             }}
           >
@@ -471,7 +709,14 @@ export default function ScheduleExportButtons({ schedules }) {
           </Button>
         </span>
       </Tooltip>
-      <Tooltip title={isDisabled ? "No hay horarios para exportar" : "Descargar lista en formato PDF"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay horarios para exportar"
+            : "Descargar lista en formato PDF"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -485,7 +730,9 @@ export default function ScheduleExportButtons({ schedules }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
               },
             }}
           >

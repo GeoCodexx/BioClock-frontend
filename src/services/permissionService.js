@@ -63,6 +63,11 @@ export const getPaginatedPermissions = async ({
     const { data } = await api.get("/permissions/paginated", {
       params: { search, page, limit },
     });
+    const formattedData = data.permissions.map((s, i) => ({
+      ...s,
+      index: (page - 1) * limit + i + 1,
+    }));
+    data.permissions = formattedData;
     return data;
   } catch (error) {
     handleApiError(error, "Error al obtener los permisos paginados");
