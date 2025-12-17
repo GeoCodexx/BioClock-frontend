@@ -85,10 +85,24 @@ export const getAttendances = async () => {
 
 export const justifyAttendance = async (attendanceId, data) => {
   try {
-    const response = await api.put(`/attendances/${attendanceId}/justify`,data);
+    const response = await api.put(
+      `/attendances/${attendanceId}/justify`,
+      data
+    );
     return response;
   } catch (error) {
     handleApiError(error, "Error al justificar asistencia");
+  }
+};
+
+export const removeJustification = async (attendanceId) => {
+  try {
+    const response = await api.delete(
+      `/attendances/${attendanceId}/justification`
+    );
+    return response;
+  } catch (error) {
+    handleApiError(error, "Error al anular justificación");
   }
 };
 

@@ -314,7 +314,7 @@ export default function JustifyAttendanceDialog({
         </Box>
 
         {/* Radio buttons para aprobar/rechazar */}
-        <Box sx={{ mb: 2 }}>
+        {/* <Box sx={{ mb: 2 }}>
           <FormLabel component="legend" sx={{ mb: 1, fontWeight: 500 }}>
             Estado de la justificación
           </FormLabel>
@@ -383,7 +383,7 @@ export default function JustifyAttendanceDialog({
               />
             </Paper>
           </RadioGroup>
-        </Box>
+        </Box> */}
 
         {/* Alert de error */}
         {error && (

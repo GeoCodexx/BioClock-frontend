@@ -21,6 +21,7 @@ import {
   updateAttendance,
   deleteAttendance,
   justifyAttendance,
+  removeJustification,
 } from "../services/attendanceService";
 import AttendanceTable from "../components/Attendance/AttendanceTable";
 import AttendanceSearchBar from "../components/Attendance/AttendanceSearchBar";
@@ -43,6 +44,7 @@ import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import ClearIcon from "@mui/icons-material/Clear";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import JustifyAttendanceDialog from "../components/Attendance/JustifyAttendanceDialog";
+import { ConfirmDeleteJustificationDialog } from "../components/Attendance/ConfirmDeleteJustificationDialog";
 //import SearchIcon from "@mui/icons-material/Search";
 //import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
@@ -95,6 +97,8 @@ export default function Attendances() {
   //Estados para justificar registro de asistencia
   const [selectedAttendance, setSelectedAttendance] = useState(null);
   const [justifyDialogOpen, setJustifyDialogOpen] = useState(false);
+  const [deleteJustificationDialogOpen, setDeleteJustificationDialogOpen] =
+    useState(false);
 
   useEffect(() => {
     const loadAttendances = async () => {
@@ -352,9 +356,22 @@ export default function Attendances() {
     setJustifyDialogOpen(true);
   }, []);
 
+  // Abrir el dialog de justificación
+  const handleOpenDeleteJustifyDialog = useCallback((attendance) => {
+    setSelectedAttendance(attendance);
+    setDeleteJustificationDialogOpen(true);
+  }, []);
+
   // Callback cuando se justifica exitosamente
   const handleJustifySuccess = (updatedAttendance) => {
     console.log("Justificación guardada:", updatedAttendance);
+    // Refrescar la tabla
+    refreshAttendances();
+  };
+
+  // Callback cuando se justifica exitosamente
+  const handleDeleteJustificationSuccess = (updatedAttendance) => {
+    console.log("Justificación eliminada:", updatedAttendance);
     // Refrescar la tabla
     refreshAttendances();
   };
@@ -393,7 +410,7 @@ export default function Attendances() {
       console.error("Error capturado:", error); // Importante para debug
 
       const errorMessage =
-        error.response?.data?.message || // 👈 AQUÍ ESTÁ LA MAGIA (?. en vez de .)
+        error.response?.data?.message ||
         error.message || // Captura mensajes de error genéricos de JS
         "Error al registrar la justificación";
 
@@ -441,28 +458,30 @@ export default function Attendances() {
   /**
    * Handler para eliminar una justificación
    * @param {string} attendanceId - ID del registro de asistencia
-   * @param {Function} onSuccess - Callback opcional en caso de éxito
    */
-  const handleDeleteJustification = async (attendanceId, onSuccess) => {
+  const handleDeleteJustification = async (attendanceId) => {
     try {
-      const response = await api.delete(
-        `/attendances/${attendanceId}/justification`
-      );
+      const response = await removeJustification(attendanceId);
 
-      toast.success(
+      showSuccess(
         response.data.message || "Justificación eliminada exitosamente"
       );
 
-      if (onSuccess) {
-        onSuccess(response.data.data);
-      }
+      console.log("Justificación eliminada:", attendanceId);
+      // Refrescar la tabla
+      refreshAttendances();
 
-      return { success: true, data: response.data.data };
+      //return { success: true, data: response.data.data };
     } catch (error) {
+      console.error("Error capturado:", error); // Importante para debug
+
       const errorMessage =
-        error.response?.data?.message || "Error al eliminar la justificación";
-      toast.error(errorMessage);
-      return { success: false, error: errorMessage };
+        error.response?.data?.message ||
+        error.message || // Captura mensajes de error genéricos de JS
+        "Error al eliminar la justificación";
+
+      showError(errorMessage);
+      //return { success: false, error: errorMessage };
     }
   };
 
@@ -508,9 +527,16 @@ export default function Attendances() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onJustify={handleOpenJustifyDialog}
+        onDeleteJustification={handleOpenDeleteJustifyDialog}
       />
     ),
-    [attendances, handleEdit, handleDelete, handleOpenJustifyDialog]
+    [
+      attendances,
+      handleEdit,
+      handleDelete,
+      handleOpenJustifyDialog,
+      handleOpenDeleteJustifyDialog,
+    ]
   );
 
   // Verifica si hay filtros activos
@@ -889,6 +915,14 @@ export default function Attendances() {
         attendance={selectedAttendance}
         handleJustifyAttendance={handleJustifyAttendance}
         onSuccess={handleJustifySuccess}
+      />
+
+      {/* Dialog de confirmación de eliminar justificación */}
+      <ConfirmDeleteJustificationDialog
+        open={deleteJustificationDialogOpen}
+        onOpenChange={setDeleteJustificationDialogOpen}
+        attendance={selectedAttendance}
+        onConfirm={handleDeleteJustification}
       />
     </Box>
   );
