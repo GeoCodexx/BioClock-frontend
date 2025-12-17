@@ -20,6 +20,7 @@ import {
   getPaginatedAttendances,
   updateAttendance,
   deleteAttendance,
+  justifyAttendance,
 } from "../services/attendanceService";
 import AttendanceTable from "../components/Attendance/AttendanceTable";
 import AttendanceSearchBar from "../components/Attendance/AttendanceSearchBar";
@@ -41,6 +42,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import ClearIcon from "@mui/icons-material/Clear";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
+import JustifyAttendanceDialog from "../components/Attendance/JustifyAttendanceDialog";
 //import SearchIcon from "@mui/icons-material/Search";
 //import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
@@ -90,28 +92,9 @@ export default function Attendances() {
   //Estado para mostrar u ocultar filtros mobile
   const [openFilters, setOpenFilters] = useState(false);
 
-  // Carga de datos llamando a la API
-  /*useEffect(() => {
-    const loadAttendances = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await getPaginatedAttendances({
-          search: pagination.search,
-          page: (pagination.page + 1).toString(),
-          limit: pagination.rowsPerPage.toString(),
-        });
-        setAttendances(data.attendances);
-        setTotal(data.total);
-      } catch (err) {
-        setError(err.response?.data?.message || "Error al cargar asistencias");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadAttendances();
-  }, [pagination.search, pagination.page, pagination.rowsPerPage]);*/
+  //Estados para justificar registro de asistencia
+  const [selectedAttendance, setSelectedAttendance] = useState(null);
+  const [justifyDialogOpen, setJustifyDialogOpen] = useState(false);
 
   useEffect(() => {
     const loadAttendances = async () => {
@@ -175,24 +158,7 @@ export default function Attendances() {
   }, [searchInput, pagination.search]);
 
   // Handlers con useCallback
-  /*const refreshusers = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const data = await getPaginatedAttendances({
-        search: pagination.search,
-        page: (pagination.page + 1).toString(),
-        limit: pagination.rowsPerPage.toString(),
-      });
-      setAttendances(data.attendances);
-      setTotal(data.total);
-    } catch (err) {
-      setError(err.response?.data?.message || "Error al cargar usuarios");
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination.search, pagination.page, pagination.rowsPerPage]);*/
-  const refreshusers = useCallback(async () => {
+  const refreshAttendances = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -290,7 +256,7 @@ export default function Attendances() {
         }
 
         setDialog({ open: false, editAttendance: null, error: "" });
-        await refreshusers();
+        await refreshAttendances();
       } catch (err) {
         const errorMessage =
           err.response?.data?.message ||
@@ -304,7 +270,7 @@ export default function Attendances() {
         throw err;
       }
     },
-    [dialog.editAttendance, showSuccess, showError, refreshusers]
+    [dialog.editAttendance, showSuccess, showError, refreshAttendances]
   );
 
   const handleEdit = useCallback((attendance) => {
@@ -322,13 +288,18 @@ export default function Attendances() {
     });
   }, []);
 
+  /*const handleJustify = useCallback((attendance) =>{
+    setJustifyDialogOpen(true);
+    setSelectedAttendance(attendance);
+  })*/
+
   const confirmDelete = useCallback(async () => {
     setDeleteState((prev) => ({ ...prev, error: "" }));
     try {
       await deleteAttendance(deleteState.id);
       showSuccess("Asistencia eliminado correctamente");
       setDeleteState({ id: null, error: "" });
-      await refreshusers();
+      await refreshAttendances();
     } catch (err) {
       const errorMessage =
         err.response?.data?.message || "Error al eliminar el rol";
@@ -337,7 +308,7 @@ export default function Attendances() {
       showError(errorMessage);
       console.error("Error en confirmDelete:", err);
     }
-  }, [deleteState.id, showSuccess, showError, refreshusers]);
+  }, [deleteState.id, showSuccess, showError, refreshAttendances]);
 
   const handleClose = useCallback(() => {
     setDialog({ open: false, editAttendance: null, error: "" });
@@ -375,6 +346,126 @@ export default function Attendances() {
     setDeleteState({ id: null, error: "" });
   }, []);
 
+  // Abrir el dialog de justificación
+  const handleOpenJustifyDialog = useCallback((attendance) => {
+    setSelectedAttendance(attendance);
+    setJustifyDialogOpen(true);
+  }, []);
+
+  // Callback cuando se justifica exitosamente
+  const handleJustifySuccess = (updatedAttendance) => {
+    console.log("Justificación guardada:", updatedAttendance);
+    // Refrescar la tabla
+    refreshAttendances();
+  };
+
+  /**
+   * Handler para justificar una asistencia (Admin/RRHH)
+   * @param {string} attendanceId - ID del registro de asistencia
+   * @param {string} reason - Razón de la justificación
+   * @param {boolean} approved - Si se aprueba o no la justificación
+   * @param {Function} onSuccess - Callback opcional en caso de éxito
+   */
+  const handleJustifyAttendance = async (
+    attendanceId,
+    reason,
+    approved,
+    onSuccess
+  ) => {
+    try {
+      const response = await justifyAttendance(attendanceId, {
+        reason,
+        approved,
+      });
+
+      showSuccess(
+        response.data.message || "Justificación registrada exitosamente"
+      );
+
+      if (onSuccess) {
+        onSuccess(response.data.data);
+      }
+
+      //console.log({ success: true, data: response.data.data });
+
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      console.error("Error capturado:", error); // Importante para debug
+
+      const errorMessage =
+        error.response?.data?.message || // 👈 AQUÍ ESTÁ LA MAGIA (?. en vez de .)
+        error.message || // Captura mensajes de error genéricos de JS
+        "Error al registrar la justificación";
+
+      //showError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  /**
+   * Handler para actualizar una justificación existente
+   * @param {string} attendanceId - ID del registro de asistencia
+   * @param {string} reason - Nueva razón (opcional)
+   * @param {boolean} approved - Nuevo estado de aprobación (opcional)
+   * @param {Function} onSuccess - Callback opcional en caso de éxito
+   */
+  const handleUpdateJustification = async (
+    attendanceId,
+    reason,
+    approved,
+    onSuccess
+  ) => {
+    try {
+      const response = await api.put(
+        `/attendances/${attendanceId}/update-justification`,
+        { reason, approved }
+      );
+
+      toast.success(
+        response.data.message || "Justificación actualizada exitosamente"
+      );
+
+      if (onSuccess) {
+        onSuccess(response.data.data);
+      }
+
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Error al actualizar la justificación";
+      toast.error(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  /**
+   * Handler para eliminar una justificación
+   * @param {string} attendanceId - ID del registro de asistencia
+   * @param {Function} onSuccess - Callback opcional en caso de éxito
+   */
+  const handleDeleteJustification = async (attendanceId, onSuccess) => {
+    try {
+      const response = await api.delete(
+        `/attendances/${attendanceId}/justification`
+      );
+
+      toast.success(
+        response.data.message || "Justificación eliminada exitosamente"
+      );
+
+      if (onSuccess) {
+        onSuccess(response.data.data);
+      }
+
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Error al eliminar la justificación";
+      toast.error(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  };
+
   // Memorizar valores reutilizables
   const breadcrumbItems = useMemo(
     () => (
@@ -384,23 +475,23 @@ export default function Attendances() {
         sx={isMobile ? { fontSize: "0.875rem" } : undefined}
       >
         <Link
-        component={RouterLink}
-        to="/"
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          color: "text.secondary",
-          textDecoration: "none",
-          transition: "color 0.2s",
-          "&:hover": {
-            color: "primary.main",
-          },
-        }}
-      >
-        <HomeIcon fontSize="small" />
-        {!isMobile && <Typography variant="body2">Inicio</Typography>}
-      </Link>
+          component={RouterLink}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            color: "text.secondary",
+            textDecoration: "none",
+            transition: "color 0.2s",
+            "&:hover": {
+              color: "primary.main",
+            },
+          }}
+        >
+          <HomeIcon fontSize="small" />
+          {!isMobile && <Typography variant="body2">Inicio</Typography>}
+        </Link>
         <Typography variant="body2" color="text.primary">
           Asistencias
         </Typography>
@@ -416,9 +507,10 @@ export default function Attendances() {
         attendances={attendances}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onJustify={handleOpenJustifyDialog}
       />
     ),
-    [attendances, handleEdit, handleDelete]
+    [attendances, handleEdit, handleDelete, handleOpenJustifyDialog]
   );
 
   // Verifica si hay filtros activos
@@ -788,6 +880,15 @@ export default function Attendances() {
         onConfirm={confirmDelete}
         deleteError={deleteState.error}
         itemName="asistencia"
+      />
+
+      {/* Dialog de justificación */}
+      <JustifyAttendanceDialog
+        open={justifyDialogOpen}
+        onOpenChange={setJustifyDialogOpen}
+        attendance={selectedAttendance}
+        handleJustifyAttendance={handleJustifyAttendance}
+        onSuccess={handleJustifySuccess}
       />
     </Box>
   );

@@ -26,6 +26,8 @@ import {
   //Avatar,
 } from "@mui/material";
 import {
+  Check as CheckIcon,
+  Close as CloseIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon,
@@ -49,6 +51,7 @@ const AttendanceTable = ({
   attendances = [],
   onEdit,
   onDelete,
+  onJustify,
   loading = false,
 }) => {
   const theme = useTheme();
@@ -86,6 +89,13 @@ const AttendanceTable = ({
   const handleDelete = () => {
     if (selectedAttendance && onDelete) {
       onDelete(selectedAttendance._id);
+    }
+    handleMenuClose();
+  };
+
+  const handleJustify = () => {
+    if (selectedAttendance && onJustify) {
+      onJustify(selectedAttendance);
     }
     handleMenuClose();
   };
@@ -206,7 +216,7 @@ const AttendanceTable = ({
   };
 
   // Obtener icono según estado
-  const getStatusIcon = (status) => {
+  /*const getStatusIcon = (status) => {
     switch (status) {
       case "on_time":
         return <CheckCircleIcon fontSize="small" />;
@@ -221,7 +231,7 @@ const AttendanceTable = ({
       default:
         return <WarningIcon fontSize="small" />;
     }
-  };
+  };*/
 
   // Obtener configuración de color según estado
   const getStatusConfig = (status) => {
@@ -329,6 +339,11 @@ const AttendanceTable = ({
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
     setOrderBy(property);
+  };
+
+  // Determinar si un registro necesita justificación
+  const needsJustification = (attendance) => {
+    return ["late", "absent", "early_exit"].includes(attendance.status);
   };
 
   const sortedAttendances = useMemo(() => {
@@ -484,7 +499,7 @@ const AttendanceTable = ({
                               }}
                             />
                             <Chip
-                              icon={getStatusIcon(attendance.status)}
+                              //icon={getStatusIcon(attendance.status)}
                               label={formatStatus(attendance.status)}
                               size="small"
                               sx={{
@@ -710,6 +725,12 @@ const AttendanceTable = ({
             },
           }}
         >
+          <MenuItem onClick={handleJustify}>
+            <ListItemIcon>
+              <CheckIcon fontSize="small" color="secondary" />
+            </ListItemIcon>
+            <ListItemText>Justificar</ListItemText>
+          </MenuItem>
           <MenuItem onClick={handleEdit}>
             <ListItemIcon>
               <EditIcon fontSize="small" color="primary" />
@@ -887,7 +908,7 @@ const AttendanceTable = ({
                   {/* Estado */}
                   <TableCell align="center">
                     <Chip
-                      icon={getStatusIcon(attendance.status)}
+                      //icon={getStatusIcon(attendance.status)}
                       label={formatStatus(attendance.status)}
                       size="small"
                       sx={{
@@ -904,45 +925,91 @@ const AttendanceTable = ({
                   </TableCell>
 
                   {/* Acciones */}
-                  <TableCell align="center">
-                    <Stack
-                      direction="row"
-                      spacing={0.5}
-                      justifyContent="center"
-                    >
-                      <Tooltip title="Editar asistencia" arrow>
-                        <IconButton
-                          size="small"
-                          onClick={() => onEdit && onEdit(attendance)}
-                          sx={{
-                            color: theme.palette.primary.main,
-                            bgcolor: alpha(theme.palette.primary.main, 0.08),
-                            "&:hover": {
-                              bgcolor: alpha(theme.palette.primary.main, 0.15),
-                            },
-                          }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar asistencia" arrow>
-                        <IconButton
-                          size="small"
-                          onClick={() => onDelete && onDelete(attendance._id)}
-                          sx={{
-                            color: theme.palette.error.main,
-                            bgcolor: alpha(theme.palette.error.main, 0.08),
-                            "&:hover": {
-                              bgcolor: alpha(theme.palette.error.main, 0.15),
-                            },
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
+                            <TableCell align="center">
+                            <Stack
+                              direction="row"
+                              spacing={0.5}
+                              justifyContent="center"
+                            >
+                              {needsJustification(attendance) && !attendance.justification && (
+                              <Tooltip title="Justificar asistencia" arrow>
+                                <IconButton
+                                size="small"
+                                onClick={() => onJustify && onJustify(attendance)}
+                                sx={{
+                                  color: theme.palette.secondary.main,
+                                  bgcolor: alpha(
+                                  theme.palette.secondary.main,
+                                  0.08
+                                  ),
+                                  "&:hover": {
+                                  bgcolor: alpha(
+                                    theme.palette.secondary.main,
+                                    0.15
+                                  ),
+                                  },
+                                }}
+                                >
+                                <CheckIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              )}
+                              {attendance.justification && (
+                              <Tooltip title="Remover justificación" arrow>
+                                <IconButton
+                                size="small"
+                                onClick={() => onJustify && onJustify(attendance)}
+                                sx={{
+                                  color: theme.palette.error.main,
+                                  bgcolor: alpha(
+                                  theme.palette.error.main,
+                                  0.08
+                                  ),
+                                  "&:hover": {
+                                  bgcolor: alpha(
+                                    theme.palette.error.main,
+                                    0.15
+                                  ),
+                                  },
+                                }}
+                                >
+                                <CloseIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              )}
+                              <Tooltip title="Editar asistencia" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => onEdit && onEdit(attendance)}
+                                sx={{
+                                color: theme.palette.primary.main,
+                                bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                "&:hover": {
+                                  bgcolor: alpha(theme.palette.primary.main, 0.15),
+                                },
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Eliminar asistencia" arrow>
+                              <IconButton
+                                size="small"
+                                onClick={() => onDelete && onDelete(attendance._id)}
+                                sx={{
+                                color: theme.palette.error.main,
+                                bgcolor: alpha(theme.palette.error.main, 0.08),
+                                "&:hover": {
+                                  bgcolor: alpha(theme.palette.error.main, 0.15),
+                                },
+                                }}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                              </Tooltip>
+                            </Stack>
+                            </TableCell>
+                          </TableRow>
 
                 {/* Fila Colapsable con Información Adicional */}
                 <TableRow>

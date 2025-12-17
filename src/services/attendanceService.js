@@ -83,6 +83,15 @@ export const getAttendances = async () => {
   }
 };
 
+export const justifyAttendance = async (attendanceId, data) => {
+  try {
+    const response = await api.put(`/attendances/${attendanceId}/justify`,data);
+    return response;
+  } catch (error) {
+    handleApiError(error, "Error al justificar asistencia");
+  }
+};
+
 /*export const getPaginatedAttendances = async (params) => {
   const response = await api.get("/attendances/paginated", { params });
   return response.data;
