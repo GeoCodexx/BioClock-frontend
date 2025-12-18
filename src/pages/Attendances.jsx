@@ -252,11 +252,12 @@ export default function Attendances() {
         const isEditing = !!dialog.editAttendance;
 
         if (isEditing) {
-          await updateAttendance(dialog.editAttendance._id, data);
-          showSuccess("Asistencia actualizado correctamente");
+          const res = await updateAttendance(dialog.editAttendance._id, data);
+
+          showSuccess(res?.message || "Asistencia actualizada correctamente");
         } else {
-          await createAttendance(data);
-          showSuccess("Asistencia creado correctamente");
+          const res = await createAttendance(data);
+          showSuccess(res?.message || "Asistencia creada correctamente");
         }
 
         setDialog({ open: false, editAttendance: null, error: "" });

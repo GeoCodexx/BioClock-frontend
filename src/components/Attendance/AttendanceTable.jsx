@@ -30,6 +30,7 @@ import {
   Close as CloseIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  EditNote as EditNoteIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
   MoreVert as MoreVertIcon,
@@ -46,10 +47,10 @@ import {
   Warning as WarningIcon,
   Error as ErrorIcon,
 } from "@mui/icons-material";
-import DescriptionIcon from '@mui/icons-material/Description';
-import PendingIcon from '@mui/icons-material/Pending';
-import PersonIcon from '@mui/icons-material/Person';
-import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import DescriptionIcon from "@mui/icons-material/Description";
+import PendingIcon from "@mui/icons-material/Pending";
+import PersonIcon from "@mui/icons-material/Person";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 
 const AttendanceTable = ({
   attendances = [],
@@ -173,10 +174,10 @@ const AttendanceTable = ({
   // Normalizar estado
   const formatStatus = (status) => {
     const statuses = {
-      on_time: "A Tiempo",
+      on_time: "A tiempo",
       late: "Tardanza",
       early: "Temprano",
-      early_exit: "Salida Temprana",
+      early_exit: "Salida anticipada",
       absent: "Ausente",
       justified: "Justificado",
       pending: "Pendiente",
@@ -362,6 +363,20 @@ const AttendanceTable = ({
     return [...attendances].sort(getComparator(order, orderBy));
   }, [attendances, order, orderBy]);
 
+  const InfoItem = ({ icon, label, children, color }) => (
+    <Box>
+      <Stack direction="row" spacing={1} alignItems="center">
+        {icon}
+        <Typography variant="caption" color="text.secondary" fontWeight={600}>
+          {label}
+        </Typography>
+      </Stack>
+      <Typography variant="body2" sx={{ mt: 0.4 }}>
+        {children}
+      </Typography>
+    </Box>
+  );
+
   // Estado vacío
   if (attendances.length === 0 && !loading) {
     return (
@@ -494,7 +509,10 @@ const AttendanceTable = ({
                           </Stack>
 
                           {/* Chips de Tipo y Estado */}
-                          <Stack direction="row" spacing={1} flexWrap="wrap">
+                          <Stack
+                            direction="column"
+                            spacing={1}
+                          >
                             <Chip
                               icon={getTypeIcon(attendance.type)}
                               label={formatType(attendance.type)}
@@ -525,6 +543,11 @@ const AttendanceTable = ({
                                 },
                               }}
                             />
+                            {attendance.justification?.approved && (
+                              <Typography variant="caption" color="info" align="center">
+                                (Justificado)
+                              </Typography>
+                            )}
                           </Stack>
                         </Stack>
                       </TableCell>
@@ -683,28 +706,130 @@ const AttendanceTable = ({
                                   />
                                 </Stack>
 
-                                {attendance.approvedBy && (
-                                  <Stack
-                                    direction="row"
-                                    spacing={1}
-                                    alignItems="center"
-                                  >
-                                    <CheckCircleIcon
-                                      sx={{
-                                        fontSize: 16,
-                                        color: theme.palette.success.main,
-                                      }}
-                                    />
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                      fontWeight={600}
+                                <Divider />
+
+                                {/* Justificación */}
+                                {attendance.justification && (
+                                  <Stack spacing={1.5}>
+                                    <Stack
+                                      direction="row"
+                                      spacing={1}
+                                      alignItems="center"
                                     >
-                                      APROBADO POR:
-                                    </Typography>
-                                    <Typography variant="body2">
-                                      {attendance.approvedBy}
-                                    </Typography>
+                                      <CheckCircleIcon
+                                        sx={{
+                                          fontSize: 16,
+                                          color: theme.palette.main,
+                                        }}
+                                      />
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        fontWeight={600}
+                                      >
+                                        JUSTIFICACIÓN:
+                                      </Typography>
+                                      <Chip
+                                        icon={
+                                          attendance.justification.approved ? (
+                                            <CheckCircleIcon
+                                              sx={{ fontSize: 16 }}
+                                            />
+                                          ) : (
+                                            <PendingIcon
+                                              sx={{ fontSize: 16 }}
+                                            />
+                                          )
+                                        }
+                                        label={
+                                          attendance.justification.approved
+                                            ? "Aprobada"
+                                            : "Pendiente"
+                                        }
+                                        size="small"
+                                        sx={{
+                                          fontSize: "0.7rem",
+                                          height: 24,
+                                          fontWeight: 700,
+                                          bgcolor: attendance.justification
+                                            .approved
+                                            ? theme.palette.success.main
+                                            : theme.palette.warning.main,
+                                          color: "white",
+                                          "& .MuiChip-icon": {
+                                            color: "white",
+                                          },
+                                        }}
+                                      />
+                                    </Stack>
+                                    <Stack
+                                      direction="row"
+                                      spacing={1}
+                                      alignItems="center"
+                                    >
+                                      <EditNoteIcon
+                                        sx={{
+                                          fontSize: 16,
+                                          color: theme.palette.main,
+                                        }}
+                                      />
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        fontWeight={600}
+                                      >
+                                        MOTIVO:
+                                      </Typography>
+                                      <Typography variant="body2">
+                                        {attendance.justification.reason}
+                                      </Typography>
+                                    </Stack>
+                                    <Stack
+                                      direction="row"
+                                      spacing={1}
+                                      alignItems="center"
+                                    >
+                                      <PersonIcon
+                                        sx={{
+                                          fontSize: 16,
+                                          color: theme.palette.main,
+                                        }}
+                                      />
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        fontWeight={600}
+                                      >
+                                        APROBADO POR:
+                                      </Typography>
+                                      <Typography variant="body2">
+                                        {`${attendance.justification.approvedBy.name} ${attendance.justification.approvedBy.firstSurname} ${attendance.justification.approvedBy.secondSurname}`}
+                                      </Typography>
+                                    </Stack>
+                                    <Stack
+                                      direction="row"
+                                      spacing={1}
+                                      alignItems="center"
+                                    >
+                                      <EventAvailableIcon
+                                        sx={{
+                                          fontSize: 16,
+                                          color: theme.palette.main,
+                                        }}
+                                      />
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        fontWeight={600}
+                                      >
+                                        FECHA DE APROBACIÓN:
+                                      </Typography>
+                                      <Typography variant="body2">
+                                        {formatDateTime(
+                                          attendance.justification.approvedAt
+                                        )}
+                                      </Typography>
+                                    </Stack>
                                   </Stack>
                                 )}
                               </Stack>
@@ -737,7 +862,8 @@ const AttendanceTable = ({
             },
           }}
         >
-          {needsJustification(selectedAttendance) &&
+          {selectedAttendance &&
+            needsJustification(selectedAttendance) &&
             !selectedAttendance.justification && (
               <MenuItem onClick={handleJustify}>
                 <ListItemIcon>
@@ -746,7 +872,7 @@ const AttendanceTable = ({
                 <ListItemText>Justificar</ListItemText>
               </MenuItem>
             )}
-          {selectedAttendance.justification && (
+          {selectedAttendance && selectedAttendance.justification && (
             <MenuItem onClick={handleDeleteJustification}>
               <ListItemIcon>
                 <CloseIcon fontSize="small" color="secondary" />
@@ -931,7 +1057,7 @@ const AttendanceTable = ({
 
                   {/* Estado */}
                   <TableCell align="center">
-                    <Stack spacing={0.3}>
+                    <Stack spacing={0.5}>
                       <Chip
                         //icon={getStatusIcon(attendance.status)}
                         label={formatStatus(attendance.status)}
@@ -1052,401 +1178,447 @@ const AttendanceTable = ({
                     }}
                   >
                     <Collapse in={isOpen} timeout="auto" unmountOnExit>
-  <Box sx={{ py: 3, px: 3 }}>
-    <Stack direction="row" spacing={4}>
-      {/* Columna Izquierda */}
-      <Stack spacing={2} flex={1}>
-        <Typography
-          variant="subtitle2"
-          fontWeight={700}
-          color="primary"
-          gutterBottom
-        >
-          INFORMACIÓN DEL REGISTRO
-        </Typography>
+                      <Box sx={{ py: 3, px: 3 }}>
+                        <Stack direction="row" spacing={4}>
+                          {/* Columna Izquierda */}
+                          <Stack spacing={2} flex={1}>
+                            <Typography
+                              variant="subtitle2"
+                              fontWeight={700}
+                              color="primary"
+                              gutterBottom
+                            >
+                              INFORMACIÓN DEL REGISTRO
+                            </Typography>
 
-        {/* Dispositivo */}
-        <Box>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <DevicesIcon
-              sx={{
-                fontSize: 18,
-                color: theme.palette.text.secondary,
-              }}
-            />
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={600}
-            >
-              DISPOSITIVO:
-            </Typography>
-          </Stack>
-          <Typography
-            variant="body2"
-            sx={{
-              mt: 0.5,
-              fontFamily: "monospace",
-              fontSize: "0.85rem",
-            }}
-          >
-            {attendance.deviceId?.name || "—"}
-          </Typography>
-          {attendance.deviceId?.location && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: 0.3, display: "block" }}
-            >
-              📍 {attendance.deviceId.location}
-            </Typography>
-          )}
-        </Box>
+                            {/* Dispositivo */}
+                            <Box>
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                              >
+                                <DevicesIcon
+                                  sx={{
+                                    fontSize: 18,
+                                    color: theme.palette.text.secondary,
+                                  }}
+                                />
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  fontWeight={600}
+                                >
+                                  DISPOSITIVO:
+                                </Typography>
+                              </Stack>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  mt: 0.5,
+                                  fontFamily: "monospace",
+                                  fontSize: "0.85rem",
+                                }}
+                              >
+                                {attendance.deviceId?.name || "—"}
+                              </Typography>
+                              {attendance.deviceId?.location && (
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  sx={{ mt: 0.3, display: "block" }}
+                                >
+                                  📍 {attendance.deviceId.location}
+                                </Typography>
+                              )}
+                            </Box>
 
-        {/* Horario */}
-        <Box>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <ScheduleIcon
-              sx={{
-                fontSize: 18,
-                color: theme.palette.text.secondary,
-              }}
-            />
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={600}
-            >
-              HORARIO ASIGNADO:
-            </Typography>
-          </Stack>
-          <Typography variant="body2" sx={{ mt: 0.5 }}>
-            {attendance.scheduleId?.name || "Sin horario"}
-          </Typography>
-          {attendance.scheduleId?.startTime &&
-            attendance.scheduleId?.endTime && (
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mt: 0.3, display: "block" }}
-              >
-                🕐 {attendance.scheduleId.startTime} -{" "}
-                {attendance.scheduleId.endTime}
-              </Typography>
-            )}
-        </Box>
+                            {/* Horario */}
+                            <Box>
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                              >
+                                <ScheduleIcon
+                                  sx={{
+                                    fontSize: 18,
+                                    color: theme.palette.text.secondary,
+                                  }}
+                                />
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  fontWeight={600}
+                                >
+                                  HORARIO ASIGNADO:
+                                </Typography>
+                              </Stack>
+                              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                {attendance.scheduleId?.name || "Sin horario"}
+                              </Typography>
+                              {attendance.scheduleId?.startTime &&
+                                attendance.scheduleId?.endTime && (
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ mt: 0.3, display: "block" }}
+                                  >
+                                    🕐 {attendance.scheduleId.startTime} -{" "}
+                                    {attendance.scheduleId.endTime}
+                                  </Typography>
+                                )}
+                            </Box>
 
-        {/* Método de Verificación */}
-        <Box>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <FingerprintIcon
-              sx={{
-                fontSize: 18,
-                color: theme.palette.text.secondary,
-              }}
-            />
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={600}
-            >
-              MÉTODO DE VERIFICACIÓN:
-            </Typography>
-          </Stack>
-          <Chip
-            label={
-              attendance.verificationMethod === "fingerprint"
-                ? "Huella Digital"
-                : attendance.verificationMethod === "rfid"
-                ? "Tarjeta RFID"
-                : attendance.verificationMethod === "pin"
-                ? "PIN"
-                : attendance.verificationMethod || "—"
-            }
-            size="small"
-            sx={{
-              mt: 0.5,
-              fontSize: "0.75rem",
-              height: 26,
-              bgcolor: alpha(theme.palette.info.main, 0.1),
-              color: theme.palette.info.main,
-              fontWeight: 600,
-            }}
-          />
-        </Box>
-      </Stack>
+                            {/* Método de Verificación */}
+                            <Box>
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                              >
+                                <FingerprintIcon
+                                  sx={{
+                                    fontSize: 18,
+                                    color: theme.palette.text.secondary,
+                                  }}
+                                />
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  fontWeight={600}
+                                >
+                                  MÉTODO DE VERIFICACIÓN:
+                                </Typography>
+                              </Stack>
+                              <Chip
+                                label={
+                                  attendance.verificationMethod ===
+                                  "fingerprint"
+                                    ? "Huella Digital"
+                                    : attendance.verificationMethod === "rfid"
+                                    ? "Tarjeta RFID"
+                                    : attendance.verificationMethod === "pin"
+                                    ? "PIN"
+                                    : attendance.verificationMethod || "—"
+                                }
+                                size="small"
+                                sx={{
+                                  mt: 0.5,
+                                  fontSize: "0.75rem",
+                                  height: 26,
+                                  bgcolor: alpha(theme.palette.info.main, 0.1),
+                                  color: theme.palette.info.main,
+                                  fontWeight: 600,
+                                }}
+                              />
+                            </Box>
+                          </Stack>
 
-      {/* Columna Derecha */}
-      <Stack spacing={2} flex={1}>
-        <Typography
-          variant="subtitle2"
-          fontWeight={700}
-          color="primary"
-          gutterBottom
-        >
-          DETALLES ADICIONALES
-        </Typography>
+                          {/* Columna Derecha */}
+                          <Stack spacing={2} flex={1}>
+                            <Typography
+                              variant="subtitle2"
+                              fontWeight={700}
+                              color="primary"
+                              gutterBottom
+                            >
+                              DETALLES ADICIONALES
+                            </Typography>
 
-        {/* Fecha de Creación */}
-        <Box>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <AccessTimeIcon
-              sx={{
-                fontSize: 18,
-                color: theme.palette.text.secondary,
-              }}
-            />
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={600}
-            >
-              FECHA DE CREACIÓN:
-            </Typography>
-          </Stack>
-          <Typography variant="body2" sx={{ mt: 0.5 }}>
-            {formatDateTime(attendance.createdAt)}
-          </Typography>
-        </Box>
+                            {/* Fecha de Creación */}
+                            <Box>
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                              >
+                                <AccessTimeIcon
+                                  sx={{
+                                    fontSize: 18,
+                                    color: theme.palette.text.secondary,
+                                  }}
+                                />
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  fontWeight={600}
+                                >
+                                  FECHA DE CREACIÓN:
+                                </Typography>
+                              </Stack>
+                              <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                {formatDateTime(attendance.createdAt)}
+                              </Typography>
+                            </Box>
 
-        {/* Última Actualización */}
-        {attendance.updatedAt &&
-          attendance.updatedAt !== attendance.createdAt && (
-            <Box>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <AccessTimeIcon
-                  sx={{
-                    fontSize: 18,
-                    color: theme.palette.text.secondary,
-                  }}
-                />
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontWeight={600}
-                >
-                  ÚLTIMA ACTUALIZACIÓN:
-                </Typography>
-              </Stack>
-              <Typography variant="body2" sx={{ mt: 0.5 }}>
-                {formatDateTime(attendance.updatedAt)}
-              </Typography>
-            </Box>
-          )}
+                            {/* Última Actualización */}
+                            {attendance.updatedAt &&
+                              attendance.updatedAt !== attendance.createdAt && (
+                                <Box>
+                                  <Stack
+                                    direction="row"
+                                    spacing={1}
+                                    alignItems="center"
+                                  >
+                                    <AccessTimeIcon
+                                      sx={{
+                                        fontSize: 18,
+                                        color: theme.palette.text.secondary,
+                                      }}
+                                    />
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                      fontWeight={600}
+                                    >
+                                      ÚLTIMA ACTUALIZACIÓN:
+                                    </Typography>
+                                  </Stack>
+                                  <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                    {formatDateTime(attendance.updatedAt)}
+                                  </Typography>
+                                </Box>
+                              )}
 
-        {/* Aprobado Por */}
-        {attendance.approvedBy && (
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <CheckCircleIcon
-                sx={{
-                  fontSize: 18,
-                  color: theme.palette.success.main,
-                }}
-              />
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                fontWeight={600}
-              >
-                APROBADO POR:
-              </Typography>
-            </Stack>
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
-              {attendance.approvedBy}
-            </Typography>
-          </Box>
-        )}
+                            {/* Aprobado Por */}
+                            {attendance.approvedBy && (
+                              <Box>
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  alignItems="center"
+                                >
+                                  <CheckCircleIcon
+                                    sx={{
+                                      fontSize: 18,
+                                      color: theme.palette.success.main,
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    fontWeight={600}
+                                  >
+                                    APROBADO POR:
+                                  </Typography>
+                                </Stack>
+                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                  {attendance.approvedBy}
+                                </Typography>
+                              </Box>
+                            )}
 
-        {/* Información del Departamento */}
-        {attendance.userId?.departmentId && (
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <BusinessIcon
-                sx={{
-                  fontSize: 18,
-                  color: theme.palette.text.secondary,
-                }}
-              />
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                fontWeight={600}
-              >
-                DEPARTAMENTO:
-              </Typography>
-            </Stack>
-            <Typography variant="body2" sx={{ mt: 0.5 }}>
-              {attendance.userId.departmentId.name ||
-                attendance.userId.departmentId}
-            </Typography>
-          </Box>
-        )}
-      </Stack>
-    </Stack>
+                            {/* Información del Departamento */}
+                            {attendance.userId?.departmentId && (
+                              <Box>
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  alignItems="center"
+                                >
+                                  <BusinessIcon
+                                    sx={{
+                                      fontSize: 18,
+                                      color: theme.palette.text.secondary,
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    fontWeight={600}
+                                  >
+                                    DEPARTAMENTO:
+                                  </Typography>
+                                </Stack>
+                                <Typography variant="body2" sx={{ mt: 0.5 }}>
+                                  {attendance.userId.departmentId.name ||
+                                    attendance.userId.departmentId}
+                                </Typography>
+                              </Box>
+                            )}
+                          </Stack>
+                        </Stack>
 
-    {/* Sección de Justificación - Nueva */}
-    {attendance.justification && (
-      <Box
-        sx={{
-          mt: 3,
-          p: 2.5,
-          borderRadius: 2,
-          bgcolor: attendance.justification.approved
-            ? alpha(theme.palette.success.main, 0.08)
-            : alpha(theme.palette.warning.main, 0.08),
-          border: `1px solid ${
-            attendance.justification.approved
-              ? alpha(theme.palette.success.main, 0.3)
-              : alpha(theme.palette.warning.main, 0.3)
-          }`,
-        }}
-      >
-        <Stack spacing={2}>
-          {/* Encabezado de Justificación */}
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-          >
-            <Stack direction="row" spacing={1} alignItems="center">
-              <DescriptionIcon
-                sx={{
-                  fontSize: 20,
-                  color: attendance.justification.approved
-                    ? theme.palette.success.main
-                    : theme.palette.warning.main,
-                }}
-              />
-              <Typography
-                variant="subtitle2"
-                fontWeight={700}
-                color={
-                  attendance.justification.approved
-                    ? "success.main"
-                    : "warning.main"
-                }
-              >
-                JUSTIFICACIÓN
-              </Typography>
-            </Stack>
-            <Chip
-              icon={
-                attendance.justification.approved ? (
-                  <CheckCircleIcon sx={{ fontSize: 16 }} />
-                ) : (
-                  <PendingIcon sx={{ fontSize: 16 }} />
-                )
-              }
-              label={
-                attendance.justification.approved ? "Aprobada" : "Pendiente"
-              }
-              size="small"
-              sx={{
-                fontSize: "0.7rem",
-                height: 24,
-                fontWeight: 700,
-                bgcolor: attendance.justification.approved
-                  ? theme.palette.success.main
-                  : theme.palette.warning.main,
-                color: "white",
-                "& .MuiChip-icon": {
-                  color: "white",
-                },
-              }}
-            />
-          </Stack>
+                        {/* Sección de Justificación - Nueva */}
+                        {attendance.justification && (
+                          <Box
+                            sx={{
+                              mt: 3,
+                              p: 2.5,
+                              borderRadius: 2,
+                              border: "1px solid gray",
+                              /*bgcolor: attendance.justification.approved
+                                ? alpha(theme.palette.success.main, 0.08)
+                                : alpha(theme.palette.warning.main, 0.08),*/
+                              /*border: `1px solid ${
+                                attendance.justification.approved
+                                  ? alpha(theme.palette.success.main, 0.3)
+                                  : alpha(theme.palette.warning.main, 0.3)
+                              }`,*/
+                            }}
+                          >
+                            <Stack spacing={2}>
+                              {/* Encabezado de Justificación */}
+                              <Stack
+                                direction="row"
+                                alignItems="center"
+                                justifyContent="space-between"
+                              >
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  alignItems="center"
+                                >
+                                  <DescriptionIcon
+                                    sx={{
+                                      fontSize: 20,
+                                      color: attendance.justification.approved
+                                        ? theme.palette.primary.main
+                                        : theme.palette.warning.main,
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="subtitle2"
+                                    fontWeight={700}
+                                    color={
+                                      attendance.justification.approved
+                                        ? "primary.main"
+                                        : "warning.main"
+                                    }
+                                  >
+                                    JUSTIFICACIÓN
+                                  </Typography>
+                                </Stack>
+                                <Chip
+                                  icon={
+                                    attendance.justification.approved ? (
+                                      <CheckCircleIcon sx={{ fontSize: 16 }} />
+                                    ) : (
+                                      <PendingIcon sx={{ fontSize: 16 }} />
+                                    )
+                                  }
+                                  label={
+                                    attendance.justification.approved
+                                      ? "Aprobada"
+                                      : "Pendiente"
+                                  }
+                                  size="small"
+                                  sx={{
+                                    fontSize: "0.7rem",
+                                    height: 24,
+                                    fontWeight: 700,
+                                    bgcolor: attendance.justification.approved
+                                      ? theme.palette.success.main
+                                      : theme.palette.warning.main,
+                                    color: "white",
+                                    "& .MuiChip-icon": {
+                                      color: "white",
+                                    },
+                                  }}
+                                />
+                              </Stack>
 
-          {/* Motivo */}
-          <Box>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={600}
-              sx={{ display: "block", mb: 0.5 }}
-            >
-              MOTIVO:
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                lineHeight: 1.6,
-                color: theme.palette.text.primary,
-              }}
-            >
-              {attendance.justification.reason}
-            </Typography>
-          </Box>
+                              {/* Motivo */}
+                              <Box>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  fontWeight={600}
+                                  sx={{ display: "block", mb: 0.5 }}
+                                >
+                                  MOTIVO:
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    lineHeight: 1.6,
+                                    color: theme.palette.text.primary,
+                                  }}
+                                >
+                                  {attendance.justification.reason}
+                                </Typography>
+                              </Box>
 
-          {/* Información de Aprobación */}
-          {attendance.justification.approved && (
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={3}
-              sx={{
-                pt: 1.5,
-                borderTop: `1px solid ${alpha(
-                  theme.palette.success.main,
-                  0.2
-                )}`,
-              }}
-            >
-              {/* Aprobado Por */}
-              <Box flex={1}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <PersonIcon
-                    sx={{
-                      fontSize: 16,
-                      color: theme.palette.success.main,
-                    }}
-                  />
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    fontWeight={600}
-                  >
-                    APROBADO POR:
-                  </Typography>
-                </Stack>
-                <Typography
-                  variant="body2"
-                  sx={{ mt: 0.5, fontWeight: 500 }}
-                >
-                  {`${attendance.justification.approvedBy.name} ${attendance.justification.approvedBy.firstSurname} ${attendance.justification.approvedBy.secondSurname}`}
-                </Typography>
-              </Box>
+                              {/* Información de Aprobación */}
+                              {attendance.justification.approved && (
+                                <Stack
+                                  direction={{ xs: "column", sm: "row" }}
+                                  spacing={3}
+                                  sx={{
+                                    pt: 1.5,
+                                    borderTop: `1px solid ${alpha(
+                                      theme.palette.divider,
+                                      0.2
+                                    )}`,
+                                  }}
+                                >
+                                  {/* Aprobado Por */}
+                                  <Box flex={1}>
+                                    <Stack
+                                      direction="row"
+                                      spacing={1}
+                                      alignItems="center"
+                                    >
+                                      <PersonIcon
+                                        sx={{
+                                          fontSize: 16,
+                                          //color: theme.palette.success.main,
+                                        }}
+                                      />
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        fontWeight={600}
+                                      >
+                                        APROBADO POR:
+                                      </Typography>
+                                    </Stack>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ mt: 0.5, fontWeight: 500 }}
+                                    >
+                                      {`${attendance.justification.approvedBy.name} ${attendance.justification.approvedBy.firstSurname} ${attendance.justification.approvedBy.secondSurname}`}
+                                    </Typography>
+                                  </Box>
 
-              {/* Fecha de Aprobación */}
-              <Box flex={1}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <EventAvailableIcon
-                    sx={{
-                      fontSize: 16,
-                      color: theme.palette.success.main,
-                    }}
-                  />
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    fontWeight={600}
-                  >
-                    FECHA DE APROBACIÓN:
-                  </Typography>
-                </Stack>
-                <Typography
-                  variant="body2"
-                  sx={{ mt: 0.5, fontWeight: 500 }}
-                >
-                  {formatDateTime(attendance.justification.approvedAt)}
-                </Typography>
-              </Box>
-            </Stack>
-          )}
-        </Stack>
-      </Box>
-    )}
-  </Box>
-</Collapse>
+                                  {/* Fecha de Aprobación */}
+                                  <Box flex={1}>
+                                    <Stack
+                                      direction="row"
+                                      spacing={1}
+                                      alignItems="center"
+                                    >
+                                      <EventAvailableIcon
+                                        sx={{
+                                          fontSize: 16,
+                                          //color: theme.palette.success.main,
+                                        }}
+                                      />
+                                      <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        fontWeight={600}
+                                      >
+                                        FECHA DE APROBACIÓN:
+                                      </Typography>
+                                    </Stack>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ mt: 0.5, fontWeight: 500 }}
+                                    >
+                                      {formatDateTime(
+                                        attendance.justification.approvedAt
+                                      )}
+                                    </Typography>
+                                  </Box>
+                                </Stack>
+                              )}
+                            </Stack>
+                          </Box>
+                        )}
+                      </Box>
+                    </Collapse>
                   </TableCell>
                 </TableRow>
               </React.Fragment>

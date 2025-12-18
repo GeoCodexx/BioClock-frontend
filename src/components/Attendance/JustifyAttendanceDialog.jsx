@@ -19,6 +19,10 @@ import {
   CircularProgress,
   Divider,
   FormLabel,
+  Fade,
+  Stack,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Description as DescriptionIcon,
@@ -46,10 +50,26 @@ export default function JustifyAttendanceDialog({
   handleJustifyAttendance,
   onSuccess,
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const [reason, setReason] = useState("");
   const [approved, setApproved] = useState("true");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showButtons, setShowButtons] = useState(false);
   const [error, setError] = useState("");
+
+  // Animación de entrada de botones en mobile
+  useEffect(() => {
+    if (open && isMobile) {
+      const timer = setTimeout(() => setShowButtons(true), 300);
+      return () => clearTimeout(timer);
+    } else if (open) {
+      setShowButtons(true);
+    } else {
+      setShowButtons(false);
+    }
+  }, [open, isMobile]);
 
   // Reiniciar el formulario cuando cambia la asistencia
   useEffect(() => {
@@ -167,10 +187,10 @@ export default function JustifyAttendanceDialog({
       </DialogTitle>
 
       <DialogContent dividers>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        {/* <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           Como administrador o personal de RRHH, puedes justificar registros de
           asistencia y determinar si se aprueban o no.
-        </Typography>
+        </Typography> */}
 
         {attendance && (
           <Paper
@@ -391,23 +411,60 @@ export default function JustifyAttendanceDialog({
             {error}
           </Alert>
         )}
+        {isMobile && (
+          <Fade in={showButtons} timeout={500}>
+            <Stack spacing={1.5} sx={{ mt: 3 }}>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                fullWidth
+                disabled={isSubmitting}
+                startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
+              >
+                {isSubmitting
+                  ? "Guardando..."
+                  : `${isEditing ? "Actualizar" : "Guardar"} Justificación`}
+              </Button>
+
+              <Button
+                onClick={handleClose}
+                disabled={isSubmitting}
+                color="inherit"
+                variant="outlined"
+                size="large"
+                fullWidth
+              >
+                Cancelar
+              </Button>
+            </Stack>
+          </Fade>
+        )}
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={handleClose} disabled={isSubmitting} color="inherit">
-          Cancelar
-        </Button>
-        <Button
-          type="submit"
-          variant="contained"
-          disabled={isSubmitting}
-          startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
-        >
-          {isSubmitting
-            ? "Guardando..."
-            : `${isEditing ? "Actualizar" : "Guardar"} Justificación`}
-        </Button>
-      </DialogActions>
+      {/* Acciones solo en desktop */}
+      {!isMobile && (
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button
+            onClick={handleClose}
+            disabled={isSubmitting}
+            color="inherit"
+            variant="outlined"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={isSubmitting}
+            startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
+          >
+            {isSubmitting
+              ? "Guardando..."
+              : `${isEditing ? "Actualizar" : "Guardar"} Justificación`}
+          </Button>
+        </DialogActions>
+      )}
     </Dialog>
   );
 }

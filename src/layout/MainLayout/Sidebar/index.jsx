@@ -45,12 +45,12 @@ const menuItems = [
   },
   { text: "Asistencias", path: "/attendances", icon: <EventNoteIcon /> },
   { text: "Mi Asistencia", path: "/myattendances", icon: <EventNoteIcon /> },
-    {
+  {
     text: "Gestión de Usuarios",
     icon: <PeopleIcon />,
     children: [
-      { text: "Permisos", path: "users/permissions", icon: <VpnKeyIcon /> },
-      { text: "Roles", path: "users/roles", icon: <VpnKeyIcon /> },
+      { text: "Permisos", path: "/users/permissions", icon: <VpnKeyIcon /> },
+      { text: "Roles", path: "/users/roles", icon: <VpnKeyIcon /> },
       { text: "Usuarios", path: "/users", icon: <PeopleIcon /> },
     ],
   },
@@ -113,9 +113,9 @@ const Sidebar = ({ isOpen, handleDrawerToggle, mobileOpen, setMobileOpen }) => {
               transition: "all 0.2s ease",
               "&:hover": {
                 transform: "translateX(4px)",
-                "& .MuiListItemIcon-root": {
+                /*"& .MuiListItemIcon-root": {
                   color: theme.palette.primary.main,
-                },
+                },*/
               },
             }}
           >

@@ -1,5 +1,5 @@
 import {
-    Alert,
+  Alert,
   Box,
   Button,
   Dialog,
@@ -7,15 +7,20 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  Fade,
   Grid,
   Paper,
+  Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   Warning as WarningIcon,
   Description as DescriptionIcon,
 } from "@mui/icons-material";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import { useEffect, useState } from "react";
 
 /**
  * Dialog de confirmación para eliminar una justificación
@@ -32,6 +37,23 @@ export function ConfirmDeleteJustificationDialog({
   onConfirm,
   isDeleting = false,
 }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const [showButtons, setShowButtons] = useState(false);
+
+  // Animación de entrada de botones en mobile
+  useEffect(() => {
+    if (open && isMobile) {
+      const timer = setTimeout(() => setShowButtons(true), 300);
+      return () => clearTimeout(timer);
+    } else if (open) {
+      setShowButtons(true);
+    } else {
+      setShowButtons(false);
+    }
+  }, [open, isMobile]);
+
   const handleConfirm = () => {
     if (onConfirm) {
       onConfirm(attendance._id);
@@ -66,11 +88,11 @@ export function ConfirmDeleteJustificationDialog({
       </DialogTitle>
 
       <DialogContent dividers>
-        <Alert severity="warning" sx={{ mb: 3 }}>
+        {/* <Alert severity="warning" sx={{ mb: 3 }}>
           <Typography variant="body2" fontWeight={500}>
             Esta acción no se puede deshacer
           </Typography>
-        </Alert>
+        </Alert> */}
 
         <Typography variant="body2" color="text.secondary" gutterBottom>
           ¿Estás seguro de que deseas eliminar la justificación del siguiente
@@ -151,28 +173,70 @@ export function ConfirmDeleteJustificationDialog({
             )}
           </Paper>
         )}
+        {/* Botones dentro del contenido en mobile con animación */}
+        {isMobile && (
+          <Fade in={showButtons} timeout={500}>
+            <Stack spacing={1.5} sx={{ mt: 3 }}>
+              <Button
+                onClick={handleConfirm}
+                variant="contained"
+                color="error"
+                size="large"
+                fullWidth
+                disabled={isDeleting}
+                startIcon={
+                  isDeleting ? (
+                    <CircularProgress size={20} />
+                  ) : (
+                    <DeleteForeverIcon />
+                  )
+                }
+              >
+                {isDeleting ? "Eliminando..." : "Eliminar Justificación"}
+              </Button>
+              <Button
+                onClick={() => onOpenChange(false)}
+                variant="outlined"
+                size="large"
+                fullWidth
+                disabled={isDeleting}
+                color="inherit"
+              >
+                Cancelar
+              </Button>
+            </Stack>
+          </Fade>
+        )}
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button
-          onClick={() => onOpenChange(false)}
-          disabled={isDeleting}
-          color="inherit"
-        >
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleConfirm}
-          variant="contained"
-          color="error"
-          disabled={isDeleting}
-          startIcon={
-            isDeleting ? <CircularProgress size={20} /> : <DeleteForeverIcon />
-          }
-        >
-          {isDeleting ? "Eliminando..." : "Eliminar Justificación"}
-        </Button>
-      </DialogActions>
+      {/* Acciones solo en desktop */}
+      {!isMobile && (
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button
+            onClick={() => onOpenChange(false)}
+            disabled={isDeleting}
+            variant="outlined"
+            color="inherit"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            variant="contained"
+            color="error"
+            disabled={isDeleting}
+            startIcon={
+              isDeleting ? (
+                <CircularProgress size={20} />
+              ) : (
+                <DeleteForeverIcon />
+              )
+            }
+          >
+            {isDeleting ? "Eliminando..." : "Eliminar Justificación"}
+          </Button>
+        </DialogActions>
+      )}
     </Dialog>
   );
 }

@@ -92,7 +92,7 @@ const Dashboard = () => {
               >
                 <Box flex={1}>
                   <Typography variant="h6" fontWeight={700} gutterBottom>
-                    Panel
+                    Panel Estadístico
                   </Typography>
                   <Chip
                     label={format(new Date(), "d 'de' MMMM 'de' yyyy", {

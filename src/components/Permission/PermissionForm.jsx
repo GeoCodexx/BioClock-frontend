@@ -5,17 +5,18 @@ import { useEffect } from "react";
 
 // Configuración de módulos y acciones
 const MODULES = [
-  { value: "dashboard", label: "Dashboard" },
-  { value: "devices", label: "Dispositivos" },
-  { value: "schedules", label: "Horarios" },
+  { value: "attendances", label: "Asistencias" },
   { value: "departments", label: "Departamentos" },
+  { value: "devices", label: "Dispositivos" },
+  { value: "fingerprints", label: "Huellas Dactilares" },
+  { value: "schedules", label: "Horarios" },
+  { value: "my-attendance", label: "Mi Asistencia" },
+  { value: "dashboard", label: "Panel Estadístico" },
   { value: "permissions", label: "Permisos" },
+  { value: "daily-report", label: "Reporte Diario" },
+  { value: "general-report", label: "Reporte General" },
   { value: "roles", label: "Roles" },
   { value: "users", label: "Usuarios" },
-  { value: "fingerprints", label: "Huellas Dactilares" },
-  { value: "attendances", label: "Asistencias" },
-  { value: "personal-report", label: "Reporte Personal" },
-  { value: "general-report", label: "Reporte General" },
 ];
 
 const ACTIONS = [
