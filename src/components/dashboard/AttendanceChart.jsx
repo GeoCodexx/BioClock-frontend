@@ -1,8 +1,18 @@
-import { Box, Card, CardContent, Typography, Chip } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Chip,
+  useTheme,
+} from "@mui/material";
 import ReactApexChart from "react-apexcharts";
-import AssignmentIcon from '@mui/icons-material/Assignment';
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import { useThemeMode } from "../../contexts/ThemeContext";
 
 const AttendanceChart = ({ weeklyAttendances }) => {
+  const theme = useTheme();
+  const { mode } = useThemeMode(); // 'light' o 'dark'
   const onTimeStatusData =
     Array.isArray(weeklyAttendances) && weeklyAttendances.length === 7
       ? weeklyAttendances.map((c) => c.on_time)
@@ -36,7 +46,8 @@ const AttendanceChart = ({ weeklyAttendances }) => {
   const totalAbsent = absentStatusData.reduce((a, b) => a + b, 0);
   const totalWeek = totalOnTime + totalLate + totalAbsent;
   const avgDaily = totalWeek > 0 ? Math.round(totalWeek / 7) : 0;
-  const punctualityRate = totalWeek > 0 ? Math.round((totalOnTime / totalWeek) * 100) : 0;
+  const punctualityRate =
+    totalWeek > 0 ? Math.round((totalOnTime / totalWeek) * 100) : 0;
 
   const chartData = {
     series: [
@@ -45,6 +56,9 @@ const AttendanceChart = ({ weeklyAttendances }) => {
       { name: "Ausente", data: absentStatusData },
     ],
     options: {
+      theme: {
+        mode: mode,
+      },
       chart: {
         type: "area",
         height: 380,
@@ -52,17 +66,17 @@ const AttendanceChart = ({ weeklyAttendances }) => {
         zoom: { enabled: false },
         animations: {
           enabled: true,
-          easing: 'easeinout',
+          easing: "easeinout",
           speed: 800,
           animateGradually: {
             enabled: true,
-            delay: 150
+            delay: 150,
           },
           dynamicAnimation: {
             enabled: true,
-            speed: 350
-          }
-        }
+            speed: 350,
+          },
+        },
       },
       dataLabels: {
         enabled: false,
@@ -70,35 +84,38 @@ const AttendanceChart = ({ weeklyAttendances }) => {
       stroke: {
         curve: "smooth",
         width: 3,
-        lineCap: 'round'
+        lineCap: "round",
       },
       xaxis: {
         categories: dayLabels,
         labels: {
           style: {
-            fontSize: '13px',
+            fontSize: "13px",
             fontWeight: 600,
-            colors: '#666'
-          }
+            colors: "#666",
+          },
+        },
+        tooltip: {
+          enabled: false, // ← Agregar esta línea
         },
         axisBorder: { show: false },
-        axisTicks: { show: false }
+        axisTicks: { show: false },
       },
       yaxis: {
         title: {
           text: "Número de Asistencias",
           style: {
-            fontSize: '13px',
+            fontSize: "13px",
             fontWeight: 600,
-            color: '#666'
-          }
+            color: "#666",
+          },
         },
         labels: {
           style: {
-            fontSize: '12px',
-            colors: '#666'
-          }
-        }
+            fontSize: "12px",
+            colors: "#666",
+          },
+        },
       },
       colors: ["#2196F3", "#673AB7", "#F44336"],
       fill: {
@@ -111,19 +128,16 @@ const AttendanceChart = ({ weeklyAttendances }) => {
         },
       },
       grid: {
-        borderColor: '#f0f0f0',
+        borderColor: "#f0f0f0",
         strokeDashArray: 5,
-        xaxis: { lines: { show: false } }
+        xaxis: { lines: { show: false } },
       },
       legend: {
-        show: false
+        show: false,
       },
       tooltip: {
         shared: true,
         intersect: false,
-        y: {
-          formatter: (value) => value + ' personas'
-        },
         x: {
           formatter: function (val, opts) {
             const date = dateLabels[opts.dataPointIndex];
@@ -132,16 +146,16 @@ const AttendanceChart = ({ weeklyAttendances }) => {
           },
         },
         style: {
-          fontSize: '13px'
-        }
+          fontSize: "13px",
+        },
       },
       markers: {
         size: 0,
         hover: {
           size: 6,
-          sizeOffset: 3
-        }
-      }
+          sizeOffset: 3,
+        },
+      },
     },
   };
 
@@ -149,10 +163,10 @@ const AttendanceChart = ({ weeklyAttendances }) => {
     <Card
       sx={{
         borderRadius: 4,
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
-        position: 'relative',
-        overflow: 'hidden',
-        height: '100%',
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
+        position: "relative",
+        overflow: "hidden",
+        height: "100%",
         /*'&::before': {
           content: '""',
           position: 'absolute',
@@ -166,74 +180,94 @@ const AttendanceChart = ({ weeklyAttendances }) => {
     >
       <CardContent sx={{ p: 4 }}>
         {/* Header con título y leyenda */}
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 2,
-          mb: 3.5
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 2,
+            mb: 3.5,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <Box
               sx={{
                 width: 40,
                 height: 40,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                //background: "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)",
+                background: theme.palette.primary.main,
                 borderRadius: 2,
-                color: 'white',
-                boxShadow: '0 4px 12px rgba(33, 150, 243, 0.3)'
+                color: "white",
+                //boxShadow: "0 4px 12px rgba(33, 150, 243, 0.3)",
               }}
             >
               <AssignmentIcon sx={{ fontSize: 20 }} />
             </Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1a1a1a' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
               Asistencia de la semana
             </Typography>
           </Box>
 
           {/* Leyenda personalizada */}
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
             <Chip
-              icon={<Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#2196F3', boxShadow: '0 2px 8px #2196F3' }} />}
+              icon={
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    bgcolor: theme.palette.primary.main,
+                  }}
+                />
+              }
               label={`A tiempo: ${totalOnTime}`}
               sx={{
-                bgcolor: 'rgba(0, 0, 0, 0.03)',
+                bgcolor: "rgba(0, 0, 0, 0.03)",
                 fontWeight: 600,
-                '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.06)',
-                  transform: 'translateY(-2px)',
-                  transition: 'all 0.3s ease'
-                }
+                /*"&:hover": {
+                  bgcolor: "rgba(0, 0, 0, 0.06)",
+                  transform: "translateY(-2px)",
+                  transition: "all 0.3s ease",
+                },*/
               }}
             />
             <Chip
-              icon={<Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#673AB7', boxShadow: '0 2px 8px #673AB7' }} />}
+              icon={
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    bgcolor: theme.palette.secondary.main,
+                  }}
+                />
+              }
               label={`Tarde: ${totalLate}`}
               sx={{
-                bgcolor: 'rgba(0, 0, 0, 0.03)',
+                bgcolor: "rgba(0, 0, 0, 0.03)",
                 fontWeight: 600,
-                '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.06)',
-                  transform: 'translateY(-2px)',
-                  transition: 'all 0.3s ease'
-                }
               }}
             />
             <Chip
-              icon={<Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: '#F44336', boxShadow: '0 2px 8px #F44336' }} />}
+              icon={
+                <Box
+                  sx={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    bgcolor: theme.palette.error.main,
+                  }}
+                />
+              }
               label={`Ausente: ${totalAbsent}`}
               sx={{
-                bgcolor: 'rgba(0, 0, 0, 0.03)',
+                bgcolor: "rgba(0, 0, 0, 0.03)",
                 fontWeight: 600,
-                '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.06)',
-                  transform: 'translateY(-2px)',
-                  transition: 'all 0.3s ease'
-                }
               }}
             />
           </Box>
@@ -252,40 +286,52 @@ const AttendanceChart = ({ weeklyAttendances }) => {
         {/* Estadísticas resumen */}
         <Box
           sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
             gap: 2,
             mt: 3,
             pt: 3,
-            borderTop: '1px solid rgba(0, 0, 0, 0.08)'
+            borderTop: `1px solid ${theme.palette.divider}`,
           }}
         >
           <Box
             sx={{
-              textAlign: 'center',
+              textAlign: "center",
               p: 2,
-              background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%)',
+              /*/background:
+                "linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(33, 150, 243, 0.02) 100%)",*/
+              background: theme.palette.primary.main + "0A",
               borderRadius: 2,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)'
-              }
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
+                //boxShadow:`0 8px 16px ${theme.palette.primary.main}20`
+              },
             }}
           >
-            <Typography variant="caption" sx={{ color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                //color: "#666",
+                //textTransform: "uppercase",
+                letterSpacing: "0.5px",
+                fontWeight: 600,
+              }}
+            >
               Total Semana
             </Typography>
             <Typography
               variant="h4"
-              sx={{
+              color={theme.palette.primary.main}
+              /*sx={{
                 fontWeight: 800,
                 mt: 1,
-                background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}
+                background: "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}*/
             >
               {totalWeek}
             </Typography>
@@ -293,30 +339,41 @@ const AttendanceChart = ({ weeklyAttendances }) => {
 
           <Box
             sx={{
-              textAlign: 'center',
+              textAlign: "center",
               p: 2,
-              background: 'linear-gradient(135deg, rgba(103, 58, 183, 0.05) 0%, rgba(103, 58, 183, 0.02) 100%)',
+              /*background:
+                "linear-gradient(135deg, rgba(103, 58, 183, 0.05) 0%, rgba(103, 58, 183, 0.02) 100%)",*/
+              background: theme.palette.secondary.main + "0A",
               borderRadius: 2,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)'
-              }
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
+              },
             }}
           >
-            <Typography variant="caption" sx={{ color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                /*color: "#666",
+                textTransform: "uppercase",*/
+                letterSpacing: "0.5px",
+                fontWeight: 600,
+              }}
+            >
               Promedio Diario
             </Typography>
             <Typography
               variant="h4"
-              sx={{
+              color={theme.palette.secondary.main}
+              /*sx={{
                 fontWeight: 800,
                 mt: 1,
-                background: 'linear-gradient(135deg, #673AB7 0%, #512DA8 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}
+                background: "linear-gradient(135deg, #673AB7 0%, #512DA8 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}*/
             >
               {avgDaily}
             </Typography>
@@ -324,30 +381,41 @@ const AttendanceChart = ({ weeklyAttendances }) => {
 
           <Box
             sx={{
-              textAlign: 'center',
+              textAlign: "center",
               p: 2,
-              background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, rgba(76, 175, 80, 0.02) 100%)',
+              /*background:
+                "linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, rgba(76, 175, 80, 0.02) 100%)",*/
+              background: theme.palette.success.main + "0A",
               borderRadius: 2,
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)'
-              }
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
+              },
             }}
           >
-            <Typography variant="caption" sx={{ color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                /* color: "#666",
+                textTransform: "uppercase",*/
+                letterSpacing: "0.5px",
+                fontWeight: 600,
+              }}
+            >
               Tasa Puntualidad
             </Typography>
             <Typography
               variant="h4"
-              sx={{
+              color={theme.palette.success.main}
+              /*sx={{
                 fontWeight: 800,
                 mt: 1,
-                background: 'linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text'
-              }}
+                background: "linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}*/
             >
               {punctualityRate}%
             </Typography>

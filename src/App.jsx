@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import Login from "./pages/Login";
@@ -9,16 +8,13 @@ import Permissions from "./pages/Permissions";
 import Devices from "./pages/Devices";
 import Schedules from "./pages/Schedules";
 import Departments from "./pages/Departments";
-import { ThemeProvider } from "@mui/material/styles";
-import { CssBaseline } from "@mui/material";
-import theme from "./themes";
 import Fingerprint from "./pages/Fingerprints";
 import Attendances from "./pages/Attendances";
 import DailyReport from "./pages/DailyReport";
-//import UserHistoryReport from "./pages/UserHistoryReport";
 import GlobalSnackbar from "./components/GlobalSnackbar";
 import GeneralReportPage from "./pages/GeneralReport";
 import MyAttendances from "./pages/MyAttendances";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -26,14 +22,11 @@ function PrivateRoute({ children }) {
 }
 
 export default function App() {
-  const [user, setUser] = useState(null);
-
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <ThemeProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login onLogin={setUser} />} />
+          <Route path="/login" element={<Login />} />
           <Route
             path="/"
             element={

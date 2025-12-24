@@ -6,6 +6,7 @@ import Logo from "../../assets/images/bitel_logo.png";
 // Componentes del layout
 import Header from "./Header";
 import Sidebar from "./Sidebar";
+import { useThemeMode } from "../../contexts/ThemeContext";
 
 const drawerWidth = 260;
 const collapsedWidth = 80;
@@ -13,13 +14,9 @@ const collapsedWidth = 80;
 const MainLayout = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
+  const { mode, toggleTheme } = useThemeMode();
 
   const handleDrawerToggle = () => {
     if (isMobile) {
@@ -33,9 +30,9 @@ const MainLayout = () => {
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <Header
         toggleTheme={toggleTheme}
-        isDarkMode={isDarkMode}
+        isDarkMode={mode === "dark"}
         handleDrawerToggle={handleDrawerToggle}
-        logoSrc={Logo}  // ← Pasa el logo aquí
+        logoSrc={Logo} // ← Pasa el logo aquí
       />
       <Sidebar
         isOpen={isDrawerOpen}
@@ -46,7 +43,7 @@ const MainLayout = () => {
       <Box
         component="main"
         sx={{
-          backgroundColor: "rgb(238, 242, 246)",
+          backgroundColor: theme.palette.background.default,
           minWidth: "1%",
           width: isMobile
             ? "100%"

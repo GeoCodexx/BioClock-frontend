@@ -198,7 +198,6 @@ export default function JustifyAttendanceDialog({
             sx={{
               p: 2,
               mb: 3,
-              backgroundColor: "grey.50",
             }}
           >
             {/* Encabezado con nombre y estado */}

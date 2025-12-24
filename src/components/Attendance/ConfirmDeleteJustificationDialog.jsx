@@ -105,7 +105,6 @@ export function ConfirmDeleteJustificationDialog({
             sx={{
               p: 2,
               mt: 2,
-              backgroundColor: "grey.50",
             }}
           >
             <Typography variant="subtitle2" fontWeight={600} gutterBottom>

@@ -35,7 +35,6 @@ const Dashboard = () => {
   const [generalStats, setGeneralStats] = useState(null);
   const [weeklyAttendances, setWeeklyAttendances] = useState([]);
   const [attendanceByStatus, setAttendanceByStatus] = useState(null);
-  const [topUsers, setTopUsers] = useState([]);
 
   // Cargar todos los datos al montar el componente
   useEffect(() => {
@@ -48,17 +47,15 @@ const Dashboard = () => {
 
     try {
       // Ejecutar todas las peticiones en paralelo
-      const [statsRes, weeklyRes, statusRes, topUsersRes] = await Promise.all([
+      const [statsRes, weeklyRes, statusRes] = await Promise.all([
         dashboardService.getGeneralStats(),
         dashboardService.getWeeklyAttendances(),
         dashboardService.getAttendanceByStatus(),
-        dashboardService.getTopUsers(),
       ]);
 
       setGeneralStats(statsRes.data);
       setWeeklyAttendances(weeklyRes.data);
       setAttendanceByStatus(statusRes);
-      setTopUsers(topUsersRes.data);
     } catch (err) {
       setError(err.message || "Error al cargar los datos del dashboard");
       console.error("Dashboard error:", err);
@@ -143,34 +140,34 @@ const Dashboard = () => {
       <PageHeader isMobile={isMobile} />
 
       {/* Tarjetas de Estadísticas */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
         {[
           {
             title: "Total Colaboradores",
             count: generalStats?.totalActiveUsers || 0,
             icon: <PeopleOutlineIcon />,
-            color: "#2196F3",
+            color: theme.palette.primary.main,
             trend: "+12%",
           },
           {
             title: "Departamentos",
             count: generalStats?.totalDepartments || 0,
             icon: <BusinessIcon />,
-            color: "#673AB7",
+            color: theme.palette.secondary.main,
             trend: "+3",
           },
           {
             title: "Asistencias Hoy",
             count: generalStats?.todayAttendances || 0,
             icon: <AssignmentIndIcon />,
-            color: "#00E676",
+            color: theme.palette.success.main,
             trend: "+5%",
           },
           {
             title: "Tasa Asistencia",
             count: `${generalStats?.attendanceRate || 0}%`,
             icon: <TrendingUpIcon />,
-            color: "#FFC107",
+            color: theme.palette.warning.main,
             trend: "+2.3%",
           },
         ].map((stat, index) => (
@@ -179,85 +176,9 @@ const Dashboard = () => {
           </Grid>
         ))}
       </Grid>
-      {/* <Grid container spacing={3} sx={{ mb: 4 }}>
-        {[
-          {
-            title: "Total Colaboradores",
-            count: generalStats?.totalActiveUsers || 0,
-            icon: <PeopleOutlineIcon />,
-            color: "#2196F3",
-          },
-          {
-            title: "Departamentos",
-            count: generalStats?.totalDepartments || 0,
-            icon: <BusinessIcon />,
-            color: "#673AB7",
-          },
-          {
-            title: "Asistencias Hoy",
-            count: generalStats?.todayAttendances || 0,
-            icon: <AssignmentIndIcon />,
-            color: "#00E676",
-          },
-          {
-            title: "Tasa Asistencia",
-            count: `${generalStats?.attendanceRate || 0}%`,
-            icon: <TrendingUpIcon />,
-            color: "#FFC107",
-          },
-        ].map((stat, index) => (
-          <Grid
-            key={index}
-            size={{ xs: 12, sm: 6, md: 3 }}
-            sx={{
-              animation: `fadeInUp 0.6s ease ${index * 0.1}s both`,
-              "@keyframes fadeInUp": {
-                from: { opacity: 0, transform: "translateY(30px)" },
-                to: { opacity: 1, transform: "translateY(0)" },
-              },
-            }}
-          >
-            <StatisticsCard {...stat} />
-          </Grid>
-        ))}
-      </Grid> */}
-      {/* <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatisticsCard
-            title="Total Colaboradores"
-            count={generalStats?.totalActiveUsers || 0}
-            icon={<PeopleOutlineIcon />}
-            color="#2196F3"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatisticsCard
-            title="Departamentos"
-            count={generalStats?.totalDepartments || 0}
-            icon={<BusinessIcon />}
-            color="#673AB7"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatisticsCard
-            title="Asistencias Hoy"
-            count={generalStats?.todayAttendances || 0}
-            icon={<AssignmentIndIcon />}
-            color="#00E676"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatisticsCard
-            title="Tasa Asistencia"
-            count={`${generalStats?.attendanceRate || 0}%`}
-            icon={<TrendingUpIcon />}
-            color="#FFC107"
-          />
-        </Grid>
-      </Grid> */}
 
       {/* Gráficos y Tablas */}
-      <Grid container spacing={3} alignItems={"stretch"}>
+      <Grid container spacing={2} alignItems={"stretch"}>
         <Grid size={{ xs: 12, md: 7 }}>
           <AttendanceChart weeklyAttendances={weeklyAttendances} />
         </Grid>
