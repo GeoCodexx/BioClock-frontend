@@ -61,6 +61,7 @@ const AttendanceChart = ({ weeklyAttendances }) => {
       },
       chart: {
         type: "area",
+        background: "transparent",
         height: 380,
         toolbar: { show: false },
         zoom: { enabled: false },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Avatar,
   Button,
@@ -14,35 +14,40 @@ import {
   alpha,
   Fade,
   CircularProgress,
-  Link
-} from '@mui/material';
+  Link,
+} from "@mui/material";
 //import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import FingerprintIcon from '@mui/icons-material/Fingerprint';
-import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined';
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import SecurityIcon from '@mui/icons-material/Security';
-import useAuthStore from '../store/useAuthStore';
+import FingerprintIcon from "@mui/icons-material/Fingerprint";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import SecurityIcon from "@mui/icons-material/Security";
+import useAuthStore from "../store/useAuthStore";
+import { useLocation } from "react-router-dom";
 
 export default function Login() {
+  const location = useLocation();
+  const message = location.state?.message;
   const theme = useTheme();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const login = useAuthStore((state) => state.login);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
     try {
       await login(email, password);
-      window.location.href = '/';
+      window.location.href = "/";
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Error de autenticación');
+      setError(
+        err.response?.data?.message || err.message || "Error de autenticación"
+      );
     } finally {
       setLoading(false);
     }
@@ -55,33 +60,42 @@ export default function Login() {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
-        position: 'relative',
-        overflow: 'hidden',
-        '&::before': {
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: `linear-gradient(135deg, ${alpha(
+          theme.palette.primary.main,
+          0.1
+        )} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
+        position: "relative",
+        overflow: "hidden",
+        "&::before": {
           content: '""',
-          position: 'absolute',
-          top: '-50%',
-          right: '-10%',
-          width: '600px',
-          height: '600px',
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.08)} 0%, transparent 70%)`,
+          position: "absolute",
+          top: "-50%",
+          right: "-10%",
+          width: "600px",
+          height: "600px",
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${alpha(
+            theme.palette.primary.main,
+            0.08
+          )} 0%, transparent 70%)`,
         },
-        '&::after': {
+        "&::after": {
           content: '""',
-          position: 'absolute',
-          bottom: '-30%',
-          left: '-5%',
-          width: '500px',
-          height: '500px',
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${alpha(theme.palette.secondary.main, 0.06)} 0%, transparent 70%)`,
-        }
+          position: "absolute",
+          bottom: "-30%",
+          left: "-5%",
+          width: "500px",
+          height: "500px",
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${alpha(
+            theme.palette.secondary.main,
+            0.06
+          )} 0%, transparent 70%)`,
+        },
       }}
     >
       <Container component="main" maxWidth="sm">
@@ -90,13 +104,16 @@ export default function Login() {
             elevation={0}
             sx={{
               borderRadius: 4,
-              overflow: 'hidden',
-              boxShadow: `0 20px 60px ${alpha(theme.palette.common.black, 0.1)}`,
+              overflow: "hidden",
+              boxShadow: `0 20px 60px ${alpha(
+                theme.palette.common.black,
+                0.1
+              )}`,
               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-              position: 'relative',
+              position: "relative",
               zIndex: 1,
-              backdropFilter: 'blur(10px)',
-              backgroundColor: alpha(theme.palette.background.paper, 0.9)
+              backdropFilter: "blur(10px)",
+              backgroundColor: alpha(theme.palette.background.paper, 0.9),
             }}
           >
             {/* Header decorativo */}
@@ -105,40 +122,48 @@ export default function Login() {
                 background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                 py: 4,
                 px: 3,
-                textAlign: 'center',
-                position: 'relative',
-                overflow: 'hidden',
-                '&::before': {
+                textAlign: "center",
+                position: "relative",
+                overflow: "hidden",
+                "&::before": {
                   content: '""',
-                  position: 'absolute',
-                  top: '-50%',
-                  left: '-50%',
-                  width: '200%',
-                  height: '200%',
-                  background: `radial-gradient(circle, ${alpha(theme.palette.common.white, 0.1)} 0%, transparent 70%)`,
-                  animation: 'pulse 8s ease-in-out infinite',
+                  position: "absolute",
+                  top: "-50%",
+                  left: "-50%",
+                  width: "200%",
+                  height: "200%",
+                  background: `radial-gradient(circle, ${alpha(
+                    theme.palette.common.white,
+                    0.1
+                  )} 0%, transparent 70%)`,
+                  animation: "pulse 8s ease-in-out infinite",
                 },
-                '@keyframes pulse': {
-                  '0%, 100%': { transform: 'scale(1)' },
-                  '50%': { transform: 'scale(1.1)' },
-                }
+                "@keyframes pulse": {
+                  "0%, 100%": { transform: "scale(1)" },
+                  "50%": { transform: "scale(1.1)" },
+                },
               }}
             >
               <Avatar
                 sx={{
-                  m: 'auto',
+                  m: "auto",
                   width: 80,
                   height: 80,
                   bgcolor: alpha(theme.palette.common.white, 0.2),
                   border: `4px solid ${alpha(theme.palette.common.white, 0.3)}`,
-                  boxShadow: `0 8px 24px ${alpha(theme.palette.common.black, 0.2)}`,
+                  boxShadow: `0 8px 24px ${alpha(
+                    theme.palette.common.black,
+                    0.2
+                  )}`,
                   mb: 2,
-                  backdropFilter: 'blur(10px)',
-                  position: 'relative',
-                  zIndex: 1
+                  backdropFilter: "blur(10px)",
+                  position: "relative",
+                  zIndex: 1,
                 }}
               >
-                <FingerprintIcon sx={{ fontSize: 40, color: theme.palette.common.white }} />
+                <FingerprintIcon
+                  sx={{ fontSize: 40, color: theme.palette.common.white }}
+                />
               </Avatar>
               <Typography
                 variant="h4"
@@ -146,8 +171,8 @@ export default function Login() {
                   color: theme.palette.common.white,
                   fontWeight: 700,
                   mb: 0.5,
-                  position: 'relative',
-                  zIndex: 1
+                  position: "relative",
+                  zIndex: 1,
                 }}
               >
                 Sistema Biométrico
@@ -157,8 +182,8 @@ export default function Login() {
                 sx={{
                   color: alpha(theme.palette.common.white, 0.9),
                   fontWeight: 400,
-                  position: 'relative',
-                  zIndex: 1
+                  position: "relative",
+                  zIndex: 1,
                 }}
               >
                 Control de Asistencia por Huella Dactilar
@@ -173,7 +198,7 @@ export default function Login() {
                   mb: 1,
                   fontWeight: 600,
                   color: theme.palette.text.primary,
-                  textAlign: 'center'
+                  textAlign: "center",
                 }}
               >
                 Iniciar Sesión
@@ -183,11 +208,24 @@ export default function Login() {
                 sx={{
                   mb: 4,
                   color: theme.palette.text.secondary,
-                  textAlign: 'center'
+                  textAlign: "center",
                 }}
               >
                 Ingrese sus credenciales para acceder al sistema
               </Typography>
+              {message && (
+                <Alert
+                  severity="info"
+                  sx={{
+                    mt: 2,
+                    //borderRadius: 2,
+                    //backgroundColor: alpha(theme.palette.error.main, 0.1),
+                    //border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+                  }}
+                >
+                  {message}
+                </Alert>
+              )}
 
               <Box component="form" onSubmit={handleSubmit}>
                 <TextField
@@ -205,21 +243,31 @@ export default function Login() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <EmailOutlinedIcon sx={{ color: theme.palette.text.secondary }} />
+                        <EmailOutlinedIcon
+                          sx={{ color: theme.palette.text.secondary }}
+                        />
                       </InputAdornment>
                     ),
                   }}
                   sx={{
-                    '& .MuiOutlinedInput-root': {
+                    "& .MuiOutlinedInput-root": {
                       borderRadius: 2,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        '& .MuiOutlinedInput-notchedOutline': {
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        "& .MuiOutlinedInput-notchedOutline": {
                           borderColor: theme.palette.primary.main,
                         },
                       },
-                      '&.Mui-focused': {
-                        boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                      "&.Mui-focused": {
+                        boxShadow: `0 0 0 3px ${alpha(
+                          theme.palette.primary.main,
+                          0.1
+                        )}`,
+                      },
+                      "& input:-webkit-autofill": {
+                        WebkitBoxShadow: "0 0 0 1000px transparent inset",
+                        WebkitTextFillColor: theme.palette.text.primary,
+                        transition: "background-color 9999s ease-in-out 0s",
                       },
                     },
                   }}
@@ -231,7 +279,7 @@ export default function Login() {
                   fullWidth
                   name="password"
                   label="Contraseña"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   id="password"
                   autoComplete="current-password"
                   value={password}
@@ -240,7 +288,9 @@ export default function Login() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <LockOpenOutlinedIcon sx={{ color: theme.palette.text.secondary }} />
+                        <LockOpenOutlinedIcon
+                          sx={{ color: theme.palette.text.secondary }}
+                        />
                       </InputAdornment>
                     ),
                     endAdornment: (
@@ -257,16 +307,19 @@ export default function Login() {
                     ),
                   }}
                   sx={{
-                    '& .MuiOutlinedInput-root': {
+                    "& .MuiOutlinedInput-root": {
                       borderRadius: 2,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        '& .MuiOutlinedInput-notchedOutline': {
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        "& .MuiOutlinedInput-notchedOutline": {
                           borderColor: theme.palette.primary.main,
                         },
                       },
-                      '&.Mui-focused': {
-                        boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
+                      "&.Mui-focused": {
+                        boxShadow: `0 0 0 3px ${alpha(
+                          theme.palette.primary.main,
+                          0.1
+                        )}`,
                       },
                     },
                   }}
@@ -280,7 +333,10 @@ export default function Login() {
                         mt: 2,
                         borderRadius: 2,
                         backgroundColor: alpha(theme.palette.error.main, 0.1),
-                        border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+                        border: `1px solid ${alpha(
+                          theme.palette.error.main,
+                          0.3
+                        )}`,
                       }}
                     >
                       {error}
@@ -298,44 +354,47 @@ export default function Login() {
                     mb: 2,
                     py: 1.5,
                     borderRadius: 2,
-                    fontSize: '1rem',
+                    fontSize: "1rem",
                     fontWeight: 600,
-                    textTransform: 'none',
+                    textTransform: "none",
                     //boxShadow: `0 4px 14px ${alpha(theme.palette.primary.main, 0.4)}`,
                     background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 5px 10px ${alpha(theme.palette.primary.main, 0.5)}`,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      transform: "translateY(-2px)",
+                      boxShadow: `0 5px 10px ${alpha(
+                        theme.palette.primary.main,
+                        0.5
+                      )}`,
                       background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
                     },
-                    '&:disabled': {
+                    "&:disabled": {
                       background: theme.palette.action.disabledBackground,
-                      boxShadow: 'none',
+                      boxShadow: "none",
                     },
                   }}
                 >
                   {loading ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <CircularProgress size={20} color="inherit" />
                       <span>Autenticando...</span>
                     </Box>
                   ) : (
-                    'Iniciar Sesión'
+                    "Iniciar Sesión"
                   )}
                 </Button>
 
-                <Box sx={{ textAlign: 'center', mt: 2 }}>
+                <Box sx={{ textAlign: "center", mt: 2 }}>
                   <Link
                     href="#"
                     variant="body2"
                     sx={{
                       color: theme.palette.primary.main,
-                      textDecoration: 'none',
+                      textDecoration: "none",
                       fontWeight: 500,
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        textDecoration: 'underline',
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        textDecoration: "underline",
                         color: theme.palette.primary.dark,
                       },
                     }}
@@ -353,13 +412,15 @@ export default function Login() {
                 px: 3,
                 backgroundColor: alpha(theme.palette.primary.main, 0.03),
                 borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 gap: 1,
               }}
             >
-              <SecurityIcon sx={{ fontSize: 18, color: theme.palette.text.secondary }} />
+              <SecurityIcon
+                sx={{ fontSize: 18, color: theme.palette.text.secondary }}
+              />
               <Typography variant="caption" color="text.secondary">
                 Conexión segura y encriptada
               </Typography>

@@ -25,6 +25,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
 //import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import useAuthStore from "../../../../store/useAuthStore";
+import ProfileDialog from "../../../../components/Profile/ProfileDialog";
 
 const ProfileSection = () => {
   const user = useAuthStore((state) => state.user);
@@ -33,7 +34,9 @@ const ProfileSection = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  //const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const [openProfileDialog, setOpenProfileDialog] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -56,9 +59,14 @@ const ProfileSection = () => {
     setOpen((prevOpen) => !prevOpen);
   };
 
-  const handleMenuItemClick = (path) => {
+  const handleMenuItemClick = () => {
     setOpen(false);
-    navigate(path);
+    setOpenProfileDialog(true);
+    //navigate(path);
+  };
+
+  const handleProfileDialogClose = () => {
+    setOpenProfileDialog(false);
   };
 
   return (
@@ -103,27 +111,7 @@ const ProfileSection = () => {
             }}
           >
             {isAuthenticated && user ? user.name.charAt(0) : ""}
-            {/*isAuthenticated && user
-              ? (user.name?.[0] + user.firstSurname?.[0]).toUpperCase()
-              : ""*/}
           </Avatar>
-          {/* <Typography
-            variant="subtitle1"
-            sx={{
-              fontWeight: 500,
-              display: { xs: "none", sm: "block" },
-            }}
-          >
-            {isAuthenticated && user ? user.name : "Jhon Doe"}
-          </Typography> */}
-          {/* <KeyboardArrowDownIcon
-            sx={{
-              fontSize: "1.2rem",
-              transform: open ? "rotate(-180deg)" : "rotate(0)",
-              transition: "transform 0.3s ease-in-out",
-              color: theme.palette.text.secondary,
-            }}
-          /> */}
         </Box>
       </ButtonBase>
       <Popper
@@ -257,9 +245,7 @@ const ProfileSection = () => {
                         },
                       }}
                     >
-                      <ListItemButton
-                        onClick={() => handleMenuItemClick("/profile")}
-                      >
+                      <ListItemButton onClick={() => handleMenuItemClick()}>
                         <ListItemIcon>
                           <PersonOutlineIcon fontSize="small" />
                         </ListItemIcon>
@@ -272,9 +258,7 @@ const ProfileSection = () => {
                         />
                       </ListItemButton>
 
-                      <ListItemButton
-                        onClick={() => handleMenuItemClick("/settings")}
-                      >
+                      <ListItemButton onClick={() => handleMenuItemClick()}>
                         <ListItemIcon>
                           <SettingsIcon fontSize="small" />
                         </ListItemIcon>
@@ -323,6 +307,11 @@ const ProfileSection = () => {
           </Fade>
         )}
       </Popper>
+      <ProfileDialog
+        open={openProfileDialog}
+        onClose={handleProfileDialogClose}
+        user={user}
+      />
     </Box>
   );
 };

@@ -9,9 +9,11 @@ import {
 import ReactApexChart from "react-apexcharts";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import { useThemeMode } from "../../contexts/ThemeContext";
 
 const DepartmentDistribution = ({ attendanceByStatus }) => {
   const theme = useTheme();
+  const { mode } = useThemeMode(); // 'light' o 'dark'
   // Mapeo de estados y sus configuraciones
   const statusConfig = {
     on_time: {
@@ -99,8 +101,12 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
   const year = period.year || new Date().getFullYear();
 
   const options = {
+    theme: {
+      mode: mode,
+    },
     chart: {
       type: "donut",
+      background: "transparent",
       height: 380,
       animations: {
         enabled: true,
@@ -120,20 +126,21 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
     plotOptions: {
       pie: {
         donut: {
-          size: "70%",
+          size: "60%",
           labels: {
             show: true,
             name: {
               show: true,
               fontSize: "16px",
               fontWeight: 600,
-              color: "#666",
+              // color: "#666",
+              color: theme.palette.text.primary,
             },
             value: {
               show: true,
               fontSize: "28px",
               fontWeight: 700,
-              color: "#1a1a1a",
+              //color: "#1a1a1a",
               formatter: (val) => val,
             },
             total: {
@@ -141,7 +148,7 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
               label: "Total",
               fontSize: "14px",
               fontWeight: 600,
-              color: "#666",
+              // color: "#666",
               formatter: () => totalRecords.toString(),
             },
           },
