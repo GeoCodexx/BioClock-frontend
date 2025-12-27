@@ -57,6 +57,7 @@ import { Link as RouterLink } from "react-router-dom";
 import { getMyAttendance } from "../services/reportService";
 import AttendanceWeekView from "../components/MyAttendace/AttendanceWeekView";
 import AttendanceMonthCalendar from "../components/MyAttendace/AttendanceMonthCalendar";
+import { useThemeMode } from "../contexts/ThemeContext";
 
 // Datos de ejemplo
 const mockData = [
@@ -257,6 +258,7 @@ const StatusChip = ({ status, label, color }) => (
 
 const MyAttendances = () => {
   const theme = useTheme();
+  const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   //const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [selectedDay, setSelectedDay] = useState(null);
@@ -288,82 +290,15 @@ const MyAttendances = () => {
   // Obtener el día de hoy
   const today = useMemo(() => new Date(), []);
 
-  // Obtener la semana actual usando date-fns
-  const getCurrentWeek = useMemo(() => {
-    const start = startOfWeek(today, { weekStartsOn: 1 }); // Lunes
-    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
-  }, [today]);
-
   // Mapear asistencias por fecha
-  const attendanceByDate = useMemo(() => {
+  /*const attendanceByDate = useMemo(() => {
     const map = {};
     mockData.forEach((record) => {
       if (!map[record.date]) map[record.date] = [];
       map[record.date].push(record);
     });
     return map;
-  }, []);
-
-  // Obtener registros de hoy
-  /*const todayRecords = useMemo(() => {
-    const todayStr = format(today, "yyyy-MM-dd");
-    return attendanceByDate[todayStr] || [];
-  }, [today, attendanceByDate]);*/
-
-  // Calcular estadísticas de la semana
-  /*const weekStats = useMemo(() => {
-    let complete = 0;
-    let late = 0;
-    let absent = 0;
-    let totalMinutes = 0;
-
-    getCurrentWeek.forEach((day) => {
-      const dateStr = format(day, "yyyy-MM-dd");
-      const records = attendanceByDate[dateStr] || [];
-
-      if (records.length === 0) {
-        absent++;
-      } else {
-        records.forEach((r) => {
-          if (r.shiftStatus === "complete") complete++;
-          else if (r.shiftStatus === "late") late++;
-          if (r.minutesWorked) totalMinutes += r.minutesWorked;
-        });
-      }
-    });
-
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    return { complete, late, absent, totalHours: `${hours}h ${minutes}m` };
-  }, [getCurrentWeek, attendanceByDate]);*/
-
-  // Función para obtener el estado de un día
-  /*const getDayStatus = useCallback(
-    (date) => {
-      const dateStr = format(date, "yyyy-MM-dd");
-      const records = attendanceByDate[dateStr];
-
-      if (!records || records.length === 0) return "absent";
-
-      const hasJustified = records.some((r) => r.justification);
-      if (hasJustified) return "justified";
-
-      const allComplete = records.every((r) => r.shiftStatus === "complete");
-      if (allComplete) return "complete";
-
-      const hasIncomplete = records.some(
-        (r) =>
-          r.shiftStatus === "incomplete_no_exit" ||
-          r.shiftStatus === "incomplete_no_entry" ||
-          r.shiftStatus === "late"
-      );
-
-      if (hasIncomplete) return "incomplete";
-      return "absent";
-    },
-    [attendanceByDate]
-  );*/
+  }, []);*/
 
   // Configuración de colores/etiquetas por estado
   const statusConfig = useMemo(
@@ -459,7 +394,7 @@ const MyAttendances = () => {
   }, []);
 
   // Events para FullCalendar
-  const calendarEvents = useMemo(() => {
+  /*const calendarEvents = useMemo(() => {
     const events = [];
     Object.entries(attendanceByDate).forEach(([date, records]) => {
       records.forEach((record) => {
@@ -480,10 +415,10 @@ const MyAttendances = () => {
       });
     });
     return events;
-  }, [attendanceByDate, statusConfig]);
+  }, [attendanceByDate, statusConfig]);*/
 
   // Manejar click en evento del calendario
-  const handleEventClick = useCallback(
+ /* const handleEventClick = useCallback(
     (info) => {
       const date = info.event.start;
       const dateStr = format(date, "yyyy-MM-dd");
@@ -492,10 +427,10 @@ const MyAttendances = () => {
       setDialogOpen(true);
     },
     [attendanceByDate]
-  );
+  );*/
 
   // Abrir diálogo con detalles
-  const handleDayClick = useCallback(
+  /*const handleDayClick = useCallback(
     (date) => {
       const dateStr = format(date, "yyyy-MM-dd");
       const records = attendanceByDate[dateStr];
@@ -503,7 +438,7 @@ const MyAttendances = () => {
       setDialogOpen(true);
     },
     [attendanceByDate]
-  );
+  );*/
 
   const handleCloseDialog = useCallback(() => {
     setDialogOpen(false);
@@ -548,10 +483,8 @@ const MyAttendances = () => {
         sx={{
           borderRadius: 3,
           mb: 3,
-          /*border: "1px solid",
-        borderColor: "divider",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        color: "white",*/
+          borderLeft: mode === "dark" ? "none" : "4px solid",
+          borderColor: "primary.main",
         }}
       >
         <CardContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>

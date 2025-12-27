@@ -665,7 +665,7 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
           )}
 
           {/* Justificación */}
-          {record.justification && (
+          {/* {record.justification && (
             <Box
               sx={{
                 p: 2,
@@ -693,7 +693,7 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
                 </Box>
               </Stack>
             </Box>
-          )}
+          )} */}
         </Stack>
       </DialogContent>
 

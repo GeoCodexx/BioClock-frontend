@@ -32,11 +32,13 @@ import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
+import { useThemeMode } from "../contexts/ThemeContext";
 
 export default function Permissions() {
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
+  const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -303,6 +305,8 @@ export default function Permissions() {
           borderRadius: isMobile ? 2 : 3,
           mb: 2,
           boxShadow: theme.shadows[1],
+          borderLeft: mode === "dark" ? "none" : "4px solid",
+          borderColor: "primary.main",
         }}
       >
         <Box
@@ -334,7 +338,6 @@ export default function Permissions() {
                 </Box>
                 <PermissionExportButtons permissions={permissions} />
               </Box>
-              {breadcrumbItems}
             </Stack>
           ) : (
             <Stack
@@ -364,7 +367,8 @@ export default function Permissions() {
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 4,
+            pt: isMobile ? 0 : 4,
+            pb: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (

@@ -38,6 +38,7 @@ import DailyReportExportButtons from "../components/Reports/DailyReport/DailyRep
 import AttendanceDetailDialog from "../components/Reports/DailyReport/AttendanceDetailDialog";
 import { SafeSelect } from "../components/common/SafeSelect";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
+import { useThemeMode } from "../contexts/ThemeContext";
 
 // Constantes
 const STATUS_OPTIONS = [
@@ -56,6 +57,7 @@ const ROWS_PER_PAGE_OPTIONS = [5, 10, 25, 50, 100];
 
 // Componente Header memoizado
 const PageHeader = memo(({ date, isMobile }) => {
+  const { mode } = useThemeMode();
   const breadcrumbs = (
     <Breadcrumbs
       aria-label="breadcrumb"
@@ -92,10 +94,8 @@ const PageHeader = memo(({ date, isMobile }) => {
       sx={{
         borderRadius: 3,
         mb: 3,
-       /* border: "1px solid",
-        borderColor: "divider",
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        color: "white",*/
+        borderLeft: mode === "dark" ? "none" : "4px solid",
+        borderColor: "primary.main",
       }}
     >
       <CardContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>
@@ -120,7 +120,7 @@ const PageHeader = memo(({ date, isMobile }) => {
                     )}
                     size="small"
                     sx={{
-                     /* bgcolor: "rgba(255,255,255,0.2)",
+                      /* bgcolor: "rgba(255,255,255,0.2)",
                       color: "white",*/
                       fontWeight: 500,
                     }}
@@ -154,7 +154,7 @@ const PageHeader = memo(({ date, isMobile }) => {
                 </Typography>
               )}
             </Box>
-            <Box /*sx={{ "& a, & p": { color: "rgba(255,255,255,0.9)" } }}*/ >
+            <Box /*sx={{ "& a, & p": { color: "rgba(255,255,255,0.9)" } }}*/>
               {breadcrumbs}
             </Box>
           </Stack>
@@ -183,7 +183,6 @@ const FiltersCard = memo(
     data,
   }) => {
     const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
     return (
       <Card

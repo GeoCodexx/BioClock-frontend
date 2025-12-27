@@ -33,10 +33,11 @@ import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import useAuthStore from "../store/useAuthStore";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
+import { useThemeMode } from "../contexts/ThemeContext";
 
 const generateDeviceId = () => {
   const now = new Date();
-  const formattedDate = now.toISOString().replace(/[-:]/g, '').split('.')[0];
+  const formattedDate = now.toISOString().replace(/[-:]/g, "").split(".")[0];
   //Ejmplo reconstrucción fecha: Dev-'2025-11-03T16:55:10.828Z'
   return `Dev_${formattedDate}`;
 };
@@ -46,6 +47,7 @@ export default function Devices() {
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
+  const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -73,7 +75,6 @@ export default function Devices() {
     error: "",
   });
 
-  // Evitar llamadas duplicadas eliminando fetchDevices de las dependencias
   useEffect(() => {
     const loadDevices = async () => {
       setLoading(true);
@@ -139,7 +140,7 @@ export default function Devices() {
         const newData = {
           ...data,
           deviceId: generateDeviceId(),
-          registeredBy: user ? user.id :null,
+          registeredBy: user ? user.id : null,
         };
 
         const isEditing = !!dialog.editDevice;
@@ -249,23 +250,23 @@ export default function Devices() {
         sx={isMobile ? { fontSize: "0.875rem" } : undefined}
       >
         <Link
-        component={RouterLink}
-        to="/"
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          color: "text.secondary",
-          textDecoration: "none",
-          transition: "color 0.2s",
-          "&:hover": {
-            color: "primary.main",
-          },
-        }}
-      >
-        <HomeIcon fontSize="small" />
-        {!isMobile && <Typography variant="body2">Inicio</Typography>}
-      </Link>
+          component={RouterLink}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            color: "text.secondary",
+            textDecoration: "none",
+            transition: "color 0.2s",
+            "&:hover": {
+              color: "primary.main",
+            },
+          }}
+        >
+          <HomeIcon fontSize="small" />
+          {!isMobile && <Typography variant="body2">Inicio</Typography>}
+        </Link>
         <Typography variant="body2" color="text.primary">
           Dispositivos
         </Typography>
@@ -315,6 +316,8 @@ export default function Devices() {
           borderRadius: isMobile ? 2 : 3,
           mb: 2,
           boxShadow: theme.shadows[1],
+          borderLeft: mode === "dark" ? "none" : "4px solid",
+          borderColor: "primary.main",
         }}
       >
         <Box
@@ -346,7 +349,6 @@ export default function Devices() {
                 </Box>
                 <DeviceExportButtons devices={devices} />
               </Box>
-              {breadcrumbItems}
             </Stack>
           ) : (
             <Stack
@@ -376,7 +378,8 @@ export default function Devices() {
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 4,
+            pt: isMobile ? 0 : 4,
+            pb: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (

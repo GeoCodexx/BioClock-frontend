@@ -11,6 +11,8 @@ import {
   useTheme,
   useMediaQuery,
   Divider,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import {
   getFingerprintTemplates,
@@ -28,11 +30,15 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
+import { useThemeMode } from "../contexts/ThemeContext";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 
 export default function Fingerprints() {
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
+  const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -41,6 +47,9 @@ export default function Fingerprints() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [searchInput, setSearchInput] = useState("");
+
+  //Estado para mostrar u ocultar filtros mobile
+  const [openFilters, setOpenFilters] = useState(false);
 
   const [pagination, setPagination] = useState({
     page: 0,
@@ -352,6 +361,8 @@ export default function Fingerprints() {
           borderRadius: isMobile ? 2 : 3,
           mb: 2,
           boxShadow: theme.shadows[1],
+          borderLeft: mode === "dark" ? "none" : "4px solid",
+          borderColor: "primary.main",
         }}
       >
         <Box
@@ -370,11 +381,46 @@ export default function Fingerprints() {
                   gap: 1,
                 }}
               >
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Gestión de Huellas Dactilares
-                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    Gestión de Huellas Dactilares
+                  </Typography>
+                </Box>
+                <Tooltip
+                  title={
+                    !fingerprints || fingerprints.length === 0
+                      ? "No hay asistencias para filtrar"
+                      : openFilters
+                      ? "Ocultar filtros"
+                      : "Mostrar filtros"
+                  }
+                >
+                  <span>
+                    <IconButton
+                      onClick={() => setOpenFilters((prev) => !prev)}
+                      disabled={!fingerprints || fingerprints.length === 0}
+                      sx={{
+                        bgcolor: theme.palette.background.paper,
+                        "&:hover": {
+                          bgcolor: theme.palette.action.hover,
+                        },
+                        "&:disabled": {
+                          bgcolor: theme.palette.action.disabledBackground,
+                        },
+                      }}
+                    >
+                      {openFilters ? <FilterListOffIcon /> : <FilterListIcon />}
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <FingerprintExportButtons fingerprints={fingerprints} />
               </Box>
-              {breadcrumbItems}
             </Stack>
           ) : (
             <Stack
@@ -402,7 +448,8 @@ export default function Fingerprints() {
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 4,
+            pt: isMobile ? 2 : 4,
+            pb: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (
@@ -412,13 +459,12 @@ export default function Fingerprints() {
                 setSearchInput={setSearchInput}
                 onSearch={handleSearch}
               />
-              <Stack direction="row" spacing={1} alignItems="center">
+              {openFilters && (
                 <StatusFilter
                   value={pagination.status}
                   onChange={handleStatusFilterChange}
                 />
-                <FingerprintExportButtons fingerprints={fingerprints} />
-              </Stack>
+              )}
             </Stack>
           ) : (
             <Stack

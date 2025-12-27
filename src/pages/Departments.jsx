@@ -32,11 +32,13 @@ import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
+import { useThemeMode } from "../contexts/ThemeContext";
 
 export default function Departments() {
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
+  const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -233,23 +235,23 @@ export default function Departments() {
         sx={isMobile ? { fontSize: "0.875rem" } : undefined}
       >
         <Link
-        component={RouterLink}
-        to="/"
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          color: "text.secondary",
-          textDecoration: "none",
-          transition: "color 0.2s",
-          "&:hover": {
-            color: "primary.main",
-          },
-        }}
-      >
-        <HomeIcon fontSize="small" />
-        {!isMobile && <Typography variant="body2">Inicio</Typography>}
-      </Link>
+          component={RouterLink}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            color: "text.secondary",
+            textDecoration: "none",
+            transition: "color 0.2s",
+            "&:hover": {
+              color: "primary.main",
+            },
+          }}
+        >
+          <HomeIcon fontSize="small" />
+          {!isMobile && <Typography variant="body2">Inicio</Typography>}
+        </Link>
         <Typography variant="body2" color="text.primary">
           Departamentos
         </Typography>
@@ -299,6 +301,8 @@ export default function Departments() {
           borderRadius: isMobile ? 2 : 3,
           mb: 2,
           boxShadow: theme.shadows[1],
+          borderLeft: mode === "dark" ? "none" : "4px solid",
+          borderColor: "primary.main",
         }}
       >
         <Box
@@ -330,7 +334,6 @@ export default function Departments() {
                 </Box>
                 <DepartmentExportButtons departments={departments} />
               </Box>
-              {breadcrumbItems}
             </Stack>
           ) : (
             <Stack
@@ -360,7 +363,8 @@ export default function Departments() {
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 4,
+            pt: isMobile ? 0 : 4,
+            pb: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (

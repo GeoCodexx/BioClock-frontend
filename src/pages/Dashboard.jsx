@@ -23,9 +23,11 @@ import dashboardService from "../services/dashboardService";
 import { memo, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useThemeMode } from "../contexts/ThemeContext";
 
 const Dashboard = () => {
   const theme = useTheme();
+  const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [loading, setLoading] = useState(true);
@@ -76,6 +78,8 @@ const Dashboard = () => {
           borderColor: "divider",
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
           color: "white",*/
+          borderLeft: mode === "dark" ? "none" : "4px solid",
+          borderColor: "primary.main",
         }}
       >
         <CardContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>

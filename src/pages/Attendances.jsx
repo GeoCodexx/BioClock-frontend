@@ -45,6 +45,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import JustifyAttendanceDialog from "../components/Attendance/JustifyAttendanceDialog";
 import { ConfirmDeleteJustificationDialog } from "../components/Attendance/ConfirmDeleteJustificationDialog";
+import { useThemeMode } from "../contexts/ThemeContext";
 //import SearchIcon from "@mui/icons-material/Search";
 //import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
@@ -52,6 +53,7 @@ export default function Attendances() {
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
+  const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -573,6 +575,8 @@ export default function Attendances() {
           borderRadius: isMobile ? 2 : 3,
           mb: 2,
           boxShadow: theme.shadows[1],
+          borderLeft: mode === "dark" ? "none" : "4px solid",
+          borderColor: "primary.main",
         }}
       >
         <Box
@@ -602,31 +606,6 @@ export default function Attendances() {
                     Gestión de Asistencias
                   </Typography>
                 </Box>
-                {/* <Tooltip
-                  title={
-                    !attendances || attendances.length === 0
-                      ? "No hay asistencias para buscar"
-                      : "Buscar"
-                  }
-                >
-                  <span>
-                    <IconButton
-                      onClick={() => alert("Prueba de boton busqueda")}
-                      disabled={!attendances || attendances.length === 0}
-                      sx={{
-                        bgcolor: theme.palette.background.paper,
-                        "&:hover": {
-                          bgcolor: theme.palette.action.hover,
-                        },
-                        "&:disabled": {
-                          bgcolor: theme.palette.action.disabledBackground,
-                        },
-                      }}
-                    >
-                      <SearchIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip> */}
                 <Tooltip
                   title={
                     !attendances || attendances.length === 0
@@ -656,7 +635,6 @@ export default function Attendances() {
                 </Tooltip>
                 <AttendanceExportButtons attendances={attendances} />
               </Box>
-              {breadcrumbItems}
             </Stack>
           ) : (
             <Stack
@@ -686,7 +664,8 @@ export default function Attendances() {
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 4,
+            pt: isMobile ? 0 : 4,
+            pb: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (

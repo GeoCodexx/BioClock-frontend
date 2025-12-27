@@ -33,8 +33,8 @@ import {
 
 // Configuración de estados con sus colores y iconos
 const STATUS_CONFIG = {
-  complete: {
-    label: "Completo",
+  on_time: {
+    label: "A tiempo",
     color: "success",
     icon: CheckCircle,
   },
@@ -43,23 +43,18 @@ const STATUS_CONFIG = {
     color: "warning",
     icon: Warning,
   },
-  early_leave: {
+  early: {
+    label: "Entrada temprana",
+    color: "warning",
+    icon: AccessTime,
+  },
+  early_exit: {
     label: "Salida temprana",
     color: "warning",
     icon: AccessTime,
   },
-  late_and_early_leave: {
-    label: "Tardanza y salida temprana",
-    color: "error",
-    icon: ErrorOutline,
-  },
-  incomplete_no_entry: {
-    label: "Sin entrada",
-    color: "error",
-    icon: ErrorOutline,
-  },
-  incomplete_no_exit: {
-    label: "Sin salida",
+  incomplete: {
+    label: "Incompleto",
     color: "error",
     icon: ErrorOutline,
   },

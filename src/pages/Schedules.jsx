@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo} from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Typography,
   CircularProgress,
@@ -32,8 +32,10 @@ import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
+import { useThemeMode } from "../contexts/ThemeContext";
 
 export default function Schedules() {
+  const { mode } = useThemeMode();
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
@@ -229,23 +231,23 @@ export default function Schedules() {
         sx={isMobile ? { fontSize: "0.875rem" } : undefined}
       >
         <Link
-        component={RouterLink}
-        to="/"
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.5,
-          color: "text.secondary",
-          textDecoration: "none",
-          transition: "color 0.2s",
-          "&:hover": {
-            color: "primary.main",
-          },
-        }}
-      >
-        <HomeIcon fontSize="small" />
-        {!isMobile && <Typography variant="body2">Inicio</Typography>}
-      </Link>
+          component={RouterLink}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            color: "text.secondary",
+            textDecoration: "none",
+            transition: "color 0.2s",
+            "&:hover": {
+              color: "primary.main",
+            },
+          }}
+        >
+          <HomeIcon fontSize="small" />
+          {!isMobile && <Typography variant="body2">Inicio</Typography>}
+        </Link>
         <Typography variant="body2" color="text.primary">
           Horarios
         </Typography>
@@ -295,6 +297,8 @@ export default function Schedules() {
           borderRadius: isMobile ? 2 : 3,
           mb: 2,
           boxShadow: theme.shadows[1],
+          borderLeft: mode === "dark" ? "none" : "4px solid",
+          borderColor: "primary.main",
         }}
       >
         <Box
@@ -326,7 +330,6 @@ export default function Schedules() {
                 </Box>
                 <ScheduleExportButtons schedules={schedules} />
               </Box>
-              {breadcrumbItems}
             </Stack>
           ) : (
             <Stack
@@ -356,7 +359,8 @@ export default function Schedules() {
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1.5 : 4,
+            pt: isMobile ? 0 : 4,
+            pb: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (
