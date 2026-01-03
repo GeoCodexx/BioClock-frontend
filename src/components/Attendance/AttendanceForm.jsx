@@ -88,7 +88,7 @@ const AttendanceForm = ({
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
     watch,
     reset,
   } = useForm({
@@ -150,11 +150,12 @@ const AttendanceForm = ({
   }, [defaultValues, reset]);
 
   // Detectar cambios en el formulario
-  const watchedTimestamp = watch("timestamp");
-
   useEffect(() => {
-    if (onChange) onChange();
-  }, [watchedTimestamp]);
+    // Solo llamar onChange si el formulario realmente está modificado
+    if (isDirty && onChange) {
+      onChange();
+    }
+  }, [isDirty, onChange]);
 
   // Formatear la fecha para mostrar
   const formatDate = (date) => {
@@ -259,7 +260,7 @@ const AttendanceForm = ({
               sx={{
                 p: 2,
                 mb: 3,
-                backgroundColor: "grey.50",
+                //backgroundColor: "grey.50",
                 width: "100%",
               }}
             >

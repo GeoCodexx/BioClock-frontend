@@ -105,11 +105,11 @@ const AttendanceWeekView = ({ data = mockData }) => {
         Icon: InfoIcon,
         colorHex: "#3b82f6",
       },
-      justified: {
+      /*justified: {
         label: "Justificado",
         Icon: InfoIcon,
         colorHex: "#3b82f6",
-      },
+      },*/
       incomplete: {
         label: "Incompleto",
         Icon: ErrorIcon,
@@ -434,7 +434,7 @@ const AttendanceWeekView = ({ data = mockData }) => {
         {/* Estadísticas de la semana */}
         <Divider sx={{ my: 2 }} />
         <Grid container spacing={2}>
-          <Grid size={{ xs: 2 }}>
+          <Grid size={{ xs: 2.4 }}>
             <Box textAlign="center">
               <Typography variant="h5" fontWeight={700} color="success.main">
                 {data?.periods?.week?.stats?.onTime || 0}
@@ -444,7 +444,7 @@ const AttendanceWeekView = ({ data = mockData }) => {
               </Typography>
             </Box>
           </Grid>
-          <Grid size={{ xs: 2 }}>
+          <Grid size={{ xs: 2.4 }}>
             <Box textAlign="center">
               <Typography variant="h5" fontWeight={700} color="warning.main">
                 {data?.periods?.week?.stats?.late || 0}
@@ -454,7 +454,7 @@ const AttendanceWeekView = ({ data = mockData }) => {
               </Typography>
             </Box>
           </Grid>
-          <Grid size={{ xs: 2 }}>
+          {/*<Grid size={{ xs: 2 }}>
             <Box textAlign="center">
               <Typography variant="h5" fontWeight={700} color="primary.main">
                 {data?.periods?.week?.stats?.justified || 0}
@@ -463,8 +463,8 @@ const AttendanceWeekView = ({ data = mockData }) => {
                 Justificado
               </Typography>
             </Box>
-          </Grid>
-          <Grid size={{ xs: 2 }}>
+          </Grid>*/}
+          <Grid size={{ xs: 2.4 }}>
             <Box textAlign="center">
               <Typography variant="h5" fontWeight={700} color="error.main">
                 {data?.periods?.week?.stats?.incomplete || 0}
@@ -474,7 +474,7 @@ const AttendanceWeekView = ({ data = mockData }) => {
               </Typography>
             </Box>
           </Grid>
-          <Grid size={{ xs: 2 }}>
+          <Grid size={{ xs: 2.4 }}>
             <Box textAlign="center">
               <Typography variant="h5" fontWeight={700} color="secondary.main">
                 {data?.periods?.week?.stats?.earlyExit || 0}
@@ -484,7 +484,7 @@ const AttendanceWeekView = ({ data = mockData }) => {
               </Typography>
             </Box>
           </Grid>
-          <Grid size={{ xs: 2 }}>
+          <Grid size={{ xs: 2.4 }}>
             <Box textAlign="center">
               <Typography variant="h5" fontWeight={700} color="text.disabled">
                 {data?.periods?.week?.stats?.absent || 0}

@@ -63,7 +63,7 @@ const SUMMARY_CONFIG = [
     id: "early_exit",
     label: "Salida Temprana",
     icon: ExitToAppIcon,
-    color: "warning",
+    color: "secondary",
     getValue: (records) =>
       records.filter((r) => r.shiftStatus === "early_exit").length,
   },
@@ -75,31 +75,31 @@ const SUMMARY_CONFIG = [
     getValue: (records) =>
       records.filter((r) => r.shiftStatus === "absent").length,
   },
-  {
-    id: "justified",
-    label: "Justificados",
-    icon: VerifiedUserIcon,
-    color: "info",
-    getValue: (records) =>
-      records.filter((r) => r.shiftStatus === "justified").length,
-  },
-  {
-    id: "attendance_rate",
-    label: "Tasa de Asistencia",
-    icon: TrendingUpIcon,
-    color: "primary",
-    isPercentage: true,
-    getValue: (records, total) => {
-      const present = records.filter(
-        (r) =>
-          r.shiftStatus === "on_time" ||
-          r.shiftStatus === "late" ||
-          r.shiftStatus === "early_exit" ||
-          r.shiftStatus === "justified"
-      ).length;
-      return total > 0 ? ((present / total) * 100).toFixed(1) : 0;
-    },
-  },
+  // {
+  //   id: "justified",
+  //   label: "Justificados",
+  //   icon: VerifiedUserIcon,
+  //   color: "info",
+  //   getValue: (records) =>
+  //     records.filter((r) => r.shiftStatus === "justified").length,
+  // },
+  // {
+  //   id: "attendance_rate",
+  //   label: "Tasa de Asistencia",
+  //   icon: TrendingUpIcon,
+  //   color: "primary",
+  //   isPercentage: true,
+  //   getValue: (records, total) => {
+  //     const present = records.filter(
+  //       (r) =>
+  //         r.shiftStatus === "on_time" ||
+  //         r.shiftStatus === "late" ||
+  //         r.shiftStatus === "early_exit" ||
+  //         r.shiftStatus === "justified"
+  //     ).length;
+  //     return total > 0 ? ((present / total) * 100).toFixed(1) : 0;
+  //   },
+  // },
 ];
 
 // Componente individual de tarjeta de estadística
@@ -240,7 +240,7 @@ const SummaryCards = memo(({ data, isLoading = false }) => {
       {stats.map((stat, index) => (
         <Grid
           key={stat.id}
-          size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+          size={{ xs: 12, sm: 6, md: 4, lg: 4 }}
           sx={{
             animation: isLoading
               ? "none"

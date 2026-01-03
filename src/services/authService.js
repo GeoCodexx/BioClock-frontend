@@ -41,6 +41,7 @@ export const login = async (email, password) => {
 
 export const logout = () => {
   localStorage.removeItem("token");
+  localStorage.removeItem("user");
 };
 
 export const reAuthenticate = async (password) => {

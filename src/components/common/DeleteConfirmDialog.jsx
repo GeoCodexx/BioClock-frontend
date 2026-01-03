@@ -14,18 +14,18 @@ import {
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
-const DeleteConfirmDialog = ({ 
-  open, 
-  onClose, 
-  onConfirm, 
+const DeleteConfirmDialog = ({
+  open,
+  onClose,
+  onConfirm,
   deleteError,
-  itemName = "horario" 
+  itemName = "horario",
 }) => {
   const theme = useTheme();
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={onClose}
       TransitionComponent={Fade}
       maxWidth="xs"
@@ -33,8 +33,8 @@ const DeleteConfirmDialog = ({
       PaperProps={{
         sx: {
           borderRadius: 2,
-          backgroundImage: 'none',
-        }
+          backgroundImage: "none",
+        },
       }}
     >
       {/* Header con ícono de advertencia */}
@@ -61,22 +61,20 @@ const DeleteConfirmDialog = ({
 
       <DialogContent sx={{ pt: 1, pb: 3 }}>
         {deleteError && (
-          <Alert 
-            severity="error" 
-            sx={{ mb: 2, borderRadius: 1.5 }}
-          >
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 1.5 }}>
             {deleteError}
           </Alert>
         )}
-        <Typography color="text.secondary" sx={{ lineHeight: 1.6 }}>
-          ¿Estás seguro de que deseas eliminar este {itemName}?
+        <Typography align="center" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+          ¿Estás seguro de eliminar{" "}
+          {itemName === "asistencia" ? "esta" : "este"} {itemName}?
           <br />
           <strong>Esta acción no se puede deshacer.</strong>
         </Typography>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-        <Button 
+        <Button
           onClick={onClose}
           variant="outlined"
           color="inherit"
@@ -84,9 +82,9 @@ const DeleteConfirmDialog = ({
         >
           Cancelar
         </Button>
-        <Button 
+        <Button
           onClick={onConfirm}
-          color="error" 
+          color="error"
           variant="contained"
           startIcon={<DeleteOutlineIcon />}
           sx={{ minWidth: 120 }}

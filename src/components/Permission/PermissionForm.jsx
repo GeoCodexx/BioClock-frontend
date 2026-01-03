@@ -24,6 +24,10 @@ const ACTIONS = [
   { value: "read", label: "Leer", color: "info" },
   { value: "update", label: "Actualizar", color: "warning" },
   { value: "delete", label: "Eliminar", color: "error" },
+  { value: "justify", label: "Justificar", color: "info" },
+  { value: "unjustify", label: "Anular justificación", color: "info" },
+  { value: "approve", label: "Aprobar", color: "info" },
+  { value: "reject", label: "Rechazar", color: "info" },
 ];
 
 const PermissionForm = ({
@@ -183,13 +187,13 @@ const PermissionForm = ({
           <Controller
             name="description"
             control={control}
-            rules={{
-              required: "La descripción es obligatoria",
-              minLength: {
-                value: 5,
-                message: "Mínimo 5 caracteres",
-              },
-            }}
+            // rules={{
+            //   required: "La descripción es obligatoria",
+            //   minLength: {
+            //     value: 5,
+            //     message: "Mínimo 5 caracteres",
+            //   },
+            // }}
             render={({ field }) => (
               <TextField
                 {...field}
@@ -197,7 +201,7 @@ const PermissionForm = ({
                 fullWidth
                 multiline
                 rows={3}
-                required
+                //required
                 disabled={disabled}
                 error={!!errors.description}
                 helperText={errors.description?.message}

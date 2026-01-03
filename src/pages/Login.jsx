@@ -48,6 +48,7 @@ export default function Login() {
       setError(
         err.response?.data?.message || err.message || "Error de autenticación"
       );
+      console.log(err);
     } finally {
       setLoading(false);
     }

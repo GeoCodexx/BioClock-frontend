@@ -15,10 +15,27 @@ import GlobalSnackbar from "./components/GlobalSnackbar";
 import GeneralReportPage from "./pages/GeneralReport";
 import MyAttendances from "./pages/MyAttendances";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import useAuthStore from "./store/useAuthStore";
+import NoAccessPage from "./pages/NoAccessPage";
 
-function PrivateRoute({ children }) {
-  const token = localStorage.getItem("token");
-  return token ? children : <Navigate to="/login" />;
+function AuthRoute({ children }) {
+  const { isAuthenticated } = useAuthStore();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
+function PermissionRoute({ permission, children }) {
+  const { permissions } = useAuthStore();
+  console.log(permissions, permission);
+  if (permission && !permissions.includes(permission)) {
+    return <Navigate to="/403" replace />;
+  }
+
+  return children;
 }
 
 export default function App() {
@@ -30,25 +47,109 @@ export default function App() {
           <Route
             path="/"
             element={
-              <PrivateRoute>
+              <AuthRoute>
                 <MainLayout />
-              </PrivateRoute>
+              </AuthRoute>
             }
           >
-            <Route index element={<Dashboard />} />
-            <Route path="users" element={<Users />} />
-            <Route path="fingerprints" element={<Fingerprint />} />
-            <Route path="users/roles" element={<Roles />} />
-            <Route path="users/permissions" element={<Permissions />} />
-            <Route path="devices" element={<Devices />} />
-            <Route path="departments" element={<Departments />} />
-            <Route path="schedules" element={<Schedules />} />
-            <Route path="attendances" element={<Attendances />} />
-            <Route path="myattendances" element={<MyAttendances />} />
-            <Route path="reports/daily" element={<DailyReport />} />
-            <Route path="reports/general" element={<GeneralReportPage />} />
+            <Route
+              index
+              element={
+                <PermissionRoute permission="dashboard:read">
+                  <Dashboard />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="users"
+              element={
+                <PermissionRoute permission="users:read">
+                  <Users />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="fingerprints"
+              element={
+                <PermissionRoute permission="fingerprints:read">
+                  <Fingerprint />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="users/roles"
+              element={
+                <PermissionRoute permission="roles:read">
+                  <Roles />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="users/permissions"
+              element={
+                <PermissionRoute permission="permissions:read">
+                  <Permissions />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="devices"
+              element={
+                <PermissionRoute permission="devices:read">
+                  <Devices />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="departments"
+              element={
+                <PermissionRoute permission="departments:read">
+                  <Departments />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="schedules"
+              element={
+                <PermissionRoute permission="schedules:read">
+                  <Schedules />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="attendances"
+              element={
+                <PermissionRoute permission="attendances:read">
+                  <Attendances />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="myattendance"
+              element={
+                <PermissionRoute permission="my-attendance:read">
+                  <MyAttendances />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="reports/daily"
+              element={
+                <PermissionRoute permission="daily-report:read">
+                  <DailyReport />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="reports/general"
+              element={
+                <PermissionRoute permission="general-report:read">
+                  <GeneralReportPage />
+                </PermissionRoute>
+              }
+            />
           </Route>
-
+          <Route path="/403" element={<NoAccessPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>

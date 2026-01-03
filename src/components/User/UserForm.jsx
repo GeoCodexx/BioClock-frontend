@@ -17,10 +17,6 @@ import {
 import {
   Visibility,
   VisibilityOff,
-  Person,
-  Email,
-  Phone,
-  Badge,
 } from "@mui/icons-material";
 import { getRoles } from "../../services/roleService";
 import { getDepartments } from "../../services/departmentService";
@@ -294,23 +290,23 @@ const UserForm = ({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Nombre"
+                label="Nombres"
                 fullWidth
                 required
                 size="small"
                 disabled={disabled}
                 error={!!errors.name}
                 helperText={errors.name?.message}
-                placeholder="Ej: Juan"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person fontSize="small" color="action" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
+                //placeholder="Ej: Juan"
+                // slotProps={{
+                //   input: {
+                //     startAdornment: (
+                //       <InputAdornment position="start">
+                //         <Person fontSize="small" color="action" />
+                //       </InputAdornment>
+                //     ),
+                //   },
+                // }}
               />
             )}
           />
@@ -346,7 +342,7 @@ const UserForm = ({
                 disabled={disabled}
                 error={!!errors.firstSurname}
                 helperText={errors.firstSurname?.message}
-                placeholder="Ej: Pérez"
+                //placeholder="Ej: Pérez"
               />
             )}
           />
@@ -376,11 +372,12 @@ const UserForm = ({
                 {...field}
                 label="Apellido Materno"
                 fullWidth
+                required
                 size="small"
                 disabled={disabled}
                 error={!!errors.secondSurname}
                 helperText={errors.secondSurname?.message}
-                placeholder="Ej: García"
+                //placeholder="Ej: García"
               />
             )}
           />
@@ -408,17 +405,17 @@ const UserForm = ({
                 disabled={disabled}
                 error={!!errors.dni}
                 helperText={errors.dni?.message}
-                placeholder="12345678"
+                //placeholder="12345678"
                 inputProps={{ maxLength: 8 }}
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Badge fontSize="small" color="action" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
+                // slotProps={{
+                //   input: {
+                //     startAdornment: (
+                //       <InputAdornment position="start">
+                //         <Badge fontSize="small" color="action" />
+                //       </InputAdornment>
+                //     ),
+                //   },
+                // }}
               />
             )}
           />
@@ -447,16 +444,16 @@ const UserForm = ({
                 disabled={disabled}
                 error={!!errors.email}
                 helperText={errors.email?.message}
-                placeholder="usuario@example.com"
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Email fontSize="small" color="action" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
+                //placeholder="usuario@example.com"
+                // slotProps={{
+                //   input: {
+                //     startAdornment: (
+                //       <InputAdornment position="start">
+                //         <Email fontSize="small" color="action" />
+                //       </InputAdornment>
+                //     ),
+                //   },
+                // }}
               />
             )}
           />
@@ -484,17 +481,17 @@ const UserForm = ({
                 disabled={disabled}
                 error={!!errors.phone}
                 helperText={errors.phone?.message}
-                placeholder="987654321"
+                //placeholder="987654321"
                 inputProps={{ maxLength: 9 }}
-                slotProps={{
-                  input: {
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Phone fontSize="small" color="action" />
-                      </InputAdornment>
-                    ),
-                  },
-                }}
+                // slotProps={{
+                //   input: {
+                //     startAdornment: (
+                //       <InputAdornment position="start">
+                //         <Phone fontSize="small" color="action" />
+                //       </InputAdornment>
+                //     ),
+                //   },
+                // }}
               />
             )}
           />
@@ -658,7 +655,7 @@ const UserForm = ({
                         </Typography>
                         {dept.location && (
                           <Typography variant="caption" color="text.secondary">
-                            📍 {dept.location}
+                            {dept.location}
                           </Typography>
                         )}
                       </Stack>
@@ -745,7 +742,7 @@ const UserForm = ({
                         </Typography>
                         {schedule.startTime && schedule.endTime && (
                           <Typography variant="caption" color="text.secondary">
-                            🕐 {schedule.startTime} - {schedule.endTime}
+                            {schedule.startTime} - {schedule.endTime}
                           </Typography>
                         )}
                       </Stack>
@@ -802,7 +799,7 @@ const UserForm = ({
                         </Typography>
                         {dev.location && (
                           <Typography variant="caption" color="text.secondary">
-                            📍 {dev.location}
+                            {dev.location}
                           </Typography>
                         )}
                       </Stack>

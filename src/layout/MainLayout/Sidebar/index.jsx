@@ -28,44 +28,94 @@ import { ExpandLess, ExpandMore, ReadMore } from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LogoBitel from "../../../assets/images/bitel_logo.png";
-//import ReadMoreIcon from "@mui/icons-material/ReadMore";
+import { usePermission } from "../../../utils/permissions";
 
 const drawerWidth = 260;
 const collapsedWidth = 80;
 
 const menuItems = [
-  { text: "Panel Estadístico", path: "/", icon: <DashboardIcon /> },
-  { text: "Horarios", path: "/schedules", icon: <EventNoteIcon /> },
-  { text: "Departamentos", path: "/departments", icon: <BusinessIcon /> },
-  { text: "Dispositivos", path: "/devices", icon: <DevicesIcon /> },
+  {
+    text: "Panel Estadístico",
+    path: "/",
+    permission: "dashboard:read",
+    icon: <DashboardIcon />,
+  },
+  {
+    text: "Horarios",
+    path: "/schedules",
+    permission: "schedules:read",
+    icon: <EventNoteIcon />,
+  },
+  {
+    text: "Departamentos",
+    path: "/departments",
+    permission: "departments:read",
+    icon: <BusinessIcon />,
+  },
+  {
+    text: "Dispositivos",
+    path: "/devices",
+    permission: "devices:read",
+    icon: <DevicesIcon />,
+  },
   {
     text: "Huellas Dactilares",
     path: "/fingerprints",
+    permission: "fingerprints:read",
     icon: <FingerprintIcon />,
   },
-  { text: "Asistencias", path: "/attendances", icon: <EventNoteIcon /> },
-  { text: "Mi Asistencia", path: "/myattendances", icon: <EventNoteIcon /> },
+  {
+    text: "Asistencias",
+    path: "/attendances",
+    permission: "attendances:read",
+    icon: <EventNoteIcon />,
+  },
+  {
+    text: "Mi Asistencia",
+    path: "/myattendance",
+    permission: "my-attendace:read",
+    icon: <EventNoteIcon />,
+  },
   {
     text: "Gestión de Usuarios",
     icon: <PeopleIcon />,
+    permission: ["permissions:read", "roles:read", "users:read"],
     children: [
-      { text: "Permisos", path: "/users/permissions", icon: <VpnKeyIcon /> },
-      { text: "Roles", path: "/users/roles", icon: <VpnKeyIcon /> },
-      { text: "Usuarios", path: "/users", icon: <PeopleIcon /> },
+      {
+        text: "Permisos",
+        path: "/users/permissions",
+        permission: "permissions:read",
+        icon: <VpnKeyIcon />,
+      },
+      {
+        text: "Roles",
+        path: "/users/roles",
+        permission: "roles:read",
+        icon: <VpnKeyIcon />,
+      },
+      {
+        text: "Usuarios",
+        path: "/users",
+        permission: "users:read",
+        icon: <PeopleIcon />,
+      },
     ],
   },
   {
     text: "Reportes",
     icon: <AssessmentIcon />,
+    permission: ["deily-report:read", "general-report:read"],
     children: [
       {
         text: "Asistencia del día",
         path: "/reports/daily",
+        permission: "deily-report:read",
         icon: <ChevronRightIcon />,
       },
       {
         text: "General",
         path: "/reports/general",
+        permission: "general-report:read",
         icon: <ChevronRightIcon />,
       },
     ],
@@ -76,6 +126,7 @@ const Sidebar = ({ isOpen, handleDrawerToggle, mobileOpen, setMobileOpen }) => {
   const theme = useTheme();
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { can, canAny } = usePermission();
 
   const [openMenu, setOpenMenu] = useState(() => {
     const current = menuItems.find((item) =>
@@ -98,8 +149,18 @@ const Sidebar = ({ isOpen, handleDrawerToggle, mobileOpen, setMobileOpen }) => {
     }
   };
 
+  const canRenderItem = (item) => {
+    if (item.children?.length) {
+      return (
+        canAny(item.permission) &&
+        item.children.some((child) => can(child.permission))
+      );
+    }
+    return can(item.permission);
+  };
+
   const renderMenuItems = (items, isSubmenu = false) =>
-    items.map((item) => {
+    items.filter(canRenderItem).map((item) => {
       const isActive =
         (item.path && activeRoute(item.path)) ||
         item.children?.some((child) => activeRoute(child.path));
@@ -179,7 +240,10 @@ const Sidebar = ({ isOpen, handleDrawerToggle, mobileOpen, setMobileOpen }) => {
           {item.children && (
             <Collapse in={openMenu === item.text} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
-                {renderMenuItems(item.children, true)}
+                {renderMenuItems(
+                  item.children.filter((child) => can(child.permission)),
+                  true
+                )}
               </List>
             </Collapse>
           )}
