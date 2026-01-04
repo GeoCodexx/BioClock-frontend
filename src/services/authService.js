@@ -33,15 +33,21 @@ export const login = async (email, password) => {
   try {
     const res = await api.post("auth/login", { username: email, password });
     localStorage.setItem("token", res.data.token);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
     return res.data;
   } catch (error) {
     handleApiError(error, "Error al autenticar usuario");
   }
 };
 
-export const logout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+export const logout = async () => {
+  try {
+    const refreshToken = localStorage.getItem("refreshToken");
+    await api.post("auth/logout", { refreshToken });
+    localStorage.clear();
+  } catch (error) {
+    handleApiError(error, "Error al cerrar sesion");
+  }
 };
 
 export const reAuthenticate = async (password) => {
@@ -49,7 +55,7 @@ export const reAuthenticate = async (password) => {
     const res = await api.post("/auth/re-authenticate", { password });
     return res.data; // Faltaba el return aquí
   } catch (error) {
-    handleApiError(error, "Error al autenticar usuario");
+    handleApiError(error, "Error al reautenticar usuario");
   }
 };
 

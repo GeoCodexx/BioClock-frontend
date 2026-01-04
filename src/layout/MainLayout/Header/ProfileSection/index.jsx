@@ -30,8 +30,9 @@ import ProfileDialog from "../../../../components/Profile/ProfileDialog";
 const ProfileSection = () => {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { logout } = useAuthStore();
   const theme = useTheme();
-  const navigate = useNavigate();
+  //const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const anchorRef = useRef(null);
   //const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -41,8 +42,9 @@ const ProfileSection = () => {
   const handleLogout = async () => {
     try {
       // Implementar lógica de logout
-      localStorage.removeItem("token");
-      navigate("/login");
+      /*localStorage.removeItem("token");
+      navigate("/login");*/
+      logout();
     } catch (err) {
       console.error(err);
     }

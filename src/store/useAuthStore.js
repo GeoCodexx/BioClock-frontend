@@ -34,8 +34,8 @@ const useAuthStore = create((set) => {
 
     logout: () => {
       logoutApi();
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      /*localStorage.removeItem("user");
+      localStorage.removeItem("token");*/
       set({ user: null, permissions: [], isAuthenticated: false });
     },
   };
