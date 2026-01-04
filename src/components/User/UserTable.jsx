@@ -41,8 +41,10 @@ import {
   Devices as DevicesIcon,
   CalendarToday as CalendarTodayIcon,
 } from "@mui/icons-material";
+import { usePermission } from "../../utils/permissions";
 
 const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
+  const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("index");
@@ -117,7 +119,7 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
       minWidth: 50,
       align: "center",
     },
-        {
+    {
       id: "index",
       label: "#",
       sortable: true,
@@ -591,19 +593,23 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
             },
           }}
         >
-          <MenuItem onClick={handleEdit}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText>Editar</ListItemText>
-          </MenuItem>
+          {can("users:update") && (
+            <MenuItem onClick={handleEdit}>
+              <ListItemIcon>
+                <EditIcon fontSize="small" color="primary" />
+              </ListItemIcon>
+              <ListItemText>Editar</ListItemText>
+            </MenuItem>
+          )}
           <Divider />
-          <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>Eliminar</ListItemText>
-          </MenuItem>
+          {can("users:delete") && (
+            <MenuItem onClick={handleDelete}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Eliminar</ListItemText>
+            </MenuItem>
+          )}
         </Menu>
       </>
     );
@@ -687,7 +693,6 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                     },
                   }}
                 >
-                  
                   {/* Botón Expandir/Colapsar */}
                   <TableCell align="center" sx={{ py: 2 }}>
                     <IconButton
@@ -777,36 +782,43 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                       spacing={0.5}
                       justifyContent="center"
                     >
-                      <Tooltip title="Editar usuario" arrow>
-                        <IconButton
-                          size="small"
-                          onClick={() => onEdit && onEdit(user)}
-                          sx={{
-                            color: theme.palette.primary.main,
-                            bgcolor: alpha(theme.palette.primary.main, 0.08),
-                            "&:hover": {
-                              bgcolor: alpha(theme.palette.primary.main, 0.15),
-                            },
-                          }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar usuario" arrow>
-                        <IconButton
-                          size="small"
-                          onClick={() => onDelete && onDelete(user._id)}
-                          sx={{
-                            color: theme.palette.error.main,
-                            bgcolor: alpha(theme.palette.error.main, 0.08),
-                            "&:hover": {
-                              bgcolor: alpha(theme.palette.error.main, 0.15),
-                            },
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                      {can("users:update") && (
+                        <Tooltip title="Editar usuario" arrow>
+                          <IconButton
+                            size="small"
+                            onClick={() => onEdit && onEdit(user)}
+                            sx={{
+                              color: theme.palette.primary.main,
+                              bgcolor: alpha(theme.palette.primary.main, 0.08),
+                              "&:hover": {
+                                bgcolor: alpha(
+                                  theme.palette.primary.main,
+                                  0.15
+                                ),
+                              },
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      {can("users:delete") && (
+                        <Tooltip title="Eliminar usuario" arrow>
+                          <IconButton
+                            size="small"
+                            onClick={() => onDelete && onDelete(user._id)}
+                            sx={{
+                              color: theme.palette.error.main,
+                              bgcolor: alpha(theme.palette.error.main, 0.08),
+                              "&:hover": {
+                                bgcolor: alpha(theme.palette.error.main, 0.15),
+                              },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </Stack>
                   </TableCell>
                 </TableRow>

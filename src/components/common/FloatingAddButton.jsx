@@ -6,7 +6,7 @@ export default function FloatingAddButton({ onClick }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  if (!isMobile) return null; // 👈 Oculta el botón en escritorio
+  if (!isMobile) return null; // Oculta el botón en escritorio
 
   return (
     <Fab

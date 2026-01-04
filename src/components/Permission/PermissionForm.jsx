@@ -28,6 +28,7 @@ const ACTIONS = [
   { value: "unjustify", label: "Anular justificación", color: "info" },
   { value: "approve", label: "Aprobar", color: "info" },
   { value: "reject", label: "Rechazar", color: "info" },
+  { value: "export", label: "Exportar", color: "info" },
 ];
 
 const PermissionForm = ({

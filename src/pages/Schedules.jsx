@@ -33,8 +33,10 @@ import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
+import { usePermission } from "../utils/permissions";
 
 export default function Schedules() {
+  const { can } = usePermission();
   const { mode } = useThemeMode();
   const { showSuccess, showError } = useSnackbarStore();
 
@@ -328,7 +330,9 @@ export default function Schedules() {
                     Gestión de Horarios
                   </Typography>
                 </Box>
-                <ScheduleExportButtons schedules={schedules} />
+                {can("schedules:export") && (
+                  <ScheduleExportButtons schedules={schedules} />
+                )}
               </Box>
             </Stack>
           ) : (
@@ -370,7 +374,9 @@ export default function Schedules() {
                 spacing={1}
                 sx={{ width: "100%" }}
               >
-                <FloatingAddButton onClick={handleOpenDialog} />
+                {can("schedules:create") && (
+                  <FloatingAddButton onClick={handleOpenDialog} />
+                )}
               </Stack>
               <ScheduleSearchBar
                 searchInput={searchInput}
@@ -393,15 +399,19 @@ export default function Schedules() {
                 />
               </Box>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleOpenDialog}
-                  sx={{ minWidth: 140 }}
-                >
-                  Nuevo
-                </Button>
-                <ScheduleExportButtons schedules={schedules} />
+                {can("schedules:create") && (
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleOpenDialog}
+                    sx={{ minWidth: 140 }}
+                  >
+                    Nuevo
+                  </Button>
+                )}
+                {can("schedules:export") && (
+                  <ScheduleExportButtons schedules={schedules} />
+                )}
               </Stack>
             </Stack>
           )}

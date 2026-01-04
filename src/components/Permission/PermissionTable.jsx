@@ -33,8 +33,10 @@ import PinIcon from "@mui/icons-material/Pin";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { usePermission } from "../../utils/permissions";
 
 const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
+  const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("index");
@@ -44,13 +46,6 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedPermission, setSelectedPermission] = useState(null);
 
-  // Toggle row collapse
-  /*const handleRowToggle = (permissionId) => {
-    setOpenRows((prev) => ({
-      ...prev,
-      [permissionId]: !prev[permissionId],
-    }));
-  };*/
   const handleRowToggle = (permissionId) => {
     setOpenRowId((prev) => (prev === permissionId ? null : permissionId));
   };
@@ -416,18 +411,22 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
             },
           }}
         >
-          <MenuItem onClick={handleEdit}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText>Editar</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>Eliminar</ListItemText>
-          </MenuItem>
+          {can("permissions:update") && (
+            <MenuItem onClick={handleEdit}>
+              <ListItemIcon>
+                <EditIcon fontSize="small" color="primary" />
+              </ListItemIcon>
+              <ListItemText>Editar</ListItemText>
+            </MenuItem>
+          )}
+          {can("permissions:delete") && (
+            <MenuItem onClick={handleDelete}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Eliminar</ListItemText>
+            </MenuItem>
+          )}
         </Menu>
       </>
     );

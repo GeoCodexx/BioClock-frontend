@@ -37,8 +37,8 @@ import { es } from "date-fns/locale";
 
 // Configuración de estados
 const STATUS_CONFIG = {
-  complete: {
-    label: "Completo",
+  on_time: {
+    label: "A tiempo",
     color: "success",
     icon: CheckCircle,
   },
@@ -47,23 +47,13 @@ const STATUS_CONFIG = {
     color: "warning",
     icon: Warning,
   },
-  early_leave: {
+  early_exit: {
     label: "Salida temprana",
     color: "warning",
     icon: AccessTime,
   },
-  late_and_early_leave: {
-    label: "Tardanza y salida temprana",
-    color: "error",
-    icon: ErrorOutline,
-  },
-  incomplete_no_entry: {
-    label: "Sin entrada",
-    color: "error",
-    icon: ErrorOutline,
-  },
-  incomplete_no_exit: {
-    label: "Sin salida",
+  incomplete: {
+    label: "Incompleto",
     color: "error",
     icon: ErrorOutline,
   },
@@ -71,16 +61,6 @@ const STATUS_CONFIG = {
     label: "Ausente",
     color: "error",
     icon: Cancel,
-  },
-  justified: {
-    label: "Justificado",
-    color: "info",
-    icon: VerifiedUser,
-  },
-  on_time: {
-    label: "A tiempo",
-    color: "success",
-    icon: CheckCircle,
   },
 };
 
@@ -94,7 +74,8 @@ const StatusDisplay = memo(({ status }) => {
   };
 
   const Icon = config.icon;
-  const colorValue = theme.palette[config.color]?.main || theme.palette.grey[500];
+  const colorValue =
+    theme.palette[config.color]?.main || theme.palette.grey[500];
 
   return (
     <Chip
@@ -118,45 +99,53 @@ const StatusDisplay = memo(({ status }) => {
 StatusDisplay.displayName = "StatusDisplay";
 
 // Componente para campo de información
-const InfoField = memo(({ icon: Icon, label, value, color = "text.primary" }) => {
-  if (!value || value === "—") {
-    return null;
+const InfoField = memo(
+  ({ icon: Icon, label, value, color = "text.primary" }) => {
+    if (!value || value === "—") {
+      return null;
+    }
+    return (
+      <Stack direction="row" spacing={2} alignItems="flex-start">
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            borderRadius: 2,
+            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Icon sx={{ fontSize: 20, color: "primary.main" }} />
+        </Box>
+        <Box flex={1}>
+          <Typography variant="caption" color="text.secondary" fontWeight={500}>
+            {label}
+          </Typography>
+          {
+            <Typography
+              variant="body1"
+              fontWeight={500}
+              color={color}
+              sx={{ mt: 0.5 }}
+            >
+              {value}
+            </Typography>
+          }
+        </Box>
+      </Stack>
+    );
   }
-
-  return (
-    <Stack direction="row" spacing={2} alignItems="flex-start">
-      <Box
-        sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 2,
-          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <Icon sx={{ fontSize: 20, color: "primary.main" }} />
-      </Box>
-      <Box flex={1}>
-        <Typography variant="caption" color="text.secondary" fontWeight={500}>
-          {label}
-        </Typography>
-        <Typography variant="body1" fontWeight={500} color={color} sx={{ mt: 0.5 }}>
-          {value}
-        </Typography>
-      </Box>
-    </Stack>
-  );
-});
+);
 
 InfoField.displayName = "InfoField";
 
 // Componente para mostrar entrada/salida
 const TimeEntry = memo(({ icon: Icon, label, timestamp, status, color }) => {
   const theme = useTheme();
-  
+
   if (!timestamp) {
     return (
       <Card
@@ -183,7 +172,9 @@ const TimeEntry = memo(({ icon: Icon, label, timestamp, status, color }) => {
   }
 
   const formattedTime = format(new Date(timestamp), "HH:mm:ss", { locale: es });
-  const formattedDate = format(new Date(timestamp), "d 'de' MMMM", { locale: es });
+  const formattedDate = format(new Date(timestamp), "d 'de' MMMM", {
+    locale: es,
+  });
 
   return (
     <Card
@@ -192,7 +183,10 @@ const TimeEntry = memo(({ icon: Icon, label, timestamp, status, color }) => {
         p: 2,
         borderRadius: 2,
         borderColor: color + ".main",
-        bgcolor: alpha(theme.palette[color]?.main || theme.palette.primary.main, 0.04),
+        bgcolor: alpha(
+          theme.palette[color]?.main || theme.palette.primary.main,
+          0.04
+        ),
       }}
     >
       <Stack spacing={1.5}>
@@ -231,10 +225,13 @@ const AttendanceDetailDialog = memo(({ open, record, onClose }) => {
   const userInfo = useMemo(() => {
     if (!record?.user) return null;
     const { name, firstSurname, secondSurname, dni } = record.user;
-    const fullName = `${name || ""} ${firstSurname || ""} ${secondSurname || ""}`.trim();
-    const initials = name && firstSurname
-      ? `${name[0]}${firstSurname[0]}`.toUpperCase()
-      : name?.[0]?.toUpperCase() || "?";
+    const fullName = `${name || ""} ${firstSurname || ""} ${
+      secondSurname || ""
+    }`.trim();
+    const initials =
+      name && firstSurname
+        ? `${name[0]}${firstSurname[0]}`.toUpperCase()
+        : name?.[0]?.toUpperCase() || "?";
     return { fullName, initials, dni };
   }, [record]);
 
@@ -273,7 +270,11 @@ const AttendanceDetailDialog = memo(({ open, record, onClose }) => {
           py: 2,
         }}
       >
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <Box>
             <Typography variant="h6" fontWeight={700}>
               Detalles de Asistencia
@@ -349,7 +350,12 @@ const AttendanceDetailDialog = memo(({ open, record, onClose }) => {
 
           {/* Entrada y Salida */}
           <Box>
-            <Typography variant="subtitle2" fontWeight={700} gutterBottom sx={{ mb: 2 }}>
+            <Typography
+              variant="subtitle2"
+              fontWeight={700}
+              gutterBottom
+              sx={{ mb: 2 }}
+            >
               Registro de Asistencia
             </Typography>
             <Stack spacing={2}>
@@ -396,10 +402,18 @@ const AttendanceDetailDialog = memo(({ open, record, onClose }) => {
                   <AccessTime sx={{ fontSize: 24, color: "white" }} />
                 </Box>
                 <Box>
-                  <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    fontWeight={500}
+                  >
                     Horas Trabajadas
                   </Typography>
-                  <Typography variant="h5" fontWeight={700} color="primary.main">
+                  <Typography
+                    variant="h5"
+                    fontWeight={700}
+                    color="primary.main"
+                  >
                     {record.hoursWorked}
                   </Typography>
                 </Box>
@@ -410,34 +424,37 @@ const AttendanceDetailDialog = memo(({ open, record, onClose }) => {
           <Divider />
 
           {/* Información Adicional */}
-          <Box>
-            <Typography variant="subtitle2" fontWeight={700} gutterBottom sx={{ mb: 2 }}>
-              Información Adicional
-            </Typography>
-            <Stack spacing={2}>
-              <InfoField
-                icon={DevicesIcon}
-                label="Dispositivo de Registro"
-                value={record.checkIn?.device?.name}
-              />
-              
-              {record.justification && (
-                <InfoField
-                  icon={DescriptionIcon}
-                  label="Justificación"
-                  value={record.justification}
-                />
-              )}
-              
-              {record.checkIn?.notes && (
-                <InfoField
-                  icon={EventNoteIcon}
-                  label="Notas"
-                  value={record.checkIn.notes}
-                />
-              )}
-            </Stack>
-          </Box>
+
+          {(record.checkIn?.device?.name || record.justification?.reason) && (
+            <Box>
+              <Typography
+                variant="subtitle2"
+                fontWeight={700}
+                gutterBottom
+                sx={{ mb: 2 }}
+              >
+                Información Adicional
+              </Typography>
+
+              <Stack spacing={2}>
+                {record.checkIn?.device?.name && (
+                  <InfoField
+                    icon={DevicesIcon}
+                    label="Dispositivo de Registro"
+                    value={record.checkIn.device.name}
+                  />
+                )}
+
+                {record.justification?.reason && (
+                  <InfoField
+                    icon={DescriptionIcon}
+                    label="Justificación"
+                    value={record.justification.reason}
+                  />
+                )}
+              </Stack>
+            </Box>
+          )}
         </Stack>
       </DialogContent>
     </Dialog>

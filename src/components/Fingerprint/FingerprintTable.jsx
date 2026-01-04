@@ -37,6 +37,7 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import BadgeIcon from "@mui/icons-material/Badge";
+import { usePermission } from "../../utils/permissions";
 
 // Utilidades de formateo
 const formatters = {
@@ -86,6 +87,7 @@ const FingerprintTable = ({
   onReject,
   onDelete,
 }) => {
+  const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("index");
@@ -561,24 +563,30 @@ const FingerprintTable = ({
             },
           }}
         >
-          <MenuItem onClick={handleApprove}>
-            <ListItemIcon>
-              <CheckCircleIcon fontSize="small" color="success" />
-            </ListItemIcon>
-            <ListItemText>Aprobar</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={handleReject}>
-            <ListItemIcon>
-              <CancelIcon fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>Rechazar</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>Eliminar</ListItemText>
-          </MenuItem>
+          {can("fingerprints:approve") && (
+            <MenuItem onClick={handleApprove}>
+              <ListItemIcon>
+                <CheckCircleIcon fontSize="small" color="success" />
+              </ListItemIcon>
+              <ListItemText>Aprobar</ListItemText>
+            </MenuItem>
+          )}
+          {can("fingerprints:reject") && (
+            <MenuItem onClick={handleReject}>
+              <ListItemIcon>
+                <CancelIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Rechazar</ListItemText>
+            </MenuItem>
+          )}
+          {can("fingerprints:delete") && (
+            <MenuItem onClick={handleDelete}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Eliminar</ListItemText>
+            </MenuItem>
+          )}
         </Menu>
       </>
     );
@@ -671,9 +679,7 @@ const FingerprintTable = ({
                 </TableCell>
                 {/* DNI */}
                 <TableCell>
-                  <Typography
-                    variant="body2"
-                  >
+                  <Typography variant="body2">
                     {fingerprint.userId?.dni || "—"}
                   </Typography>
                   {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

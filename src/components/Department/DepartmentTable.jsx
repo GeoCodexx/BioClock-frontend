@@ -31,8 +31,10 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PlaceIcon from "@mui/icons-material/Place";
+import { usePermission } from "../../utils/permissions";
 
 const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
+  const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("index");
@@ -252,10 +254,7 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                       {/* Nombre del Departamento */}
                       <TableCell sx={{ py: 1.5 }}>
                         <Box>
-                          <Typography
-                            variant="body2"
-                            sx={{ mb: 0.5 }}
-                          >
+                          <Typography variant="body2" sx={{ mb: 0.5 }}>
                             {department.name || "—"}
                           </Typography>
                           <Stack
@@ -377,18 +376,22 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
             },
           }}
         >
-          <MenuItem onClick={handleEdit}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText>Editar</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>Eliminar</ListItemText>
-          </MenuItem>
+          {can("departments:update") && (
+            <MenuItem onClick={handleEdit}>
+              <ListItemIcon>
+                <EditIcon fontSize="small" color="primary" />
+              </ListItemIcon>
+              <ListItemText>Editar</ListItemText>
+            </MenuItem>
+          )}
+          {can("departments:delete") && (
+            <MenuItem onClick={handleDelete}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Eliminar</ListItemText>
+            </MenuItem>
+          )}
         </Menu>
       </>
     );
@@ -539,36 +542,40 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                 <Box
                   sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}
                 >
-                  <Tooltip title="Editar departamento" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={() => onEdit && onEdit(department)}
-                      sx={{
-                        color: theme.palette.primary.main,
-                        bgcolor: alpha(theme.palette.primary.main, 0.08),
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.primary.main, 0.15),
-                        },
-                      }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Eliminar departamento" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={() => onDelete && onDelete(department._id)}
-                      sx={{
-                        color: theme.palette.error.main,
-                        bgcolor: alpha(theme.palette.error.main, 0.08),
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.error.main, 0.15),
-                        },
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  {can("departments:update") && (
+                    <Tooltip title="Editar departamento" arrow>
+                      <IconButton
+                        size="small"
+                        onClick={() => onEdit && onEdit(department)}
+                        sx={{
+                          color: theme.palette.primary.main,
+                          bgcolor: alpha(theme.palette.primary.main, 0.08),
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.primary.main, 0.15),
+                          },
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {can("departments:delete") && (
+                    <Tooltip title="Eliminar departamento" arrow>
+                      <IconButton
+                        size="small"
+                        onClick={() => onDelete && onDelete(department._id)}
+                        sx={{
+                          color: theme.palette.error.main,
+                          bgcolor: alpha(theme.palette.error.main, 0.08),
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.error.main, 0.15),
+                          },
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </Box>
               </TableCell>
             </TableRow>

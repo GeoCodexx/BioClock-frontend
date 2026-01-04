@@ -70,32 +70,28 @@ const STATUS_CONFIG = {
   },
 };
 
-const STATUS_CHIP_STYLES = {
+/*const STATUS_CHIP_STYLES = {
   on_time: {
-    backgroundColor: "#B9F6CA", // #B9F6CA - Verde suave
-    color: "#00C853", // #00C853 - Verde oscuro
+    backgroundColor: alpha(theme.palette.success.main, 0.15),
+    color: theme.palette.success.main,
   },
   late: {
-    backgroundColor: "#FFF8E1", // #FFF8E1 - Amarillo suave
-    color: "#FFC107", // #FFC107 - Amarillo oscuro
+    backgroundColor: alpha(theme.palette.warning.main, 0.15),
+    color: theme.palette.warning.main,
   },
   early: {
-    backgroundColor: "#EDE7F6", // #EDE7F6 - Púrpura suave
-    color: "#5E35B1", // #5E35B1 - Púrpura oscuro
+    backgroundColor: alpha(theme.palette.secondary.main, 0.15),
+    color: theme.palette.secondary.main,
   },
   early_exit: {
-    backgroundColor: "#FAEBEB", // #EF9A9A - Rojo suave
-    color: "#C62828", // #C62828 - Rojo oscuro
-  },
-  justified: {
-    backgroundColor: "#E3F2FD", // #E3F2FD - Azul suave
-    color: "#1E88E5 ", // #1E88E5 - Azul oscuro
+    backgroundColor: alpha(theme.palette.info.main, 0.15),
+    color: theme.palette.info.main,
   },
   absent: {
-    backgroundColor: "#EF9A9A", // #EF9A9A - Rojo suave
-    color: "#C62828", // #C62828 - Rojo oscuro
+    backgroundColor: alpha(theme.palette.error.main, 0.15),
+    color: theme.palette.error.main,
   },
-};
+};*/
 
 // Mapeo de estados a etiquetas descriptivas
 const TIME_STATUS_LABELS = {
@@ -103,7 +99,7 @@ const TIME_STATUS_LABELS = {
   early: "Entrada temprana",
   early_exit: "Salida temprana",
   on_time: "A tiempo",
-  justified: "Justificado",
+  absent: "Ausente",
 };
 
 // Componente para renderizar el estado con chip - Memoizado
@@ -142,6 +138,30 @@ StatusChip.displayName = "StatusChip";
 
 // Componente para formatear fecha y hora - Memoizado
 const TimeDisplay = memo(({ timestamp, showStatus, status }) => {
+  const theme = useTheme();
+  
+  const STATUS_CHIP_STYLES = {
+    on_time: {
+      backgroundColor: alpha(theme.palette.success.main, 0.15),
+      color: theme.palette.success.main,
+    },
+    late: {
+      backgroundColor: alpha(theme.palette.warning.main, 0.15),
+      color: theme.palette.warning.main,
+    },
+    early: {
+      backgroundColor: alpha(theme.palette.secondary.main, 0.15),
+      color: theme.palette.secondary.main,
+    },
+    early_exit: {
+      backgroundColor: alpha(theme.palette.info.main, 0.15),
+      color: theme.palette.info.main,
+    },
+    absent: {
+      backgroundColor: alpha(theme.palette.error.main, 0.15),
+      color: theme.palette.error.main,
+    },
+  };
   const formattedTime = useMemo(() => {
     if (!timestamp) return null;
     return format(new Date(timestamp), "HH:mm:ss", { locale: es });

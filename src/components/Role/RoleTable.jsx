@@ -34,24 +34,17 @@ import {
   Description as DescriptionIcon,
   Security as SecurityIcon,
 } from "@mui/icons-material";
+import { usePermission } from "../../utils/permissions";
 
 const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
+  const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("index");
   const [order, setOrder] = useState("asc");
-  //const [openRows, setOpenRows] = useState({});
   const [openRowId, setOpenRowId] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
-
-  // Toggle row collapse (mobile)
-  /*const handleRowToggle = (roleId) => {
-    setOpenRows((prev) => ({
-      ...prev,
-      [roleId]: !prev[roleId],
-    }));
-  };*/
 
   const handleRowToggle = (roleId) => {
     setOpenRowId((prev) => (prev === roleId ? null : roleId));
@@ -435,19 +428,23 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
             },
           }}
         >
-          <MenuItem onClick={handleEdit}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText>Editar</ListItemText>
-          </MenuItem>
+          {can("roles:update") && (
+            <MenuItem onClick={handleEdit}>
+              <ListItemIcon>
+                <EditIcon fontSize="small" color="primary" />
+              </ListItemIcon>
+              <ListItemText>Editar</ListItemText>
+            </MenuItem>
+          )}
           <Divider />
-          <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>Eliminar</ListItemText>
-          </MenuItem>
+          {can("roles:delete") && (
+            <MenuItem onClick={handleDelete}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Eliminar</ListItemText>
+            </MenuItem>
+          )}
         </Menu>
       </>
     );
@@ -527,9 +524,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
               >
                 {/* Indice */}
                 <TableCell>
-                  <Typography variant="body2">
-                    {role.index || "—"}
-                  </Typography>
+                  <Typography variant="body2">{role.index || "—"}</Typography>
                 </TableCell>
                 {/* Nombre */}
                 <TableCell>
@@ -538,9 +533,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                       fontSize="small"
                       sx={{ color: theme.palette.primary.main }}
                     /> */}
-                    <Typography variant="body2">
-                      {role.name || "—"}
-                    </Typography>
+                    <Typography variant="body2">{role.name || "—"}</Typography>
                   </Stack>
                 </TableCell>
 
@@ -644,36 +637,40 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                 {/* Acciones */}
                 <TableCell align="center">
                   <Stack direction="row" spacing={0.5} justifyContent="center">
-                    <Tooltip title="Editar rol" arrow>
-                      <IconButton
-                        size="small"
-                        onClick={() => onEdit && onEdit(role)}
-                        sx={{
-                          color: theme.palette.primary.main,
-                          bgcolor: alpha(theme.palette.primary.main, 0.08),
-                          "&:hover": {
-                            bgcolor: alpha(theme.palette.primary.main, 0.15),
-                          },
-                        }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Eliminar rol" arrow>
-                      <IconButton
-                        size="small"
-                        onClick={() => onDelete && onDelete(role._id)}
-                        sx={{
-                          color: theme.palette.error.main,
-                          bgcolor: alpha(theme.palette.error.main, 0.08),
-                          "&:hover": {
-                            bgcolor: alpha(theme.palette.error.main, 0.15),
-                          },
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                    {can("roles:update") && (
+                      <Tooltip title="Editar rol" arrow>
+                        <IconButton
+                          size="small"
+                          onClick={() => onEdit && onEdit(role)}
+                          sx={{
+                            color: theme.palette.primary.main,
+                            bgcolor: alpha(theme.palette.primary.main, 0.08),
+                            "&:hover": {
+                              bgcolor: alpha(theme.palette.primary.main, 0.15),
+                            },
+                          }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                    {can("roles:delete") && (
+                      <Tooltip title="Eliminar rol" arrow>
+                        <IconButton
+                          size="small"
+                          onClick={() => onDelete && onDelete(role._id)}
+                          sx={{
+                            color: theme.palette.error.main,
+                            bgcolor: alpha(theme.palette.error.main, 0.08),
+                            "&:hover": {
+                              bgcolor: alpha(theme.palette.error.main, 0.15),
+                            },
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                   </Stack>
                 </TableCell>
               </TableRow>

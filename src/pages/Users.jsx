@@ -33,8 +33,10 @@ import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
+import { usePermission } from "../utils/permissions";
 
 export default function Users() {
+  const { can } = usePermission();
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
@@ -324,7 +326,7 @@ export default function Users() {
                     Gestión de Usuarios
                   </Typography>
                 </Box>
-                <UserExportButtons users={users} />
+                {can("users:export") && <UserExportButtons users={users} />}
               </Box>
             </Stack>
           ) : (
@@ -366,7 +368,9 @@ export default function Users() {
                 spacing={1}
                 sx={{ width: "100%" }}
               >
-                <FloatingAddButton onClick={handleOpenDialog} />
+                {can("users:create") && (
+                  <FloatingAddButton onClick={handleOpenDialog} />
+                )}
               </Stack>
               <UserSearchBar
                 searchInput={searchInput}
@@ -389,15 +393,17 @@ export default function Users() {
                 />
               </Box>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleOpenDialog}
-                  sx={{ minWidth: 140 }}
-                >
-                  Nuevo
-                </Button>
-                <UserExportButtons users={users} />
+                {can("users:create") && (
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleOpenDialog}
+                    sx={{ minWidth: 140 }}
+                  >
+                    Nuevo
+                  </Button>
+                )}
+                {can("users:export") && <UserExportButtons users={users} />}
               </Stack>
             </Stack>
           )}

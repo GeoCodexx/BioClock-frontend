@@ -46,10 +46,12 @@ import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import JustifyAttendanceDialog from "../components/Attendance/JustifyAttendanceDialog";
 import { ConfirmDeleteJustificationDialog } from "../components/Attendance/ConfirmDeleteJustificationDialog";
 import { useThemeMode } from "../contexts/ThemeContext";
+import { usePermission } from "../utils/permissions";
 //import SearchIcon from "@mui/icons-material/Search";
 //import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 export default function Attendances() {
+  const { can } = usePermission();
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
@@ -633,7 +635,9 @@ export default function Attendances() {
                     </IconButton>
                   </span>
                 </Tooltip>
-                <AttendanceExportButtons attendances={attendances} />
+                {can("attendances:export") && (
+                  <AttendanceExportButtons attendances={attendances} />
+                )}
               </Box>
             </Stack>
           ) : (
@@ -675,7 +679,9 @@ export default function Attendances() {
                 spacing={1}
                 sx={{ width: "100%" }}
               >
-                <FloatingAddButton onClick={handleOpenDialog} />
+                {can("attendances:create") && (
+                  <FloatingAddButton onClick={handleOpenDialog} />
+                )}
               </Stack>
               <AttendanceSearchBar
                 searchInput={searchInput}
@@ -754,15 +760,19 @@ export default function Attendances() {
                   />
                 </Box>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={handleOpenDialog}
-                    sx={{ minWidth: 140 }}
-                  >
-                    Nuevo
-                  </Button>
-                  <AttendanceExportButtons attendances={attendances} />
+                  {can("attendances:create") && (
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={handleOpenDialog}
+                      sx={{ minWidth: 140 }}
+                    >
+                      Nuevo
+                    </Button>
+                  )}
+                  {can("attendances:export") && (
+                    <AttendanceExportButtons attendances={attendances} />
+                  )}
                 </Stack>
               </Stack>
               <Stack spacing={2} sx={{ mt: 2 }}>

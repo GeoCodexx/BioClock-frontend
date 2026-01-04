@@ -33,8 +33,10 @@ import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
+import { usePermission } from "../utils/permissions";
 
 export default function Departments() {
+  const { can } = usePermission();
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
@@ -332,7 +334,9 @@ export default function Departments() {
                     Gestión de Departamentos
                   </Typography>
                 </Box>
-                <DepartmentExportButtons departments={departments} />
+                {can("departments:export") && (
+                  <DepartmentExportButtons departments={departments} />
+                )}
               </Box>
             </Stack>
           ) : (
@@ -374,7 +378,9 @@ export default function Departments() {
                 spacing={1}
                 sx={{ width: "100%" }}
               >
-                <FloatingAddButton onClick={handleOpenDialog} />
+                {can("departments:create") && (
+                  <FloatingAddButton onClick={handleOpenDialog} />
+                )}
               </Stack>
               <DepartmentSearchBar
                 searchInput={searchInput}
@@ -397,15 +403,19 @@ export default function Departments() {
                 />
               </Box>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleOpenDialog}
-                  sx={{ minWidth: 140 }}
-                >
-                  Nuevo
-                </Button>
-                <DepartmentExportButtons departments={departments} />
+                {can("departments:create") && (
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleOpenDialog}
+                    sx={{ minWidth: 140 }}
+                  >
+                    Nuevo
+                  </Button>
+                )}
+                {can("departments:export") && (
+                  <DepartmentExportButtons departments={departments} />
+                )}
               </Stack>
             </Stack>
           )}

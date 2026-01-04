@@ -73,7 +73,7 @@ const menuItems = [
   {
     text: "Mi Asistencia",
     path: "/myattendance",
-    permission: "my-attendace:read",
+    permission: "my-attendance:read",
     icon: <EventNoteIcon />,
   },
   {
@@ -104,12 +104,12 @@ const menuItems = [
   {
     text: "Reportes",
     icon: <AssessmentIcon />,
-    permission: ["deily-report:read", "general-report:read"],
+    permission: ["daily-report:read", "general-report:read"],
     children: [
       {
         text: "Asistencia del día",
         path: "/reports/daily",
-        permission: "deily-report:read",
+        permission: "daily-report:read",
         icon: <ChevronRightIcon />,
       },
       {

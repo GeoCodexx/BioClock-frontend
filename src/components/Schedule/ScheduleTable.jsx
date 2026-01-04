@@ -34,8 +34,10 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import { usePermission } from "../../utils/permissions";
 
 const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
+  const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("index");
@@ -758,36 +760,40 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                 <Box
                   sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}
                 >
-                  <Tooltip title="Editar horario" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={() => onEdit && onEdit(schedule)}
-                      sx={{
-                        color: theme.palette.primary.main,
-                        bgcolor: alpha(theme.palette.primary.main, 0.08),
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.primary.main, 0.15),
-                        },
-                      }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Eliminar horario" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={() => onDelete && onDelete(schedule._id)}
-                      sx={{
-                        color: theme.palette.error.main,
-                        bgcolor: alpha(theme.palette.error.main, 0.08),
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.error.main, 0.15),
-                        },
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                  {can("schedules:update") && (
+                    <Tooltip title="Editar horario" arrow>
+                      <IconButton
+                        size="small"
+                        onClick={() => onEdit && onEdit(schedule)}
+                        sx={{
+                          color: theme.palette.primary.main,
+                          bgcolor: alpha(theme.palette.primary.main, 0.08),
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.primary.main, 0.15),
+                          },
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {can("schedules:delete") && (
+                    <Tooltip title="Eliminar horario" arrow>
+                      <IconButton
+                        size="small"
+                        onClick={() => onDelete && onDelete(schedule._id)}
+                        sx={{
+                          color: theme.palette.error.main,
+                          bgcolor: alpha(theme.palette.error.main, 0.08),
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.error.main, 0.15),
+                          },
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </Box>
               </TableCell>
             </TableRow>

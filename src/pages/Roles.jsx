@@ -33,8 +33,10 @@ import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
+import { usePermission } from "../utils/permissions";
 
 export default function Roles() {
+  const { can } = usePermission();
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
@@ -259,11 +261,7 @@ export default function Roles() {
   // Memorizar tabla
   const roleTableMemo = useMemo(
     () => (
-      <RoleTable
-        roles={roles}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      <RoleTable roles={roles} onEdit={handleEdit} onDelete={handleDelete} />
     ),
     [roles, handleEdit, handleDelete]
   );
@@ -328,7 +326,7 @@ export default function Roles() {
                     Gestión de Roles
                   </Typography>
                 </Box>
-                <RoleExportButtons roles={roles} />
+                {can("roles:export") && <RoleExportButtons roles={roles} />}
               </Box>
             </Stack>
           ) : (
@@ -370,7 +368,9 @@ export default function Roles() {
                 spacing={1}
                 sx={{ width: "100%" }}
               >
-                <FloatingAddButton onClick={handleOpenDialog} />
+                {can("roles:create") && (
+                  <FloatingAddButton onClick={handleOpenDialog} />
+                )}
               </Stack>
               <RoleSearchBar
                 searchInput={searchInput}
@@ -393,15 +393,17 @@ export default function Roles() {
                 />
               </Box>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleOpenDialog}
-                  sx={{ minWidth: 140 }}
-                >
-                  Nuevo
-                </Button>
-                <RoleExportButtons roles={roles} />
+                {can("roles:create") && (
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleOpenDialog}
+                    sx={{ minWidth: 140 }}
+                  >
+                    Nuevo
+                  </Button>
+                )}
+                {can("roles:export") && <RoleExportButtons roles={roles} />}
               </Stack>
             </Stack>
           )}

@@ -33,8 +33,10 @@ import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
+import { usePermission } from "../utils/permissions";
 
 export default function Permissions() {
+  const { can } = usePermission();
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
@@ -336,7 +338,9 @@ export default function Permissions() {
                     Gestión de Permisos
                   </Typography>
                 </Box>
-                <PermissionExportButtons permissions={permissions} />
+                {can("permissions:export") && (
+                  <PermissionExportButtons permissions={permissions} />
+                )}
               </Box>
             </Stack>
           ) : (
@@ -378,7 +382,9 @@ export default function Permissions() {
                 spacing={1}
                 sx={{ width: "100%" }}
               >
-                <FloatingAddButton onClick={handleOpenDialog} />
+                {can("permissions:create") && (
+                  <FloatingAddButton onClick={handleOpenDialog} />
+                )}
               </Stack>
               <PermissionSearchBar
                 searchInput={searchInput}
@@ -401,15 +407,19 @@ export default function Permissions() {
                 />
               </Box>
               <Stack direction="row" spacing={1} alignItems="center">
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={handleOpenDialog}
-                  sx={{ minWidth: 140 }}
-                >
-                  Nuevo
-                </Button>
-                <PermissionExportButtons permissions={permissions} />
+                {can("permissions:create") && (
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={handleOpenDialog}
+                    sx={{ minWidth: 140 }}
+                  >
+                    Nuevo
+                  </Button>
+                )}
+                {can("permissions:export") && (
+                  <PermissionExportButtons permissions={permissions} />
+                )}
               </Stack>
             </Stack>
           )}

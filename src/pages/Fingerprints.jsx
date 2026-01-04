@@ -33,8 +33,10 @@ import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
+import { usePermission } from "../utils/permissions";
 
 export default function Fingerprints() {
+  const { can } = usePermission();
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
@@ -419,7 +421,9 @@ export default function Fingerprints() {
                     </IconButton>
                   </span>
                 </Tooltip>
-                <FingerprintExportButtons fingerprints={fingerprints} />
+                {can("fingerprints:export") && (
+                  <FingerprintExportButtons fingerprints={fingerprints} />
+                )}
               </Box>
             </Stack>
           ) : (
@@ -485,7 +489,9 @@ export default function Fingerprints() {
                   value={pagination.status}
                   onChange={handleStatusFilterChange}
                 />
-                <FingerprintExportButtons fingerprints={fingerprints} />
+                {can("fingerprints:export") && (
+                  <FingerprintExportButtons fingerprints={fingerprints} />
+                )}
               </Stack>
             </Stack>
           )}
