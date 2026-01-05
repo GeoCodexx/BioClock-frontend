@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import "./App.css";
 import MainLayout from "./layout/MainLayout";
 import Login from "./pages/Login";
 import Users from "./pages/Users";
@@ -30,7 +31,6 @@ function AuthRoute({ children }) {
 
 function PermissionRoute({ permission, children }) {
   const { permissions } = useAuthStore();
-  console.log(permissions, permission);
   if (permission && !permissions.includes(permission)) {
     return <Navigate to="/403" replace />;
   }

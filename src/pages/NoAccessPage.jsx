@@ -42,9 +42,9 @@ export default function NoAccessPage() {
       alignItems="center"
       justifyContent="center"
       px={2}
-    //   sx={{
-    //     background: "linear-gradient(135deg, #e3f2fd, #ffffff, #ede7f6)",
-    //   }}
+      //   sx={{
+      //     background: "linear-gradient(135deg, #e3f2fd, #ffffff, #ede7f6)",
+      //   }}
     >
       <Box maxWidth={700} width="100%">
         <Card
@@ -147,19 +147,19 @@ export default function NoAccessPage() {
               spacing={2}
               justifyContent="center"
             >
-              <Button
+              {/* <Button
                 variant="outlined"
                 color="inherit"
                 startIcon={<ArrowBackOutlined />}
                 onClick={() => navigate(-1)}
               >
                 Volver
-              </Button>
+              </Button> */}
 
               <Button
                 variant="contained"
                 startIcon={<HomeOutlined />}
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/", { replace: true })}
               >
                 Ir al Inicio
               </Button>

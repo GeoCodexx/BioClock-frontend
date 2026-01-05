@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Avatar,
   Button,
@@ -24,11 +24,12 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import SecurityIcon from "@mui/icons-material/Security";
 import useAuthStore from "../store/useAuthStore";
-import { useLocation } from "react-router-dom";
+import { /*replace, useLocation,*/ useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const location = useLocation();
-  const message = location.state?.message;
+  const navigate = useNavigate();
+  /*const location = useLocation();
+  const message = location.state?.message;*/
   const theme = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,13 +38,16 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const login = useAuthStore((state) => state.login);
 
+  const logoutMessage = useAuthStore((s) => s.logoutMessage);
+  const clearLogoutMessage = useAuthStore((s) => s.clearLogoutMessage);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
       await login(email, password);
-      window.location.href = "/";
+      navigate("/", { replace: true });
     } catch (err) {
       setError(
         err.response?.data?.message || err.message || "Error de autenticación"
@@ -214,17 +218,13 @@ export default function Login() {
               >
                 Ingrese sus credenciales para acceder al sistema
               </Typography>
-              {message && (
+              {logoutMessage && (
                 <Alert
                   severity="info"
-                  sx={{
-                    mt: 2,
-                    //borderRadius: 2,
-                    //backgroundColor: alpha(theme.palette.error.main, 0.1),
-                    //border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
-                  }}
+                  sx={{ mt: 2 }}
+                  onClose={clearLogoutMessage} // opcional
                 >
-                  {message}
+                  {logoutMessage}
                 </Alert>
               )}
 

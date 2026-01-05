@@ -22,11 +22,17 @@ const commonComponents = {
       },
     },
   },
+  MuiDialog: {
+    defaultProps: {
+      // Mantén el scroll lock para mejor UX
+      disableScrollLock: false,
+    },
+  },
 };
 
 export const lightTheme = createTheme({
   palette: {
-    mode: 'light',
+    mode: "light",
     ...lightColors,
   },
   typography,
@@ -35,7 +41,7 @@ export const lightTheme = createTheme({
 
 export const darkTheme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: "dark",
     ...darkColors,
   },
   typography,

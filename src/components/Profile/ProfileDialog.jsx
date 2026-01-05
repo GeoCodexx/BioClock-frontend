@@ -120,14 +120,11 @@ export default function ProfileDialog({ open, onClose, user }) {
 
       // Si el backend indica que debe cerrar sesión
       if (response.forceLogout) {
-        logout();
-        navigate("/login", {
-          state: {
-            message:
-              response.message ||
-              "Contraseña actualizada. Inicia sesión nuevamente.",
-          },
-        });
+        logout(
+          response.message ||
+            "Contraseña actualizada. Inicia sesión nuevamente."
+        );
+        navigate("/login", { replace: true });
       }
     } catch (error) {
       // Verificar si es un error del cliente (4xx)

@@ -21,6 +21,7 @@ const useAuthStore = create((set) => {
     user: storedUser,
     permissions: storedUser?.permissions || [],
     isAuthenticated: !!localStorage.getItem("token"),
+    logoutMessage: null,
 
     login: async (email, password) => {
       const data = await loginApi(email, password);
@@ -29,15 +30,22 @@ const useAuthStore = create((set) => {
         user: data?.user || null,
         permissions: data?.user?.permissions || [],
         isAuthenticated: true,
+        logoutMessage: null,
       });
     },
 
-    logout: () => {
+    logout: (message) => {
       logoutApi();
       /*localStorage.removeItem("user");
       localStorage.removeItem("token");*/
-      set({ user: null, permissions: [], isAuthenticated: false });
+      set({
+        user: null,
+        permissions: [],
+        isAuthenticated: false,
+        logoutMessage: message,
+      });
     },
+    clearLogoutMessage: () => set({ logoutMessage: null }),
   };
 });
 
