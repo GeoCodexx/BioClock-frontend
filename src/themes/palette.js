@@ -1,5 +1,3 @@
-// themes/palette.js
-
 export const lightColors = {
   primary: {
     light: "#E3F2FD",

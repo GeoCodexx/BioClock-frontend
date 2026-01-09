@@ -1,4 +1,3 @@
-// themes/index.js
 import { createTheme } from "@mui/material/styles";
 import { lightColors, darkColors } from "./palette";
 import typography from "./typography";

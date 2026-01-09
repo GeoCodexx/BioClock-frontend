@@ -1,5 +1,5 @@
 import { useForm, Controller } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   TextField,
@@ -7,10 +7,16 @@ import {
   Chip,
   Typography,
   Alert,
-  MenuItem,
   Stack,
   CircularProgress,
+  Checkbox,
+  ListSubheader,
+  Divider,
+  FormGroup,
+  FormControlLabel,
+  Paper,
 } from "@mui/material";
+import CheckIcon from "@mui/icons-material/Check";
 import { getPermissions } from "../../services/permissionService";
 
 const RoleForm = ({
@@ -23,16 +29,41 @@ const RoleForm = ({
   const [loadingPermissions, setLoadingPermissions] = useState(true);
   const [permissionsError, setPermissionsError] = useState(null);
 
-  // Normalizar permisos: si vienen como objetos, extraer solo los IDs
+  // Mapeo de módulos a nombres legibles
+  const moduleNames = {
+    attendances: "Asistencias",
+    departments: "Departamentos",
+    devices: "Dispositivos",
+    fingerprints: "Huellas Dactilares",
+    schedules: "Horarios",
+    "my-attendance": "Mi Asistencia",
+    dashboard: "Panel Estadístico",
+    permissions: "Permisos",
+    "daily-report": "Reporte Diario",
+    "general-report": "Reporte General",
+    roles: "Roles",
+    users: "Usuarios",
+  };
+
+  // Mapeo de acciones a nombres legibles
+  const actionNames = {
+    create: "Crear",
+    read: "Leer",
+    update: "Actualizar",
+    delete: "Eliminar",
+    export: "Exportar",
+    justify: "Justificar",
+    unjustify: "Desjustificar",
+    approve: "Aprobar",
+    reject: "Rechazar",
+  };
+
+  // Normalizar permisos
   const normalizePermissions = (permissions) => {
     if (!permissions || permissions.length === 0) return [];
-
-    // Si el primer elemento es un objeto con _id, extraer los IDs
     if (typeof permissions[0] === "object" && permissions[0]._id) {
       return permissions.map((p) => p._id);
     }
-
-    // Si ya son strings (IDs), retornarlos tal cual
     return permissions;
   };
 
@@ -41,13 +72,36 @@ const RoleForm = ({
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm({
+    mode: "onSubmit", // AGREGAR ESTO: valida solo al enviar
     defaultValues: {
       name: defaultValues.name || "",
       description: defaultValues.description || "",
       permissions: normalizePermissions(defaultValues.permissions),
     },
   });
+
+  // Agrupar permisos por módulo
+  const groupedPermissions = useMemo(() => {
+    return permissions.reduce((acc, permission) => {
+      const [module] = permission.code.split(":");
+      if (!acc[module]) {
+        acc[module] = [];
+      }
+      acc[module].push(permission);
+      return acc;
+    }, {});
+  }, [permissions]);
+
+  // Ordenar módulos alfabéticamente
+  const sortedModules = useMemo(() => {
+    return Object.keys(groupedPermissions).sort((a, b) => {
+      const nameA = moduleNames[a] || a;
+      const nameB = moduleNames[b] || b;
+      return nameA.localeCompare(nameB);
+    });
+  }, [groupedPermissions]);
 
   // Obtener permisos de la API
   useEffect(() => {
@@ -68,17 +122,80 @@ const RoleForm = ({
     if (getPermissions) {
       fetchPermissions();
     }
-  }, [getPermissions]);
+  }, []);
 
-  // Detectar cambios en el formulario
+  // Detectar cambios en el formulario con debounce
   useEffect(() => {
+    let timeoutId;
     const subscription = watch(() => {
       if (onChange) {
-        onChange();
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          onChange();
+        }, 300);
       }
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, [watch, onChange]);
+
+  // Obtener nombre legible del permiso
+  const getPermissionLabel = (permission) => {
+    // Usar el nombre directamente si ya viene legible
+    /* if (permission.name && !permission.name.includes(":")) {
+      return permission.name.replace(
+        /^(Crear|Leer|Actualizar|Eliminar|Exportar|Justificar|Desjustificar|Aprobar|Rechazar)\s+/i,
+        ""
+      );
+    }*/
+    // Si no, extraer del code
+    const [module, action] = permission.code.split(":");
+    return actionNames[action] || action;
+  };
+
+  // Manejar cambio de checkbox
+  const handlePermissionToggle = useCallback(
+    (permissionId, currentValue) => {
+      const newValue = currentValue.includes(permissionId)
+        ? currentValue.filter((id) => id !== permissionId)
+        : [...currentValue, permissionId];
+      setValue("permissions", newValue, { shouldValidate: false });
+    },
+    [setValue]
+  );
+
+  // Verificar si todos los permisos de un módulo están seleccionados
+  const isModuleFullySelected = (module, selectedPermissions) => {
+    const modulePerms = groupedPermissions[module] || [];
+    return modulePerms.every((p) => selectedPermissions.includes(p._id));
+  };
+
+  // Verificar si algunos permisos de un módulo están seleccionados
+  const isModulePartiallySelected = (module, selectedPermissions) => {
+    const modulePerms = groupedPermissions[module] || [];
+    const selectedCount = modulePerms.filter((p) =>
+      selectedPermissions.includes(p._id)
+    ).length;
+    return selectedCount > 0 && selectedCount < modulePerms.length;
+  };
+
+  // Seleccionar/deseleccionar todos los permisos de un módulo
+  const handleModuleToggle = useCallback(
+    (module, currentValue) => {
+      const modulePerms = groupedPermissions[module] || [];
+      const modulePermIds = modulePerms.map((p) => p._id);
+      const isFullySelected = isModuleFullySelected(module, currentValue);
+
+      const newValue = isFullySelected
+        ? currentValue.filter((id) => !modulePermIds.includes(id))
+        : [...new Set([...currentValue, ...modulePermIds])];
+
+      setValue("permissions", newValue, { shouldValidate: false });
+    },
+    [setValue, groupedPermissions]
+  );
 
   return (
     <Box
@@ -89,7 +206,7 @@ const RoleForm = ({
     >
       <Grid container spacing={3}>
         {/* Nombre del Rol */}
-        <Grid size={{ xs: 12 /*, md: 6*/ }}>
+        <Grid size={{ xs: 12 }}>
           <Controller
             name="name"
             control={control}
@@ -121,7 +238,7 @@ const RoleForm = ({
         </Grid>
 
         {/* Descripción */}
-        <Grid size={{ xs: 12 /*, md: 6*/ }}>
+        <Grid size={{ xs: 12 }}>
           <Controller
             name="description"
             control={control}
@@ -172,78 +289,139 @@ const RoleForm = ({
                 "Debe seleccionar al menos un permiso",
             }}
             render={({ field }) => (
-              <TextField
-                {...field}
-                select
-                label="Permisos"
-                fullWidth
-                size="small"
-                required
-                disabled={disabled || loadingPermissions}
-                error={!!errors.permissions}
-                helperText={
-                  errors.permissions?.message ||
-                  "Seleccione uno o más permisos para este rol"
-                }
-                slotProps={{
-                  select: {
-                    //size: "small",
-                    multiple: true,
-                    renderValue: (selected) => (
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {selected.length === 0 ? (
-                          <Typography variant="body2" color="text.secondary">
-                            Ningún permiso seleccionado
+              <Box>
+                <Typography
+                  variant="body2"
+                  color={errors.permissions ? "error" : "text.secondary"}
+                  sx={{ mb: 1 }}
+                >
+                  Permisos *
+                </Typography>
+
+                {loadingPermissions ? (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      p: 3,
+                    }}
+                  >
+                    <CircularProgress size={24} />
+                    <Typography variant="body2" sx={{ ml: 2 }}>
+                      Cargando permisos...
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      maxHeight: 400,
+                      overflowY: "auto",
+                      p: 2,
+                      backgroundColor: disabled
+                        ? "action.disabledBackground"
+                        : "background.paper",
+                    }}
+                  >
+                    {sortedModules.map((module, index) => (
+                      <Box key={module}>
+                        {/* Encabezado del módulo con checkbox para seleccionar todos */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            mb: 1,
+                            backgroundColor: "action.hover",
+                            p: 1,
+                            borderRadius: 1,
+                          }}
+                        >
+                          <Checkbox
+                            checked={isModuleFullySelected(module, field.value)}
+                            indeterminate={isModulePartiallySelected(
+                              module,
+                              field.value
+                            )}
+                            onChange={() =>
+                              handleModuleToggle(module, field.value)
+                            }
+                            disabled={disabled}
+                            checkedIcon={<CheckIcon />}
+                            size="small"
+                            sx={{ p: 0, mr: 1 }}
+                          />
+                          <Typography
+                            variant="subtitle2"
+                            fontWeight={600}
+                            color="primary"
+                          >
+                            {moduleNames[module] || module}
                           </Typography>
-                        ) : (
-                          selected.map((id) => {
-                            const permission = permissions.find(
-                              (p) => p._id === id
-                            );
-                            return (
-                              <Chip
-                                key={id}
-                                label={permission?.name || id}
-                                size="small"
-                                color="primary"
-                                variant="outlined"
-                              />
-                            );
-                          })
+                        </Box>
+
+                        {/* Acciones del módulo */}
+                        <FormGroup sx={{ pl: 4, mb: 2 }}>
+                          {groupedPermissions[module].map((permission) => (
+                            <FormControlLabel
+                              key={permission._id}
+                              control={
+                                <Checkbox
+                                  checked={field.value?.includes(
+                                    permission._id
+                                  )}
+                                  onChange={() =>
+                                    handlePermissionToggle(
+                                      permission._id,
+                                      field.value
+                                    )
+                                  }
+                                  disabled={disabled}
+                                  checkedIcon={<CheckIcon />}
+                                  size="small"
+                                />
+                              }
+                              label={
+                                <Stack spacing={0}>
+                                  <Typography variant="body2">
+                                    {getPermissionLabel(permission)}
+                                  </Typography>
+                                  {permission.description && (
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                    >
+                                      {permission.description}
+                                    </Typography>
+                                  )}
+                                </Stack>
+                              }
+                            />
+                          ))}
+                        </FormGroup>
+
+                        {/* Divider entre módulos */}
+                        {index < sortedModules.length - 1 && (
+                          <Divider sx={{ my: 2 }} />
                         )}
                       </Box>
-                    ),
-                  },
-                  input: {
-                    startAdornment: loadingPermissions ? (
-                      <CircularProgress size={20} sx={{ mr: 1 }} />
-                    ) : null,
-                  },
-                }}
-              >
-                {permissions.length === 0 && !loadingPermissions ? (
-                  <MenuItem disabled>
-                    <Typography variant="body2" color="text.secondary">
-                      No hay permisos disponibles
-                    </Typography>
-                  </MenuItem>
-                ) : (
-                  permissions.map((permission) => (
-                    <MenuItem key={permission._id} value={permission._id}>
-                      <Stack spacing={0.5}>
-                        <Typography variant="body2" fontWeight="medium">
-                          {permission.name}
-                        </Typography>
-                        {permission.description && (
-                          <Typography variant="caption" color="text.secondary">
-                            {permission.description}
-                          </Typography>
-                        )}
-                      </Stack>
-                    </MenuItem>
-                  ))
+                    ))}
+                  </Paper>
                 )}
-              </TextField>
+
+                {/* Contador y mensaje de error */}
+                <Box sx={{ mt: 1 }}>
+                  {errors.permissions ? (
+                    <Typography variant="caption" color="error">
+                      {errors.permissions.message}
+                    </Typography>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">
+                      {field.value?.length || 0} permiso(s) seleccionado(s)
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
             )}
           />
         </Grid>

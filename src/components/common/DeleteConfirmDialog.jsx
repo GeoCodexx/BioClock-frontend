@@ -10,6 +10,7 @@ import {
   Box,
   useTheme,
   Fade,
+  useMediaQuery,
 } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -22,6 +23,7 @@ const DeleteConfirmDialog = ({
   itemName = "horario",
 }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
     <Dialog
@@ -65,7 +67,11 @@ const DeleteConfirmDialog = ({
             {deleteError}
           </Alert>
         )}
-        <Typography align="center" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+        <Typography
+          align="center"
+          color="text.secondary"
+          sx={{ lineHeight: 1.6 }}
+        >
           ¿Estás seguro de eliminar{" "}
           {itemName === "asistencia" ? "esta" : "este"} {itemName}?
           <br />
@@ -73,12 +79,22 @@ const DeleteConfirmDialog = ({
         </Typography>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+      <DialogActions
+        sx={{
+          px: 3,
+          pb: 3,
+          pt: 1,
+          gap: 1,
+          flexDirection: isMobile ? "column-reverse" : "row",
+          justifyContent: "center",
+        }}
+      >
         <Button
           onClick={onClose}
           variant="outlined"
           color="inherit"
-          sx={{ minWidth: 100 }}
+          fullWidth={isMobile}
+          sx={{ minWidth: isMobile ? "auto" : 120 }}
         >
           Cancelar
         </Button>
@@ -87,7 +103,11 @@ const DeleteConfirmDialog = ({
           color="error"
           variant="contained"
           startIcon={<DeleteOutlineIcon />}
-          sx={{ minWidth: 120 }}
+          fullWidth={isMobile}
+          sx={{
+            minWidth: isMobile ? "auto" : 120,
+            ml: isMobile ? "0px !important" : 2,
+          }}
         >
           Eliminar
         </Button>

@@ -180,7 +180,7 @@ export default function Login() {
                   zIndex: 1,
                 }}
               >
-                Sistema Biométrico
+                BioClock Pro
               </Typography>
               <Typography
                 variant="body2"
