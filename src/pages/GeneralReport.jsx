@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, memo } from "react";
 import {
   Box,
   Typography,
+  Button,
   TextField,
   MenuItem,
   FormControl,
@@ -31,9 +32,7 @@ import {
   Search as SearchIcon,
   NavigateNext as NavigateNextIcon,
   FilterList as FilterListIcon,
-  /*Download as DownloadIcon,
-  PictureAsPdf as PictureAsPdfIcon,
-  FileDownload as FileDownloadIcon,*/
+  Clear as ClearIcon,
 } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -199,6 +198,7 @@ const FiltersCard = memo(
     onStatusChange,
     onDateFromChange,
     onDateToChange,
+    onClearFilters,
     totalRecords,
     currentRecords,
     loading,
@@ -336,7 +336,7 @@ const FiltersCard = memo(
           {/* Información de registros y botones de exportación */}
           <Stack
             direction={{ xs: "column", sm: "row" }}
-            justifyContent="space-between"
+            justifyContent={"space-between"}
             alignItems={{ xs: "flex-start", sm: "center" }}
             spacing={2}
             sx={{
@@ -346,7 +346,11 @@ const FiltersCard = memo(
               borderColor: "divider",
             }}
           >
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ display: { xs: "none", sm: "block" } }}
+            >
               {loading ? (
                 <Skeleton width={200} />
               ) : (
@@ -357,11 +361,28 @@ const FiltersCard = memo(
               )}
             </Typography>
             {/* <ExportButtons records={records} date={date} isMobile={isMobile} /> */}
-            <GeneralReportExportButtons
-              records={records}
-              date={date}
-              isMobile={isMobile}
-            />
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1}
+              sx={{ width: { xs: "100%", sm: "auto" } }}
+            >
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ClearIcon />}
+                onClick={onClearFilters}
+                disabled={
+                  !search && !scheduleId && !status && !dateFrom && !dateTo
+                }
+              >
+                Limpiar filtros
+              </Button>
+              <GeneralReportExportButtons
+                records={records}
+                date={date}
+                isMobile={isMobile}
+              />
+            </Stack>
           </Stack>
         </CardContent>
       </Card>
@@ -499,6 +520,15 @@ export default function GeneralReportPage() {
     setSelectedRecord(null);
   }, []);
 
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setScheduleId("");
+    setStatus("");
+    setDateFrom(null);
+    setDateTo(null);
+    setPage(0);
+  }, []);
+
   const hasRecords = data.records.length > 0;
 
   return (
@@ -528,6 +558,7 @@ export default function GeneralReportPage() {
         onStatusChange={handleStatusChange}
         onDateFromChange={handleDateFromChange}
         onDateToChange={handleDateToChange}
+        onClearFilters={handleClearFilters}
         totalRecords={data.pagination.totalRecords}
         currentRecords={data.records.length}
         loading={loading}

@@ -49,7 +49,7 @@ const STATUS_CONFIG = {
     icon: AccessTime,
   },
   early_exit: {
-    label: "Salida temprana",
+    label: "Salida anticipada",
     color: "warning",
     icon: AccessTime,
   },
@@ -97,7 +97,7 @@ const STATUS_CONFIG = {
 const TIME_STATUS_LABELS = {
   late: "Tarde",
   early: "Entrada temprana",
-  early_exit: "Salida temprana",
+  early_exit: "Salida anticipada",
   on_time: "A tiempo",
   absent: "Ausente",
 };
@@ -111,7 +111,7 @@ const StatusChip = memo(({ status, size = "small" }) => {
     icon: ErrorOutline,
   };
 
-  const Icon = config.icon;
+  //const Icon = config.icon;
   const colorValue =
     theme.palette[config.color]?.main || theme.palette.grey[500];
 
@@ -150,12 +150,12 @@ const TimeDisplay = memo(({ timestamp, showStatus, status }) => {
       color: theme.palette.warning.main,
     },
     early: {
-      backgroundColor: alpha(theme.palette.secondary.main, 0.15),
-      color: theme.palette.secondary.main,
-    },
-    early_exit: {
       backgroundColor: alpha(theme.palette.info.main, 0.15),
       color: theme.palette.info.main,
+    },
+    early_exit: {
+      backgroundColor: alpha(theme.palette.warning.main, 0.15),
+      color: theme.palette.warning.main,
     },
     absent: {
       backgroundColor: alpha(theme.palette.error.main, 0.15),

@@ -493,21 +493,24 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
               </TableCell>
 
               {/* Ubicación */}
-              <TableCell align="center">
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                  }}
-                >
-                  {department.location || "Sin ubicación"}
-                </Typography>
-              </TableCell>
+              <TableCell>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <PlaceIcon
+                sx={{ fontSize: 18, color: theme.palette.text.secondary }}
+              />
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {department.location || "Sin ubicación"}
+              </Typography>
+            </Box>
+          </TableCell>
 
               {/* Estado */}
               <TableCell align="center">

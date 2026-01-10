@@ -49,8 +49,8 @@ const STATUS_CONFIG = {
     icon: AccessTime,
   },
   early_exit: {
-    label: "Salida temprana",
-    color: "warning",
+    label: "Salida anticipada",
+    color: "secondary",
     icon: AccessTime,
   },
   incomplete: {
@@ -88,7 +88,8 @@ const StatusChip = memo(({ status, size = "small" }) => {
   };
 
   const Icon = config.icon;
-  const colorValue = theme.palette[config.color]?.main || theme.palette.grey[500];
+  const colorValue =
+    theme.palette[config.color]?.main || theme.palette.grey[500];
 
   return (
     <Chip
@@ -136,7 +137,7 @@ const TimeDisplay = memo(({ timestamp, showStatus, status }) => {
         <Chip
           label={statusLabel}
           size="small"
-          color={status === "late" || status === "early_leave" ? "warning" : "success"}
+          color={status === "late" ? "warning" : "success"}
           sx={{
             height: 20,
             fontSize: "0.688rem",
@@ -155,7 +156,9 @@ TimeDisplay.displayName = "TimeDisplay";
 const UserCell = memo(({ user, compact = false }) => {
   const fullName = useMemo(() => {
     if (!user) return "—";
-    return `${user.name || ""} ${user.firstSurname || ""} ${user.secondSurname || ""}`.trim();
+    return `${user.name || ""} ${user.firstSurname || ""} ${
+      user.secondSurname || ""
+    }`.trim();
   }, [user]);
 
   const initials = useMemo(() => {
@@ -184,18 +187,18 @@ const UserCell = memo(({ user, compact = false }) => {
         {initials}
       </Avatar>
       <Box>
-        <Typography 
-          variant="body2" 
+        <Typography
+          variant="body2"
           fontWeight={600}
-          sx={{ 
+          sx={{
             fontSize: compact ? "0.813rem" : "0.875rem",
             lineHeight: compact ? 1.3 : 1.5,
           }}
         >
           {fullName}
         </Typography>
-        <Typography 
-          variant="caption" 
+        <Typography
+          variant="caption"
           color="text.secondary"
           sx={{ fontSize: compact ? "0.688rem" : "0.75rem" }}
         >
@@ -359,7 +362,9 @@ const DailyReportTable = memo(({ attendances, setSelectedRecord }) => {
     if (!attendances || attendances.length === 0) return [];
     return attendances.map((record, index) => ({
       record,
-      key: `${record.user?._id || index}-${record.schedule?._id || "no-schedule"}-${record.checkIn?.timestamp || index}`,
+      key: `${record.user?._id || index}-${
+        record.schedule?._id || "no-schedule"
+      }-${record.checkIn?.timestamp || index}`,
     }));
   }, [attendances]);
 
@@ -387,7 +392,7 @@ const DailyReportTable = memo(({ attendances, setSelectedRecord }) => {
         elevation={0}
         sx={{
           borderRadius: 2,
-         // border: "1px solid",
+          // border: "1px solid",
           borderColor: "divider",
           overflow: "hidden",
         }}
@@ -405,10 +410,12 @@ const DailyReportTable = memo(({ attendances, setSelectedRecord }) => {
                   <TableCell sx={{ fontWeight: 700 }}>Turno</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Entrada</TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Salida</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Horas Trabajadas</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    Horas Trabajadas
+                  </TableCell>
                 </>
               )}
-              <TableCell 
+              <TableCell
                 sx={{ fontWeight: 700 }}
                 align={isMobile ? "right" : "left"}
               >

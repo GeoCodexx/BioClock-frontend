@@ -15,6 +15,7 @@ import {
   IconButton,
 } from "@mui/material";
 import {
+  deleteFingerprintTemplate,
   getFingerprintTemplates,
   updateFingerprintStatus,
 } from "../services/fingerprintService";
@@ -218,12 +219,11 @@ export default function Fingerprints() {
     });
   }, []);
 
-  // Confirmar eliminación (implementa tu servicio deleteFingerprint si lo tienes)
+  // Confirmar eliminación
   const confirmDelete = useCallback(async () => {
     setDeleteState((prev) => ({ ...prev, error: "" }));
     try {
-      // Aquí deberías llamar a tu servicio de eliminación
-      // await deleteFingerprint(deleteState.id);
+      await deleteFingerprintTemplate(deleteState.id);
       showSuccess("Huella dactilar eliminada correctamente");
       setDeleteState({ id: null, error: "" });
       await refreshFingerprints();

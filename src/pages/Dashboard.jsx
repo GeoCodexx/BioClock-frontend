@@ -8,10 +8,10 @@ import {
   Chip,
   useMediaQuery,
   useTheme,
+  CircularProgress,
 } from "@mui/material";
 import StatisticsCard from "../components/dashboard/StatisticsCard";
 import AttendanceChart from "../components/dashboard/AttendanceChart";
-//import RecentActivity from "../components/dashboard/RecentActivity";
 import DepartmentDistribution from "../components/dashboard/DepartmentDistribution";
 
 // Iconos
@@ -125,8 +125,25 @@ const Dashboard = () => {
     );
   });
 
+  // Estado de carga inicial
   if (loading) {
-    return <div className="loading">Cargando dashboard...</div>;
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+          gap: 2,
+        }}
+      >
+        <CircularProgress size={48} />
+        <Typography variant="body1" color="text.secondary">
+          Cargando...
+        </Typography>
+      </Box>
+    );
   }
 
   if (error) {

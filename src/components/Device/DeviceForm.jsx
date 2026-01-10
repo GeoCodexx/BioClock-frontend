@@ -102,8 +102,8 @@ const DeviceForm = ({
                 fullWidth
                 required
                 disabled={disabled}
-                error={!!errors.name}
-                helperText={errors.name?.message}
+                error={!!errors.macAddress}
+                helperText={errors.macAddress?.message}
                 placeholder="Ej: 11:22:33:44:55:66"
                 slotProps={{
                   input: {

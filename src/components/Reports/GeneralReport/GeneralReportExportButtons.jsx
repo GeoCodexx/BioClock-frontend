@@ -145,7 +145,7 @@ export default function GeneralReportExportButtons({ records, date }) {
         const statusColors = {
           on_time: "FF4CAF50",
           late: "FFFFC107",
-          early:"FF673A87",
+          early: "FF673A87",
           early_exit: "FFFFC107",
           incomplete: "FFF44336",
           absent: "FFF44336",
@@ -192,150 +192,6 @@ export default function GeneralReportExportButtons({ records, date }) {
     }
   };
 
-  // Exportar a PDF
-  // const handleExportPDF = () => {
-  //   setExporting(true);
-  //   try {
-  //     const doc = new jsPDF("landscape", "mm", "a4");
-
-  //     // Después de crear el doc
-  //     /*const imgData = "data:image/png;base64,..."; // Tu logo en base64
-  //   doc.addImage(imgData, "PNG", 250, 10, 30, 15);*/
-
-  //     // Título
-  //     doc.setFontSize(18);
-  //     doc.setTextColor(25, 118, 210);
-  //     doc.text("Reporte Diario de Asistencias", 14, 15);
-
-  //     // Fecha
-  //     doc.setFontSize(11);
-  //     doc.setTextColor(100);
-  //     doc.text(
-  //       `Fecha: ${
-  //         date
-  //           ? format(new Date(date), "d 'de' MMMM 'de' yyyy", { locale: es })
-  //           : "—"
-  //       }`,
-  //       14,
-  //       22
-  //     );
-  //     doc.text(`Total de registros: ${records.length}`, 14, 28);
-
-  //     // Tabla
-  //     doc.autoTable({
-  //       startY: 35,
-  //       head: [
-  //         [
-  //           "DNI",
-  //           "Colaborador",
-  //           "Turno",
-  //           "Entrada",
-  //           "Salida",
-  //           "Horas",
-  //           "Estado",
-  //         ],
-  //       ],
-  //       body: records.map((record) => [
-  //         record.user?.dni || "—",
-  //         record.user
-  //           ? `${record.user.name || ""} ${
-  //               record.user.firstSurname || ""
-  //             }`.trim()
-  //           : "—",
-  //         record.schedule?.name || "Sin turno",
-  //         record.checkIn?.timestamp
-  //           ? format(new Date(record.checkIn.timestamp), "HH:mm", {
-  //               locale: es,
-  //             })
-  //           : "—",
-  //         record.checkOut?.timestamp
-  //           ? format(new Date(record.checkOut.timestamp), "HH:mm", {
-  //               locale: es,
-  //             })
-  //           : "—",
-  //         record.hoursWorked || "—",
-  //         STATUS_LABELS[record.shiftStatus] || "—",
-  //       ]),
-  //       styles: {
-  //         fontSize: 9,
-  //         cellPadding: 3,
-  //       },
-  //       headStyles: {
-  //         fillColor: [25, 118, 210],
-  //         textColor: [255, 255, 255],
-  //         fontStyle: "bold",
-  //         halign: "center",
-  //       },
-  //       bodyStyles: {
-  //         textColor: [50, 50, 50],
-  //       },
-  //       alternateRowStyles: {
-  //         fillColor: [245, 245, 245],
-  //       },
-  //       columnStyles: {
-  //         0: { cellWidth: 25 }, // DNI
-  //         1: { cellWidth: 50 }, // Colaborador
-  //         2: { cellWidth: 40 }, // Turno
-  //         3: { cellWidth: 25 }, // Entrada
-  //         4: { cellWidth: 25 }, // Salida
-  //         5: { cellWidth: 25 }, // Horas
-  //         6: { cellWidth: 45 }, // Estado
-  //       },
-  //       didParseCell: function (data) {
-  //         // Colorear celdas de estado
-  //         if (data.column.index === 6 && data.section === "body") {
-  //           const record = records[data.row.index];
-  //           const statusColors = {
-  //             complete: [76, 175, 80],
-  //             late: [255, 193, 7],
-  //             early_leave: [255, 193, 7],
-  //             late_and_early_leave: [255, 87, 34],
-  //             incomplete_no_entry: [244, 67, 54],
-  //             incomplete_no_exit: [244, 67, 54],
-  //             absent: [244, 67, 54],
-  //             justified: [33, 150, 243],
-  //           };
-
-  //           if (statusColors[record.shiftStatus]) {
-  //             data.cell.styles.fillColor = statusColors[record.shiftStatus];
-  //             data.cell.styles.textColor = [255, 255, 255];
-  //             data.cell.styles.fontStyle = "bold";
-  //           }
-  //         }
-  //       },
-  //       margin: { top: 35 },
-  //     });
-
-  //     // Pie de página
-  //     const pageCount = doc.internal.getNumberOfPages();
-  //     for (let i = 1; i <= pageCount; i++) {
-  //       doc.setPage(i);
-  //       doc.setFontSize(8);
-  //       doc.setTextColor(150);
-  //       doc.text(
-  //         `Página ${i} de ${pageCount}`,
-  //         doc.internal.pageSize.width / 2,
-  //         doc.internal.pageSize.height - 10,
-  //         { align: "center" }
-  //       );
-  //       doc.text(
-  //         `Generado el ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
-  //         14,
-  //         doc.internal.pageSize.height - 10
-  //       );
-  //     }
-
-  //     // Guardar PDF
-  //     const fileName = `Reporte_Diario_${
-  //       date || format(new Date(), "yyyy-MM-dd")
-  //     }.pdf`;
-  //     doc.save(fileName);
-  //   } catch (error) {
-  //     console.error("Error exporting to PDF:", error);
-  //   } finally {
-  //     setExporting(false);
-  //   }
-  // };
   const handleExportPDF = () => {
     setExporting(true);
     try {
@@ -527,7 +383,7 @@ export default function GeneralReportExportButtons({ records, date }) {
   const isDisabled = !records || records.length === 0;
 
   return (
-    <Stack direction="row" spacing={1.5}>
+    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
       <Tooltip
         title={
           isDisabled
@@ -542,6 +398,7 @@ export default function GeneralReportExportButtons({ records, date }) {
             color="success"
             startIcon={<DescriptionIcon />}
             onClick={handleExportExcel}
+            fullWidth={isMobile}
             disabled={isDisabled}
             sx={{
               minWidth: isMobile ? 125 : 140,
@@ -573,6 +430,7 @@ export default function GeneralReportExportButtons({ records, date }) {
             color="error"
             startIcon={<PictureAsPdfIcon />}
             onClick={handleExportPDF}
+            fullWidth={isMobile}
             disabled={isDisabled}
             sx={{
               minWidth: 140,

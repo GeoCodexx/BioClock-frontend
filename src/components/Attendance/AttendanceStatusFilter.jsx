@@ -5,10 +5,11 @@ import { SafeSelect } from "../common/SafeSelect";
 const AttendanceStatusFilter = memo(({ status, onStatusChange }) => {
   const statusOptions = [
     //{ value: "", label: "Todos los estados" },
-    { value: "present", label: "Presente" },
+    { value: "present", label: "A tiempo" },
     { value: "absent", label: "Ausente" },
-    { value: "late", label: "Tarde" },
+    { value: "late", label: "Tardanza" },
     { values: "early", label: "Temprano" },
+    { values: "early_exit", label: "Salida anticipada" },
     { value: "justified", label: "Justificado" },
   ];
 

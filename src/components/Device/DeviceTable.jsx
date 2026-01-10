@@ -503,7 +503,7 @@ const DesktopDeviceRow = memo(
               <PersonIcon
                 sx={{ fontSize: 18, color: theme.palette.text.secondary }}
               />
-              <Typography variant="body2" fontWeight={500}>
+              <Typography variant="body2">
                 {getFullName(device.registeredBy)}
               </Typography>
             </Box>

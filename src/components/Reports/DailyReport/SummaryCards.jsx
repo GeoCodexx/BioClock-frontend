@@ -61,7 +61,7 @@ const SUMMARY_CONFIG = [
   },
   {
     id: "early_exit",
-    label: "Salida Temprana",
+    label: "Salida anticipada",
     icon: ExitToAppIcon,
     color: "secondary",
     getValue: (records) =>

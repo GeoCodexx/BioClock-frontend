@@ -715,7 +715,7 @@ const FingerprintTable = ({
 
                 {/* Dedo */}
                 <TableCell align="center">
-                  <Typography variant="body2" fontWeight={500}>
+                  <Typography variant="body2">
                     {formatters.finger(fingerprint.finger)}
                   </Typography>
                 </TableCell>
@@ -729,7 +729,7 @@ const FingerprintTable = ({
 
                 {/* Fecha */}
                 <TableCell align="center">
-                  <Typography variant="body2" fontWeight={500}>
+                  <Typography variant="body2">
                     {formatters.date(fingerprint.createdAt)}
                   </Typography>
                 </TableCell>

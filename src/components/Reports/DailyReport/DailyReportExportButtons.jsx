@@ -173,7 +173,7 @@ export default function DailyReportExportButtons({ records, date }) {
       const doc = new jsPDF("landscape", "mm", "a4");
 
       // Después de crear el doc
-      /*const imgData = "data:image/png;base64,..."; // Tu logo en base64
+      /*const imgData = "data:image/png;base64,..."; // logo en base64
     doc.addImage(imgData, "PNG", 250, 10, 30, 15);*/
 
       // Título
@@ -311,32 +311,15 @@ export default function DailyReportExportButtons({ records, date }) {
     }*/
   };
 
-  // return (
-  //   <Stack direction="row" spacing={2}>
-  //     <Button
-  //       variant="outlined"
-  //       startIcon={<DownloadIcon />}
-  //       onClick={handleExportExcel}
-  //       disabled={!records || records.length === 0}
-  //     >
-  //       {exporting ? "Exportando..." : "Exportar Excel"}
-  //     </Button>
-  //     <Button
-  //       variant="outlined"
-  //       color="error"
-  //       startIcon={<PictureAsPdfIcon />}
-  //       onClick={handleExportPDF}
-  //       disabled={!records || records.length === 0}
-  //     >
-  //       {exporting ? "Exportando..." : "Exportar PDF"}
-  //     </Button>
-  //   </Stack>
-  // );
   // Validar si hay asistencias disponibles
   const isDisabled = !records || records.length === 0;
 
   return (
-    <Stack direction="row" spacing={1.5}>
+    <Stack
+      direction={{ xs: "column", sm: "row" }}
+      spacing={1.5}
+      width={{ xs: "100%", sm: "auto" }}
+    >
       <Tooltip
         title={
           isDisabled
@@ -351,6 +334,7 @@ export default function DailyReportExportButtons({ records, date }) {
             color="success"
             startIcon={<DescriptionIcon />}
             onClick={handleExportExcel}
+            fullWidth={isMobile}
             disabled={isDisabled}
             sx={{
               minWidth: isMobile ? 125 : 140,
@@ -382,6 +366,7 @@ export default function DailyReportExportButtons({ records, date }) {
             color="error"
             startIcon={<PictureAsPdfIcon />}
             onClick={handleExportPDF}
+            fullWidth={isMobile}
             disabled={isDisabled}
             sx={{
               minWidth: 140,
