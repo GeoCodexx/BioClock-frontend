@@ -36,7 +36,7 @@ const collapsedWidth = 80;
 const menuItems = [
   {
     text: "Panel Estadístico",
-    path: "/",
+    path: "/dashboard",
     permission: "dashboard:read",
     icon: <DashboardIcon />,
   },

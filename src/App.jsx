@@ -38,6 +38,24 @@ function PermissionRoute({ permission, children }) {
   return children;
 }
 
+// Componente para redirigir a la ruta de inicio según el rol
+function HomeRedirect() {
+  const { user } = useAuthStore();
+
+  // Roles que tienen acceso al dashboard como página de inicio
+  const dashboardRoles = ["Administrador", "Director", "RRHH"];
+
+  // Verificar si el rol del usuario está en la lista de roles con acceso al dashboard
+  const shouldRedirectToDashboard = dashboardRoles.includes(user?.role);
+
+  return (
+    <Navigate
+      to={shouldRedirectToDashboard ? "/dashboard" : "/myattendance"}
+      replace
+    />
+  );
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -52,8 +70,11 @@ export default function App() {
               </AuthRoute>
             }
           >
+            {/* Ruta index que redirige según el rol */}
+            <Route index element={<HomeRedirect />} />
+
             <Route
-              index
+              path="dashboard"
               element={
                 <PermissionRoute permission="dashboard:read">
                   <Dashboard />

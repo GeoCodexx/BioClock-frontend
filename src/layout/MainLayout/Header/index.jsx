@@ -12,12 +12,14 @@ import {
   Fade,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import Brightness4Icon from "@mui/icons-material/Brightness4";
-import Brightness7Icon from "@mui/icons-material/Brightness7";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+/*import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";*/
 
-// Logo (descomenta y ajusta la ruta según tu proyecto)
+// Logo
 // import LogoBitel from "../../../assets/images/bitel_logo.png";
-// O importa tu logo así:
+// O
 // import Logo from "@/assets/logo.png";
 
 // Componentes personalizados
@@ -32,28 +34,36 @@ const ThemeToggleButton = memo(({ toggleTheme, isDarkMode }) => {
     <Tooltip
       title={isDarkMode ? "Modo claro" : "Modo oscuro"}
       arrow
-      TransitionComponent={Fade}
+      slots={{
+        transition: Fade,
+      }}
     >
       <IconButton
         onClick={toggleTheme}
         color="inherit"
         aria-label={`Cambiar a modo ${isDarkMode ? "claro" : "oscuro"}`}
         sx={{
-          bgcolor: alpha(
-            theme.palette.mode === "dark" ? "#fff" : "#000",
-            theme.palette.mode === "dark" ? 0.1 : 0.05
-          ),
-          transition: "all 0.3s ease",
-          "&:hover": {
-            bgcolor: alpha(
+          bgcolor: (theme) =>
+            alpha(
               theme.palette.mode === "dark" ? "#fff" : "#000",
-              theme.palette.mode === "dark" ? 0.15 : 0.1
+              theme.palette.mode === "dark" ? 0.1 : 0.05
             ),
-            transform: "rotate(180deg)",
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          "&:hover": {
+            bgcolor: (theme) =>
+              alpha(
+                theme.palette.mode === "dark" ? "#fff" : "#000",
+                theme.palette.mode === "dark" ? 0.15 : 0.1
+              ),
+            transform: "rotate(270deg) scale(1.05)",
           },
         }}
       >
-        {isDarkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+        {isDarkMode ? (
+          <LightModeIcon sx={{ color: "#FDB813" }} />
+        ) : (
+          <DarkModeIcon sx={{ color: "#7C3AED" }} />
+        )}
       </IconButton>
     </Tooltip>
   );
@@ -134,7 +144,7 @@ const MobileView = memo(({ handleDrawerToggle, logoSrc }) => (
           backgroundClip: "text",
         }}
       >
-        SISCAB
+        BioClock Pro
       </Typography>
     </Box>
 
@@ -179,7 +189,7 @@ const DesktopView = memo(({ toggleTheme, isDarkMode, logoSrc }) => {
             letterSpacing: "0.5px",
           }}
         >
-          Sistema de Control de Asistencia Biométrico
+          BioClock Pro - Sistema de Control de Asistencia Biométrico
         </Typography>
       </Box>
 
@@ -192,7 +202,7 @@ const DesktopView = memo(({ toggleTheme, isDarkMode, logoSrc }) => {
         }}
       >
         <ThemeToggleButton toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
-        <NotificationSection />
+        {/* <NotificationSection /> */}
         <ProfileSection />
       </Box>
     </>
@@ -213,7 +223,7 @@ const Header = memo(
         zIndex: isMobile ? theme.zIndex.drawer - 1 : theme.zIndex.drawer + 1,
         bgcolor: theme.palette.background.paper,
         color: theme.palette.text.primary,
-       // boxShadow: `0 1px 3px ${alpha(theme.palette.common.black, 0.08)}`,
+        // boxShadow: `0 1px 3px ${alpha(theme.palette.common.black, 0.08)}`,
         width: "100%",
         borderBottom: `1px solid ${theme.palette.divider}`,
         transition: "all 0.3s ease",

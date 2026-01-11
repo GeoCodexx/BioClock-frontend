@@ -22,6 +22,7 @@ const useAuthStore = create((set) => {
     permissions: storedUser?.permissions || [],
     isAuthenticated: !!localStorage.getItem("token"),
     logoutMessage: null,
+    isInitialized: false,
 
     login: async (email, password) => {
       const data = await loginApi(email, password);
@@ -31,6 +32,7 @@ const useAuthStore = create((set) => {
         permissions: data?.user?.permissions || [],
         isAuthenticated: true,
         logoutMessage: null,
+        isInitialized: true,
       });
     },
 
@@ -43,6 +45,7 @@ const useAuthStore = create((set) => {
         permissions: [],
         isAuthenticated: false,
         logoutMessage: message,
+        isInitialized: true,
       });
     },
     clearLogoutMessage: () => set({ logoutMessage: null }),

@@ -17,6 +17,7 @@ import {
   Fade,
   alpha,
   useMediaQuery,
+  Tooltip,
 } from "@mui/material";
 
 // icons
@@ -73,49 +74,52 @@ const ProfileSection = () => {
 
   return (
     <Box sx={{ flexShrink: 0, ml: 0.75 }}>
-      <ButtonBase
-        sx={{
-          p: 0.25,
-          bgcolor: open
-            ? alpha(theme.palette.primary.main, 0.08)
-            : "transparent",
-          borderRadius: 2,
-          transition: "all 0.2s ease-in-out",
-          "&:hover": {
-            bgcolor: alpha(theme.palette.primary.main, 0.08),
-            transform: "translateY(-1px)",
-          },
-        }}
-        aria-label="open profile"
-        ref={anchorRef}
-        aria-controls={open ? "profile-grow" : undefined}
-        aria-haspopup="true"
-        onClick={handleToggle}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 0.5 }}>
-          <Avatar
-            src="/static/images/avatar.jpg"
-            sx={{
-              width: /*isMobile ? 24 :*/ 36,
-              height: /*isMobile ? 24 :*/ 36,
-              bgcolor: theme.palette.primary.main,
-              color: theme.palette.primary.contrastText,
-              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-              //fontSize: "1rem",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                transform: "scale(1.05)",
-                boxShadow: `0 0 0 4px ${alpha(
-                  theme.palette.primary.main,
-                  0.1
-                )}`,
-              },
-            }}
-          >
-            {isAuthenticated && user ? user.name.charAt(0) : ""}
-          </Avatar>
-        </Box>
-      </ButtonBase>
+      <Tooltip title="Perfil" arrow>
+        <ButtonBase
+          sx={{
+            p: 0.25,
+            bgcolor: open
+              ? alpha(theme.palette.primary.main, 0.08)
+              : "transparent",
+            borderRadius: 2,
+            transition: "all 0.2s ease-in-out",
+            "&:hover": {
+              bgcolor: alpha(theme.palette.primary.main, 0.08),
+              transform: "translateY(-1px)",
+            },
+          }}
+          aria-label="open profile"
+          ref={anchorRef}
+          aria-controls={open ? "profile-grow" : undefined}
+          aria-haspopup="true"
+          onClick={handleToggle}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 0.5 }}>
+            <Avatar
+              src="/static/images/avatar.jpg"
+              sx={{
+                width: /*isMobile ? 24 :*/ 36,
+                height: /*isMobile ? 24 :*/ 36,
+                bgcolor: theme.palette.primary.main,
+                color: theme.palette.primary.contrastText,
+                border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                //fontSize: "1rem",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  transform: "scale(1.05)",
+                  boxShadow: `0 0 0 4px ${alpha(
+                    theme.palette.primary.main,
+                    0.1
+                  )}`,
+                },
+              }}
+            >
+              {isAuthenticated && user ? user.name.charAt(0) : ""}
+            </Avatar>
+          </Box>
+        </ButtonBase>
+      </Tooltip>
+
       <Popper
         placement="bottom-end"
         open={open}
@@ -260,7 +264,7 @@ const ProfileSection = () => {
                         />
                       </ListItemButton>
 
-                      <ListItemButton onClick={() => handleMenuItemClick()}>
+                      {/* <ListItemButton onClick={() => handleMenuItemClick()}>
                         <ListItemIcon>
                           <SettingsIcon fontSize="small" />
                         </ListItemIcon>
@@ -271,7 +275,7 @@ const ProfileSection = () => {
                             fontWeight: 500,
                           }}
                         />
-                      </ListItemButton>
+                      </ListItemButton> */}
 
                       <Divider sx={{ my: 1 }} />
 
