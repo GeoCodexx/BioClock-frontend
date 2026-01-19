@@ -35,8 +35,10 @@ import { useThemeMode } from "../contexts/ThemeContext";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import { usePermission } from "../utils/permissions";
+import useAuthStore from "../store/useAuthStore";
 
 export default function Fingerprints() {
+  const user = useAuthStore((state) => state.user);
   const { can } = usePermission();
   const { showSuccess, showError } = useSnackbarStore();
 
@@ -66,6 +68,7 @@ export default function Fingerprints() {
     fingerprintId: null,
     currentStatus: null,
     action: null, // 'approve' o 'reject'
+    note: "",
     error: "",
   });
 
@@ -74,36 +77,36 @@ export default function Fingerprints() {
     error: "",
   });
 
-  // Cargar fingerprints
-  useEffect(() => {
-    const loadFingerprints = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await getFingerprintTemplates({
-          search: pagination.search,
-          page: pagination.page + 1,
-          limit: pagination.rowsPerPage,
-          status: pagination.status || undefined,
-        });
-        setFingerprints(data.fingerprints || data.templates || []);
-        setTotal(data.total || 0);
-      } catch (err) {
-        setError(
-          err.response?.data?.message || "Error al cargar huellas dactilares"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadFingerprints();
+  const fetchFingerprints = useCallback(async () => {
+    const data = await getFingerprintTemplates({
+      search: pagination.search,
+      page: pagination.page + 1,
+      limit: pagination.rowsPerPage,
+      status: pagination.status || undefined,
+    });
+    setFingerprints(data.fingerprints || data.templates || []);
+    setTotal(data.total || 0);
   }, [
     pagination.search,
     pagination.page,
     pagination.rowsPerPage,
     pagination.status,
   ]);
+
+  // Cargar fingerprints
+  useEffect(() => {
+    setLoading(true);
+    setError("");
+    fetchFingerprints()
+      .catch((err) => {
+        setError(
+          err.response?.data?.message || "Error al cargar huellas dactilares",
+        );
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [fetchFingerprints]);
 
   // Debounce para búsqueda
   useEffect(() => {
@@ -120,32 +123,20 @@ export default function Fingerprints() {
     return () => clearTimeout(handler);
   }, [searchInput, pagination.search]);
 
-  // Refresh fingerprints
+  // Luego úsala en useEffect y refreshFingerprints
   const refreshFingerprints = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const data = await getFingerprintTemplates({
-        search: pagination.search,
-        page: pagination.page + 1,
-        limit: pagination.rowsPerPage,
-        status: pagination.status || undefined,
-      });
-      setFingerprints(data.fingerprints || data.templates || []);
-      setTotal(data.total || 0);
+      await fetchFingerprints();
     } catch (err) {
       setError(
-        err.response?.data?.message || "Error al cargar huellas dactilares"
+        err.response?.data?.message || "Error al cargar huellas dactilares",
       );
     } finally {
       setLoading(false);
     }
-  }, [
-    pagination.search,
-    pagination.page,
-    pagination.rowsPerPage,
-    pagination.status,
-  ]);
+  }, [fetchFingerprints]);
 
   // Handler para aprobar
   const handleApprove = useCallback((fingerprint) => {
@@ -154,62 +145,77 @@ export default function Fingerprints() {
       fingerprintId: fingerprint._id || fingerprint.id,
       currentStatus: fingerprint.status,
       action: "approve",
+      note: "",
       error: "",
     });
   }, []);
 
   // Handler para rechazar
   const handleReject = useCallback((fingerprint) => {
+    console.log(fingerprint);
     setStatusDialog({
       open: true,
       fingerprintId: fingerprint._id || fingerprint.id,
       currentStatus: fingerprint.status,
       action: "reject",
+      note: "",
       error: "",
     });
   }, []);
 
   // Confirmar cambio de estado
-  const confirmStatusChange = useCallback(async () => {
-    setStatusDialog((prev) => ({ ...prev, error: "" }));
-    try {
-      const newStatus =
-        statusDialog.action === "approve" ? "approved" : "rejected";
-      await updateFingerprintStatus(statusDialog.fingerprintId, newStatus);
+  const confirmStatusChange = useCallback(
+    async (note) => {
+      setStatusDialog((prev) => ({ ...prev, error: "" }));
+      try {
+        const newStatus =
+          statusDialog.action === "approve" ? "approved" : "rejected";
+        await updateFingerprintStatus(
+          statusDialog.fingerprintId,
+          newStatus,
+          note,
+          user ? user.id : null,
+        );
 
-      showSuccess(
-        `Huella dactilar ${
-          statusDialog.action === "approve" ? "aprobada" : "rechazada"
-        } correctamente`
-      );
+        showSuccess(
+          `Huella dactilar ${
+            statusDialog.action === "approve" ? "aprobada" : "rechazada"
+          } correctamente`,
+        );
 
-      setStatusDialog({
-        open: false,
-        fingerprintId: null,
-        currentStatus: null,
-        action: null,
-        error: "",
-      });
+        setStatusDialog({
+          open: false,
+          fingerprintId: null,
+          currentStatus: null,
+          action: null,
+          note: "",
+          error: "",
+        });
 
-      await refreshFingerprints();
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message ||
-        `Error al ${
-          statusDialog.action === "approve" ? "aprobar" : "rechazar"
-        } la huella dactilar`;
+        await refreshFingerprints();
+      } catch (err) {
+        const errorMessage =
+          err.response?.data?.message ||
+          `Error al ${
+            statusDialog.action === "approve" ? "aprobar" : "rechazar"
+          } la huella dactilar`;
 
-      setStatusDialog((prev) => ({ ...prev, error: errorMessage }));
-      showError(errorMessage);
-      console.error("Error en confirmStatusChange:", err);
-    }
-  }, [
-    statusDialog.action,
-    statusDialog.fingerprintId,
-    showSuccess,
-    showError,
-    refreshFingerprints,
-  ]);
+        setStatusDialog((prev) => ({ ...prev, error: errorMessage }));
+        showError(errorMessage);
+        // NO cerrar el diálogo en caso de error para que el usuario vea el mensaje
+        throw err; // Re-lanzar el error para que el diálogo detecte el fallo
+      }
+    },
+    [
+      statusDialog.action,
+      statusDialog.fingerprintId,
+      statusDialog.note,
+      user,
+      showSuccess,
+      showError,
+      refreshFingerprints,
+    ],
+  );
 
   // Handler para eliminar
   const handleDelete = useCallback((fingerprintId) => {
@@ -260,7 +266,7 @@ export default function Fingerprints() {
         page: 0,
       }));
     },
-    [searchInput]
+    [searchInput],
   );
 
   // Handler de filtro por estado
@@ -318,7 +324,7 @@ export default function Fingerprints() {
         </Typography>
       </Breadcrumbs>
     ),
-    [isMobile]
+    [isMobile],
   );
 
   // Memorizar tabla
@@ -331,7 +337,7 @@ export default function Fingerprints() {
         onDelete={handleDelete}
       />
     ),
-    [fingerprints, handleApprove, handleReject, handleDelete]
+    [fingerprints, handleApprove, handleReject, handleDelete],
   );
 
   // Estado de carga inicial
@@ -399,8 +405,8 @@ export default function Fingerprints() {
                     !fingerprints || fingerprints.length === 0
                       ? "No hay asistencias para filtrar"
                       : openFilters
-                      ? "Ocultar filtros"
-                      : "Mostrar filtros"
+                        ? "Ocultar filtros"
+                        : "Mostrar filtros"
                   }
                 >
                   <span>

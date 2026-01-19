@@ -114,14 +114,14 @@ const FingerprintTable = ({
 
   const handleApprove = () => {
     if (selectedFingerprint && onApprove) {
-      onApprove(selectedFingerprint._id);
+      onApprove(selectedFingerprint);
     }
     handleMenuClose();
   };
 
   const handleReject = () => {
     if (selectedFingerprint && onReject) {
-      onReject(selectedFingerprint._id);
+      onReject(selectedFingerprint);
     }
     handleMenuClose();
   };
@@ -773,7 +773,7 @@ const FingerprintTable = ({
                         <IconButton
                           size="small"
                           onClick={() =>
-                            onApprove && onApprove(fingerprint._id)
+                            onApprove && onApprove(fingerprint)
                           }
                           sx={{
                             color: theme.palette.success.main,
@@ -789,7 +789,7 @@ const FingerprintTable = ({
                       <Tooltip title="Rechazar huella" arrow>
                         <IconButton
                           size="small"
-                          onClick={() => onReject && onReject(fingerprint._id)}
+                          onClick={() => onReject && onReject(fingerprint)}
                           sx={{
                             color: theme.palette.error.main,
                             bgcolor: alpha(theme.palette.error.main, 0.08),

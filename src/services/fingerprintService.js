@@ -13,8 +13,8 @@ export const getFingerprintTemplates = async ({
   search = "",
   page = 1,
   limit = 10,
-  status = ""
-,} = {}) => {
+  status = "",
+} = {}) => {
   try {
     const { data } = await api.get("/biometric-templates", {
       params: { search, page, limit, status },
@@ -31,10 +31,17 @@ export const getFingerprintTemplates = async ({
   }
 };
 
-export const updateFingerprintStatus = async (id, status) => {
-  const response = await api.put(`/biometric-templates/${id}/status`, {
-    status,
-  });
+export const updateFingerprintStatus = async (
+  id,
+  status,
+  note = "",
+  approvedBy,
+) => {
+  const body = { status, approvedBy };
+  if (note) {
+    body.note = note;
+  }
+  const response = await api.put(`/biometric-templates/${id}/status`, body);
   return response.data;
 };
 
