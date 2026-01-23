@@ -36,6 +36,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import { usePermission } from "../utils/permissions";
 import useAuthStore from "../store/useAuthStore";
+import BiometricValidationDialog from "../components/Fingerprint/BiometricValidationDialog";
 
 export default function Fingerprints() {
   const user = useAuthStore((state) => state.user);
@@ -76,6 +77,10 @@ export default function Fingerprints() {
     id: null,
     error: "",
   });
+
+  // Variable para abrir el Dialog de validación
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
 
   const fetchFingerprints = useCallback(async () => {
     const data = await getFingerprintTemplates({
@@ -139,7 +144,7 @@ export default function Fingerprints() {
   }, [fetchFingerprints]);
 
   // Handler para aprobar
-  const handleApprove = useCallback((fingerprint) => {
+  /*const handleApprove = useCallback((fingerprint) => {
     setStatusDialog({
       open: true,
       fingerprintId: fingerprint._id || fingerprint.id,
@@ -161,7 +166,42 @@ export default function Fingerprints() {
       note: "",
       error: "",
     });
+  }, []);*/
+
+  //handler de prueba para abrir el dialog de validacion
+  const handleValidation = useCallback((fingerprint) => {
+    console.log(fingerprint);
+    setStatusDialog({
+      open: true,
+      fingerprintId: fingerprint._id || fingerprint.id,
+      currentStatus: fingerprint.status,
+      action: "validate",
+      note: "",
+      error: "",
+    });
   }, []);
+
+  const handleOpenDialog = (templateId) => {
+    setSelectedTemplateId(templateId);
+    setDialogOpen(true);
+  };
+
+  const handleApprove = async (templateId) => {
+    console.log('Aprobando plantilla:', templateId);
+    // Aquí va tu lógica de API
+    // await fetch(`/api/biometric-templates/${templateId}/approve`, { method: 'POST' });
+    alert(`Plantilla ${templateId} aprobada`);
+  };
+
+  const handleReject = async (templateId, note) => {
+    console.log('Rechazando plantilla:', templateId, 'Nota:', note);
+    // Aquí va tu lógica de API
+    // await fetch(`/api/biometric-templates/${templateId}/reject`, {
+    //   method: 'POST',
+    //   body: JSON.stringify({ note })
+    // });
+    alert(`Plantilla ${templateId} rechazada. Nota: ${note}`);
+  };
 
   // Confirmar cambio de estado
   const confirmStatusChange = useCallback(
@@ -293,6 +333,28 @@ export default function Fingerprints() {
     setDeleteState({ id: null, error: "" });
   }, []);
 
+  const handleCloseValidationDialog = useCallback(() => {
+    setValidationDialog({
+      open: false,
+      fingerprintId: null,
+      currentStatus: null,
+      action: null,
+      error: "",
+    });
+  }, []);
+
+  // Aprobar huella desde el dialog de validacion
+  const handleApproveFingerprint = useCallback((fingerprintId) => {
+    console.log("Aprobado: ", fingerprintId);
+    setValidationDialog({
+      open: false,
+      fingerprintId: null,
+      currentStatus: null,
+      action: null,
+      error: "",
+    });
+  });
+
   // Memorizar breadcrumbs
   const breadcrumbItems = useMemo(
     () => (
@@ -335,6 +397,7 @@ export default function Fingerprints() {
         onApprove={handleApprove}
         onReject={handleReject}
         onDelete={handleDelete}
+        onOpenValidationDialog={handleOpenDialog}
       />
     ),
     [fingerprints, handleApprove, handleReject, handleDelete],
@@ -571,6 +634,14 @@ export default function Fingerprints() {
         onConfirm={confirmDelete}
         deleteError={deleteState.error}
         itemName="registro de huella dactilar"
+      />
+
+       <BiometricValidationDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        templateId={selectedTemplateId}
+        onApprove={handleApprove}
+        onReject={handleReject}
       />
     </Box>
   );

@@ -48,7 +48,10 @@ export default function StatusConfirmDialog({
 
     setLoading(true); // Activar loading
     try {
-      await onConfirm(note); // Esperar a que termine
+      const noteToSend = note.charAt(note.length - 1 === ".")
+        ? note.trim()
+        : note.trim() + ".";
+      await onConfirm(noteToSend); // Esperar a que termine
     } finally {
       setLoading(false); //  Desactivar loading
     }

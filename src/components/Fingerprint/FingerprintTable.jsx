@@ -86,6 +86,7 @@ const FingerprintTable = ({
   onApprove,
   onReject,
   onDelete,
+  onOpenValidationDialog,
 }) => {
   const { can } = usePermission();
   const theme = useTheme();
@@ -358,14 +359,14 @@ const FingerprintTable = ({
                                   fingerprint.status === "approved"
                                     ? alpha(theme.palette.success.main, 0.15)
                                     : fingerprint.status === "pending"
-                                    ? alpha(theme.palette.warning.main, 0.15)
-                                    : alpha(theme.palette.error.main, 0.15),
+                                      ? alpha(theme.palette.warning.main, 0.15)
+                                      : alpha(theme.palette.error.main, 0.15),
                                 color:
                                   fingerprint.status === "approved"
                                     ? theme.palette.success.main
                                     : fingerprint.status === "pending"
-                                    ? theme.palette.warning.main
-                                    : theme.palette.error.main,
+                                      ? theme.palette.warning.main
+                                      : theme.palette.error.main,
                               }}
                             />
                           </Stack>
@@ -529,7 +530,7 @@ const FingerprintTable = ({
                                       color="text.primary"
                                     >
                                       {formatters.fullName(
-                                        fingerprint.approvedBy
+                                        fingerprint.approvedBy,
                                       )}
                                     </Typography>
                                   </Box>
@@ -746,14 +747,14 @@ const FingerprintTable = ({
                         fingerprint.status === "approved"
                           ? alpha(theme.palette.success.main, 0.15)
                           : fingerprint.status === "pending"
-                          ? alpha(theme.palette.warning.main, 0.15)
-                          : alpha(theme.palette.error.main, 0.15),
+                            ? alpha(theme.palette.warning.main, 0.15)
+                            : alpha(theme.palette.error.main, 0.15),
                       color:
                         fingerprint.status === "approved"
                           ? theme.palette.success.main
                           : fingerprint.status === "pending"
-                          ? theme.palette.warning.main
-                          : theme.palette.error.main,
+                            ? theme.palette.warning.main
+                            : theme.palette.error.main,
                       borderRadius: 1,
                     }}
                   />
@@ -769,12 +770,28 @@ const FingerprintTable = ({
                         justifyContent: "center",
                       }}
                     >
-                      <Tooltip title="Aprobar huella" arrow>
+                      <Tooltip title="Revisar" arrow>
                         <IconButton
                           size="small"
                           onClick={() =>
-                            onApprove && onApprove(fingerprint)
+                            onOpenValidationDialog &&
+                            onOpenValidationDialog(fingerprint._id)
                           }
+                          sx={{
+                            color: theme.palette.success.main,
+                            bgcolor: alpha(theme.palette.success.main, 0.08),
+                            "&:hover": {
+                              bgcolor: alpha(theme.palette.success.main, 0.15),
+                            },
+                          }}
+                        >
+                          <CheckCircleIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Aprobar huella" arrow>
+                        <IconButton
+                          size="small"
+                          onClick={() => onApprove && onApprove(fingerprint)}
                           sx={{
                             color: theme.palette.success.main,
                             bgcolor: alpha(theme.palette.success.main, 0.08),
