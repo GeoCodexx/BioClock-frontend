@@ -25,6 +25,7 @@ import {
   ListItemText,
   Divider,
 } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -88,7 +89,7 @@ const FingerprintTable = ({
   onDelete,
   onOpenValidationDialog,
 }) => {
-  const { can } = usePermission();
+  const { can, canAny } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("index");
@@ -113,7 +114,7 @@ const FingerprintTable = ({
     setSelectedFingerprint(null);
   };
 
-  const handleApprove = () => {
+  /*const handleApprove = () => {
     if (selectedFingerprint && onApprove) {
       onApprove(selectedFingerprint);
     }
@@ -123,6 +124,13 @@ const FingerprintTable = ({
   const handleReject = () => {
     if (selectedFingerprint && onReject) {
       onReject(selectedFingerprint);
+    }
+    handleMenuClose();
+  };*/
+
+    const handleReview = () => {
+    if (selectedFingerprint && onOpenValidationDialog) {
+      onOpenValidationDialog(selectedFingerprint._id);
     }
     handleMenuClose();
   };
@@ -143,12 +151,6 @@ const FingerprintTable = ({
       minWidth: 50,
     },
     {
-      id: "userId.dni",
-      label: "DNI",
-      sortable: true,
-      minWidth: 120,
-    },
-    {
       id: "userId.name",
       label: "Usuario",
       sortable: true,
@@ -156,7 +158,7 @@ const FingerprintTable = ({
     },
     {
       id: "finger",
-      label: "Dedo",
+      label: "Huellas",
       sortable: true,
       minWidth: 150,
       align: "center",
@@ -336,18 +338,14 @@ const FingerprintTable = ({
                           >
                             {formatters.fullName(fingerprint.userId)}
                           </Typography>
-                          <Typography
+                          {/* <Typography
                             variant="caption"
                             color="text.secondary"
                             sx={{ display: "block", mb: 0.5 }}
                           >
                             {formatters.finger(fingerprint.finger)}
-                          </Typography>
-                          <Stack
-                            direction="row"
-                            spacing={0.5}
-                            alignItems="center"
-                          >
+                          </Typography> */}
+                          <Box>
                             <Chip
                               label={formatters.status(fingerprint.status)}
                               size="small"
@@ -369,7 +367,7 @@ const FingerprintTable = ({
                                       : theme.palette.error.main,
                               }}
                             />
-                          </Stack>
+                          </Box>
                         </Box>
                       </TableCell>
 
@@ -405,7 +403,7 @@ const FingerprintTable = ({
                         <Collapse in={isOpen} timeout="auto" unmountOnExit>
                           <Box sx={{ py: 2, px: 2 }}>
                             <Stack spacing={2}>
-                              {/* DNI */}
+                              {/* Huellas*/}
                               <Box>
                                 <Stack
                                   direction="row"
@@ -413,7 +411,7 @@ const FingerprintTable = ({
                                   spacing={0.5}
                                   mb={0.5}
                                 >
-                                  <BadgeIcon
+                                  <DevicesIcon
                                     sx={{
                                       fontSize: 14,
                                       color: theme.palette.text.secondary,
@@ -424,20 +422,23 @@ const FingerprintTable = ({
                                     fontWeight={600}
                                     color="text.secondary"
                                   >
-                                    DNI
+                                    HUELLAS
                                   </Typography>
                                 </Stack>
                                 <Typography
                                   variant="body2"
                                   color="text.primary"
-                                  fontWeight={500}
                                 >
-                                  {fingerprint.userId?.dni || "—"}
+                                  {fingerprint.fingerprintTemplates?.leftIndex
+                                    ?.imageUrl &&
+                                  fingerprint.fingerprintTemplates?.rightIndex
+                                    ?.imageUrl
+                                    ? "Dual Índice:I/D"
+                                    : "No disponible"}
                                 </Typography>
                               </Box>
 
                               <Divider />
-
                               {/* Dispositivo */}
                               <Box>
                                 <Stack
@@ -565,19 +566,13 @@ const FingerprintTable = ({
           }}
         >
           {can("fingerprints:approve") && (
-            <MenuItem onClick={handleApprove}>
+            <MenuItem
+              onClick={handleReview}
+            >
               <ListItemIcon>
                 <CheckCircleIcon fontSize="small" color="success" />
               </ListItemIcon>
-              <ListItemText>Aprobar</ListItemText>
-            </MenuItem>
-          )}
-          {can("fingerprints:reject") && (
-            <MenuItem onClick={handleReject}>
-              <ListItemIcon>
-                <CancelIcon fontSize="small" color="error" />
-              </ListItemIcon>
-              <ListItemText>Rechazar</ListItemText>
+              <ListItemText>Revisar</ListItemText>
             </MenuItem>
           )}
           {can("fingerprints:delete") && (
@@ -678,28 +673,6 @@ const FingerprintTable = ({
                     {fingerprint.index || "—"}
                   </Typography>
                 </TableCell>
-                {/* DNI */}
-                <TableCell>
-                  <Typography variant="body2">
-                    {fingerprint.userId?.dni || "—"}
-                  </Typography>
-                  {/* <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <BadgeIcon
-                      fontSize="small"
-                      sx={{ color: theme.palette.primary.main }}
-                    />
-                    <Typography
-                      variant="body2"
-                      fontWeight={600}
-                      sx={{
-                        fontFamily: "monospace",
-                        color: theme.palette.primary.main,
-                      }}
-                    >
-                      {fingerprint.userId?.dni || "—"}
-                    </Typography>
-                  </Box> */}
-                </TableCell>
 
                 {/* Usuario */}
                 <TableCell>
@@ -714,11 +687,50 @@ const FingerprintTable = ({
                   </Box>
                 </TableCell>
 
-                {/* Dedo */}
+                {/* Huellas */}
                 <TableCell align="center">
-                  <Typography variant="body2">
+                  {/* Huellas */}
+                  <Tooltip
+                    arrow
+                    title={
+                      fingerprint.fingerprintTemplates?.leftIndex?.imageUrl &&
+                      fingerprint.fingerprintTemplates?.rightIndex?.imageUrl
+                        ? "Huellas cargadas correctamente"
+                        : "Falta una o ambas huellas"
+                    }
+                  >
+                    <Chip
+                      label={
+                        fingerprint.fingerprintTemplates?.leftIndex?.imageUrl &&
+                        fingerprint.fingerprintTemplates?.rightIndex?.imageUrl
+                          ? "Dual: Índice I/D"
+                          : "No disponible"
+                      }
+                      size="small"
+                      sx={{
+                        height: 20,
+                        fontSize: "0.7rem",
+                        fontWeight: 600,
+                        cursor: "default",
+                        bgcolor:
+                          fingerprint.fingerprintTemplates?.leftIndex
+                            ?.imageUrl &&
+                          fingerprint.fingerprintTemplates?.rightIndex?.imageUrl
+                            ? alpha(theme.palette.primary.main, 0.15)
+                            : alpha(theme.palette.text.disabled, 0.15),
+                        color:
+                          fingerprint.fingerprintTemplates?.leftIndex
+                            ?.imageUrl &&
+                          fingerprint.fingerprintTemplates?.rightIndex?.imageUrl
+                            ? theme.palette.primary.main
+                            : theme.palette.text.disabled,
+                      }}
+                    />
+                  </Tooltip>
+
+                  {/* <Typography variant="body2">
                     {formatters.finger(fingerprint.finger)}
-                  </Typography>
+                  </Typography> */}
                 </TableCell>
 
                 {/* Dispositivo */}
@@ -737,27 +749,48 @@ const FingerprintTable = ({
 
                 {/* Estado */}
                 <TableCell align="center">
-                  <Chip
-                    label={formatters.status(fingerprint.status)}
-                    size="small"
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: "0.75rem",
-                      bgcolor:
-                        fingerprint.status === "approved"
-                          ? alpha(theme.palette.success.main, 0.15)
-                          : fingerprint.status === "pending"
-                            ? alpha(theme.palette.warning.main, 0.15)
-                            : alpha(theme.palette.error.main, 0.15),
-                      color:
-                        fingerprint.status === "approved"
-                          ? theme.palette.success.main
-                          : fingerprint.status === "pending"
-                            ? theme.palette.warning.main
-                            : theme.palette.error.main,
-                      borderRadius: 1,
-                    }}
-                  />
+                  {fingerprint.status === "rejected" ? (
+                    <Tooltip
+                      title={`Motivo: ${fingerprint.note}` || "No se describio"}
+                      arrow
+                    >
+                      <Chip
+                        label={formatters.status(fingerprint.status)}
+                        size="small"
+                        sx={{
+                          cursor: "default",
+                          fontWeight: 600,
+                          fontSize: "0.75rem",
+                          bgcolor: alpha(theme.palette.error.main, 0.15),
+                          color: theme.palette.error.main,
+                          borderRadius: 1,
+                        }}
+                      />
+                    </Tooltip>
+                  ) : (
+                    <Chip
+                      label={formatters.status(fingerprint.status)}
+                      size="small"
+                      sx={{
+                        cursor: "default",
+                        fontWeight: 600,
+                        fontSize: "0.75rem",
+                        bgcolor:
+                          fingerprint.status === "approved"
+                            ? alpha(theme.palette.success.main, 0.15)
+                            : fingerprint.status === "pending"
+                              ? alpha(theme.palette.warning.main, 0.15)
+                              : alpha(theme.palette.error.main, 0.15),
+                        color:
+                          fingerprint.status === "approved"
+                            ? theme.palette.success.main
+                            : fingerprint.status === "pending"
+                              ? theme.palette.warning.main
+                              : theme.palette.error.main,
+                        borderRadius: 1,
+                      }}
+                    />
+                  )}
                 </TableCell>
 
                 {/* Acciones */}
@@ -770,25 +803,33 @@ const FingerprintTable = ({
                         justifyContent: "center",
                       }}
                     >
-                      <Tooltip title="Revisar" arrow>
-                        <IconButton
-                          size="small"
-                          onClick={() =>
-                            onOpenValidationDialog &&
-                            onOpenValidationDialog(fingerprint._id)
-                          }
-                          sx={{
-                            color: theme.palette.success.main,
-                            bgcolor: alpha(theme.palette.success.main, 0.08),
-                            "&:hover": {
-                              bgcolor: alpha(theme.palette.success.main, 0.15),
-                            },
-                          }}
-                        >
-                          <CheckCircleIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Aprobar huella" arrow>
+                      {canAny([
+                        "fingerprints:approve",
+                        "fingerprints:reject",
+                      ]) && (
+                        <Tooltip title="Revisar" arrow>
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              onOpenValidationDialog &&
+                              onOpenValidationDialog(fingerprint._id)
+                            }
+                            sx={{
+                              color: theme.palette.primary.main,
+                              bgcolor: alpha(theme.palette.primary.main, 0.08),
+                              "&:hover": {
+                                bgcolor: alpha(
+                                  theme.palette.primary.main,
+                                  0.15,
+                                ),
+                              },
+                            }}
+                          >
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      {/* <Tooltip title="Aprobar huella" arrow>
                         <IconButton
                           size="small"
                           onClick={() => onApprove && onApprove(fingerprint)}
@@ -817,22 +858,26 @@ const FingerprintTable = ({
                         >
                           <CancelIcon fontSize="small" />
                         </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Eliminar huella" arrow>
-                        <IconButton
-                          size="small"
-                          onClick={() => onDelete && onDelete(fingerprint._id)}
-                          sx={{
-                            color: theme.palette.error.main,
-                            bgcolor: alpha(theme.palette.error.main, 0.08),
-                            "&:hover": {
-                              bgcolor: alpha(theme.palette.error.main, 0.15),
-                            },
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                      </Tooltip> */}
+                      {can("fingerprints:delete") && (
+                        <Tooltip title="Eliminar huella" arrow>
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              onDelete && onDelete(fingerprint._id)
+                            }
+                            sx={{
+                              color: theme.palette.error.main,
+                              bgcolor: alpha(theme.palette.error.main, 0.08),
+                              "&:hover": {
+                                bgcolor: alpha(theme.palette.error.main, 0.15),
+                              },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </Box>
                   ) : (
                     // <Typography variant="body2" color="text.disabled">

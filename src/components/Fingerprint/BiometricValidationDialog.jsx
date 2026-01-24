@@ -32,6 +32,7 @@ import {
   Storage as StorageIcon,
 } from "@mui/icons-material";
 import FingerprintImage from "./FingerprintImage";
+import { usePermission } from "../../utils/permissions";
 
 const BiometricValidationDialog = ({
   open,
@@ -40,6 +41,7 @@ const BiometricValidationDialog = ({
   onApprove,
   onReject,
 }) => {
+  const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -168,7 +170,9 @@ const BiometricValidationDialog = ({
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <FingerprintIcon sx={{ fontSize: 28, color: theme.palette.primary.main }} />
+          <FingerprintIcon
+            sx={{ fontSize: 28, color: theme.palette.primary.main }}
+          />
           <Typography variant="h6" component="div" fontWeight={600}>
             Validación de Huellas Dactilares
           </Typography>
@@ -197,7 +201,8 @@ const BiometricValidationDialog = ({
           color="text.secondary"
           sx={{ mb: 2, textAlign: "center" }}
         >
-          Revise cuidadosamente las huellas dactilares y determine si son válidas.
+          Revise cuidadosamente las huellas dactilares y determine si son
+          válidas.
         </Typography>
 
         {/* ✅ Timer visible */}
@@ -288,8 +293,20 @@ const BiometricValidationDialog = ({
 
         {/* Log de accesos */}
         {accessLog.length > 0 && (
-          <Box sx={{ mt: 3, pt: 2, borderTop: "1px solid", borderColor: "divider" }}>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+          <Box
+            sx={{
+              mt: 3,
+              pt: 2,
+              borderTop: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={1}
+              sx={{ mb: 1.5 }}
+            >
               <ShieldIcon color="action" sx={{ fontSize: 18 }} />
               <Typography
                 variant="subtitle2"
@@ -331,11 +348,20 @@ const BiometricValidationDialog = ({
                         alignItems="center"
                         sx={{ width: "100%", mb: 0.5 }}
                       >
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
-                          <TimeIcon sx={{ fontSize: 14, color: "text.disabled" }} />
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={0.5}
+                        >
+                          <TimeIcon
+                            sx={{ fontSize: 14, color: "text.disabled" }}
+                          />
                           <Typography
                             variant="caption"
-                            sx={{ fontFamily: "monospace", color: "text.secondary" }}
+                            sx={{
+                              fontFamily: "monospace",
+                              color: "text.secondary",
+                            }}
                           >
                             {new Date(log.timestamp).toLocaleTimeString()}
                           </Typography>
@@ -345,13 +371,23 @@ const BiometricValidationDialog = ({
                           label={log.action}
                           size="small"
                           color={getStatusColor(log.action)}
-                          sx={{ fontWeight: "bold", fontSize: "0.65rem", height: 20 }}
+                          sx={{
+                            fontWeight: "bold",
+                            fontSize: "0.65rem",
+                            height: 20,
+                          }}
                         />
                       </Stack>
 
                       {log.size && (
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
-                          <StorageIcon sx={{ fontSize: 14, color: "text.disabled" }} />
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={0.5}
+                        >
+                          <StorageIcon
+                            sx={{ fontSize: 14, color: "text.disabled" }}
+                          />
                           <Typography
                             variant="caption"
                             sx={{ color: "text.primary", fontWeight: 500 }}
@@ -392,39 +428,43 @@ const BiometricValidationDialog = ({
 
         <Box sx={{ flex: 1 }} />
 
-        <Button
-          variant={showRejectNote ? "contained" : "outlined"}
-          color="error"
-          startIcon={showRejectNote ? <RejectIcon /> : null}
-          onClick={showRejectNote ? handleReject : handleRejectClick}
-          disabled={submitting}
-          fullWidth={isMobile}
-          sx={{ minWidth: 140 }}
-        >
-          {submitting && showRejectNote ? (
-            <CircularProgress size={20} color="inherit" />
-          ) : showRejectNote ? (
-            "Confirmar Rechazo"
-          ) : (
-            "Rechazar"
-          )}
-        </Button>
+        {can("fingerprints:reject") && (
+          <Button
+            variant={showRejectNote ? "contained" : "outlined"}
+            color="error"
+            startIcon={showRejectNote ? <RejectIcon /> : null}
+            onClick={showRejectNote ? handleReject : handleRejectClick}
+            disabled={submitting}
+            fullWidth={isMobile}
+            sx={{ minWidth: 140 }}
+          >
+            {submitting && showRejectNote ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : showRejectNote ? (
+              "Confirmar Rechazo"
+            ) : (
+              "Rechazar"
+            )}
+          </Button>
+        )}
 
-        <Button
-          variant="contained"
-          color="success"
-          startIcon={<ApproveIcon />}
-          onClick={handleApprove}
-          disabled={submitting || showRejectNote}
-          fullWidth={isMobile}
-          sx={{ minWidth: 140 }}
-        >
-          {submitting && !showRejectNote ? (
-            <CircularProgress size={20} color="inherit" />
-          ) : (
-            "Aprobar"
-          )}
-        </Button>
+        {can("fingerprints:approve") && (
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<ApproveIcon />}
+            onClick={handleApprove}
+            disabled={submitting || showRejectNote}
+            fullWidth={isMobile}
+            sx={{ minWidth: 140 }}
+          >
+            {submitting && !showRejectNote ? (
+              <CircularProgress size={20} color="inherit" />
+            ) : (
+              "Aprobar"
+            )}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

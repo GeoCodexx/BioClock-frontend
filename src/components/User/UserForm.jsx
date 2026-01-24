@@ -14,10 +14,7 @@ import {
   IconButton,
   Skeleton,
 } from "@mui/material";
-import {
-  Visibility,
-  VisibilityOff,
-} from "@mui/icons-material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { getRoles } from "../../services/roleService";
 import { getDepartments } from "../../services/departmentService";
 import { getSchedules } from "../../services/scheduleService";
@@ -41,13 +38,13 @@ const UserForm = ({
   const [dataError, setDataError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Normalizar scheduleIds: si vienen como objetos, extraer solo los IDs
-  const normalizeSchedules = (schedules) => {
-    if (!schedules || schedules.length === 0) return [];
-    if (typeof schedules[0] === "object" && schedules[0]._id) {
-      return schedules.map((s) => s._id);
+  // Normalizar scheduleIds y deviceIds: si vienen como objetos, extraer solo los IDs
+  const normalizeIds = (items) => {
+    if (!items || items.length === 0) return [];
+    if (typeof items[0] === "object" && items[0]._id) {
+      return items.map((s) => s._id);
     }
-    return schedules;
+    return items;
   };
 
   // Normalizar roleId y departmentId
@@ -63,19 +60,6 @@ const UserForm = ({
     watch,
     reset,
   } = useForm({
-    // defaultValues: {
-    //   name: defaultValues.name || "",
-    //   firstSurname: defaultValues.firstSurname || "",
-    //   secondSurname: defaultValues.secondSurname || "",
-    //   dni: defaultValues.dni || "",
-    //   email: defaultValues.email || "",
-    //   phone: defaultValues.phone || "",
-    //   password: "", // Solo para crear nuevos usuarios
-    //   roleId: normalizeId(defaultValues.roleId),
-    //   departmentId: normalizeId(defaultValues.departmentId),
-    //   scheduleIds: normalizeSchedules(defaultValues.scheduleIds),
-    //   deviceId: normalizeId(defaultValues.deviceId),
-    // },
     defaultValues: {
       name: "",
       firstSurname: "",
@@ -87,7 +71,7 @@ const UserForm = ({
       roleId: "",
       departmentId: "",
       scheduleIds: [],
-      deviceId: "",
+      deviceIds: [],
     },
   });
 
@@ -122,46 +106,6 @@ const UserForm = ({
 
     fetchData();
   }, []);
-  /*useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setDataError(null);
-
-        // Cargar roles
-        setLoadingRoles(true);
-        const rolesData = await getRoles();
-        setRoles(rolesData.filter((r) => r.status === "active"));
-        setLoadingRoles(false);
-
-        // Cargar departamentos
-        setLoadingDepartments(true);
-        const deptsData = await getDepartments();
-        setDepartments(deptsData.filter((d) => d.status === "active"));
-        setLoadingDepartments(false);
-
-        // Cargar horarios
-        setLoadingSchedules(true);
-        const schedulesData = await getSchedules();
-        setSchedules(schedulesData.filter((s) => s.status === "active"));
-        setLoadingSchedules(false);
-
-        // Cargar dispositivos
-        setLoadingDevices(true);
-        const devicesData = await getDevices();
-        setDevices(devicesData.filter((d) => d.status === "active"));
-        setLoadingDevices(false);
-      } catch (error) {
-        setDataError("Error al cargar los datos del formulario");
-        console.error("Error fetching form data:", error);
-        setLoadingRoles(false);
-        setLoadingDepartments(false);
-        setLoadingSchedules(false);
-        setLoadingDevices(false);
-      }
-    };
-
-    fetchData();
-  }, []);*/
 
   // Cuando todos los datos estén listos y haya defaultValues, reseteamos el formulario
   useEffect(() => {
@@ -182,8 +126,8 @@ const UserForm = ({
         password: "",
         roleId: normalizeId(defaultValues.roleId),
         departmentId: normalizeId(defaultValues.departmentId),
-        scheduleIds: normalizeSchedules(defaultValues.scheduleIds),
-        deviceId: normalizeId(defaultValues.deviceId),
+        scheduleIds: normalizeIds(defaultValues.scheduleIds),
+        deviceIds: normalizeIds(defaultValues.deviceIds),
       });
     }
   }, [
@@ -354,6 +298,7 @@ const UserForm = ({
             name="secondSurname"
             control={control}
             rules={{
+              required: "El apellido materno es obligatorio",
               minLength: {
                 value: 2,
                 message: "Mínimo 2 caracteres",
@@ -704,7 +649,7 @@ const UserForm = ({
                         ) : (
                           selected.map((id) => {
                             const schedule = schedules.find(
-                              (s) => s._id === id
+                              (s) => s._id === id,
                             );
                             return (
                               <Chip
@@ -757,26 +702,51 @@ const UserForm = ({
         {/* Dispositivo */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Controller
-            name="deviceId"
+            name="deviceIds"
             control={control}
             rules={{
-              required: "Debe seleccionar un departamento",
+              required: "Debe seleccionar al menos un dispositivo",
             }}
             render={({ field }) => (
               <TextField
                 {...field}
                 select
-                label="Dispositivo"
+                label="Dispositivos de marcación"
                 fullWidth
                 size="small"
                 required
                 disabled={disabled || loadingDevices}
-                error={!!errors.deviceId}
+                error={!!errors.deviceIds}
                 helperText={
-                  errors.deviceId?.message ||
-                  "Seleccione el departamento del usuario"
+                  errors.deviceIds?.message ||
+                  "Seleccione uno o más dispositivos de marcación de asistencia"
                 }
                 slotProps={{
+                  select: {
+                    multiple: true,
+                    renderValue: (selected) => (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {selected.length === 0 ? (
+                          <Typography variant="body2" color="text.secondary">
+                            Ningún dispositivo seleccionado
+                          </Typography>
+                        ) : (
+                          selected.map((id) => {
+                            const device = devices.find((s) => s._id === id);
+                            return (
+                              <Chip
+                                key={id}
+                                label={device?.name || id}
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                              />
+                            );
+                          })
+                        )}
+                      </Box>
+                    ),
+                  },
                   input: {
                     startAdornment: loadingDevices ? (
                       <CircularProgress size={20} sx={{ mr: 1 }} />

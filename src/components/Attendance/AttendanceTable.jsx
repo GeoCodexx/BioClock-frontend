@@ -23,7 +23,6 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  //Avatar,
 } from "@mui/material";
 import {
   Check as CheckIcon,
@@ -829,7 +828,7 @@ const AttendanceTable = ({
                                       </Typography>
                                       <Typography variant="body2">
                                         {formatDateTime(
-                                          attendance.justification.approvedAt
+                                          attendance.justification.approvedAt,
                                         )}
                                       </Typography>
                                     </Stack>
@@ -1007,9 +1006,12 @@ const AttendanceTable = ({
                       <Typography variant="body2" fontWeight={600}>
                         {formatDate(attendance.timestamp)}
                       </Typography>
-                      <Typography variant="caption" color="primary">
-                        🕐 {formatTime(attendance.timestamp)}
-                      </Typography>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <AccessTimeIcon fontSize="small" />
+                        <Typography variant="caption" color="primary">
+                          {formatTime(attendance.timestamp)}
+                        </Typography>
+                      </Stack>
                     </Stack>
                   </TableCell>
 
@@ -1098,12 +1100,12 @@ const AttendanceTable = ({
                                 color: theme.palette.secondary.main,
                                 bgcolor: alpha(
                                   theme.palette.secondary.main,
-                                  0.08
+                                  0.08,
                                 ),
                                 "&:hover": {
                                   bgcolor: alpha(
                                     theme.palette.secondary.main,
-                                    0.15
+                                    0.15,
                                   ),
                                 },
                               }}
@@ -1127,7 +1129,7 @@ const AttendanceTable = ({
                                 "&:hover": {
                                   bgcolor: alpha(
                                     theme.palette.error.main,
-                                    0.15
+                                    0.15,
                                   ),
                                 },
                               }}
@@ -1147,7 +1149,7 @@ const AttendanceTable = ({
                               "&:hover": {
                                 bgcolor: alpha(
                                   theme.palette.primary.main,
-                                  0.15
+                                  0.15,
                                 ),
                               },
                             }}
@@ -1312,10 +1314,10 @@ const AttendanceTable = ({
                                   "fingerprint"
                                     ? "Huella Digital"
                                     : attendance.verificationMethod === "rfid"
-                                    ? "Tarjeta RFID"
-                                    : attendance.verificationMethod === "pin"
-                                    ? "PIN"
-                                    : attendance.verificationMethod || "—"
+                                      ? "Tarjeta RFID"
+                                      : attendance.verificationMethod === "pin"
+                                        ? "PIN"
+                                        : attendance.verificationMethod || "—"
                                 }
                                 size="small"
                                 sx={{
@@ -1564,7 +1566,7 @@ const AttendanceTable = ({
                                     pt: 1.5,
                                     borderTop: `1px solid ${alpha(
                                       theme.palette.divider,
-                                      0.2
+                                      0.2,
                                     )}`,
                                   }}
                                 >
@@ -1623,7 +1625,7 @@ const AttendanceTable = ({
                                       sx={{ mt: 0.5, fontWeight: 500 }}
                                     >
                                       {formatDateTime(
-                                        attendance.justification.approvedAt
+                                        attendance.justification.approvedAt,
                                       )}
                                     </Typography>
                                   </Box>

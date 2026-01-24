@@ -23,7 +23,7 @@ import FingerprintTable from "../components/Fingerprint/FingerprintTable";
 import FingerprintSearchBar from "../components/Fingerprint/FingerprintSearchBar";
 import FingerprintExportButtons from "../components/Fingerprint/FingerprintExportButtons";
 import StatusFilter from "../components/Fingerprint/StatusFilter";
-import StatusConfirmDialog from "../components/Fingerprint/StatusConfirmDialog";
+//import StatusConfirmDialog from "../components/Fingerprint/StatusConfirmDialog";
 import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
 import { Link as RouterLink } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
@@ -168,39 +168,46 @@ export default function Fingerprints() {
     });
   }, []);*/
 
-  //handler de prueba para abrir el dialog de validacion
-  const handleValidation = useCallback((fingerprint) => {
-    console.log(fingerprint);
-    setStatusDialog({
-      open: true,
-      fingerprintId: fingerprint._id || fingerprint.id,
-      currentStatus: fingerprint.status,
-      action: "validate",
-      note: "",
-      error: "",
-    });
-  }, []);
-
   const handleOpenDialog = (templateId) => {
     setSelectedTemplateId(templateId);
     setDialogOpen(true);
   };
 
+  //handler para aprobar registro de huellas
   const handleApprove = async (templateId) => {
-    console.log('Aprobando plantilla:', templateId);
-    // Aquí va tu lógica de API
-    // await fetch(`/api/biometric-templates/${templateId}/approve`, { method: 'POST' });
-    alert(`Plantilla ${templateId} aprobada`);
+    console.log("Aprobando plantilla:", templateId);
+    try {
+      await updateFingerprintStatus(
+        templateId,
+        "approved",
+        undefined,
+        user ? user.id : null,
+      );
+      showSuccess("Datos actualizados correctamente");
+      await refreshFingerprints();
+    } catch (error) {
+      console.log(error);
+      showError("Error interno en el servidor. Por favor intente nuevamente");
+    }
   };
 
+  // handler para rechazar registro de huellas
   const handleReject = async (templateId, note) => {
-    console.log('Rechazando plantilla:', templateId, 'Nota:', note);
-    // Aquí va tu lógica de API
-    // await fetch(`/api/biometric-templates/${templateId}/reject`, {
-    //   method: 'POST',
-    //   body: JSON.stringify({ note })
-    // });
-    alert(`Plantilla ${templateId} rechazada. Nota: ${note}`);
+    console.log("Rechazando plantilla:", templateId, "Nota:", note);
+    try {
+      await updateFingerprintStatus(
+        templateId,
+        "rejected",
+        note,
+        user ? user.id : null,
+      );
+      showSuccess("Datos actualizados correctamente");
+
+      await refreshFingerprints();
+    } catch (error) {
+      console.log(error);
+      showError("Error interno en el servidor. Por favor intente nuevamente");
+    }
   };
 
   // Confirmar cambio de estado
@@ -394,8 +401,6 @@ export default function Fingerprints() {
     () => (
       <FingerprintTable
         fingerprints={fingerprints}
-        onApprove={handleApprove}
-        onReject={handleReject}
         onDelete={handleDelete}
         onOpenValidationDialog={handleOpenDialog}
       />
@@ -620,13 +625,13 @@ export default function Fingerprints() {
       </Card>
 
       {/* DIÁLOGOS */}
-      <StatusConfirmDialog
+      {/* <StatusConfirmDialog
         open={statusDialog.open}
         onClose={handleCloseStatusDialog}
         onConfirm={confirmStatusChange}
         action={statusDialog.action}
         error={statusDialog.error}
-      />
+      /> */}
 
       <DeleteConfirmDialog
         open={!!deleteState.id}
@@ -636,7 +641,7 @@ export default function Fingerprints() {
         itemName="registro de huella dactilar"
       />
 
-       <BiometricValidationDialog
+      <BiometricValidationDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         templateId={selectedTemplateId}
