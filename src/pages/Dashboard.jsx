@@ -20,10 +20,11 @@ import BusinessIcon from "@mui/icons-material/Business";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import dashboardService from "../services/dashboardService";
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useThemeMode } from "../contexts/ThemeContext";
+import TopUsersRanking from "../components/dashboard/TopUsersRanking";
 
 const Dashboard = () => {
   const theme = useTheme();
@@ -37,9 +38,11 @@ const Dashboard = () => {
   const [generalStats, setGeneralStats] = useState(null);
   const [weeklyAttendances, setWeeklyAttendances] = useState([]);
   const [attendanceByStatus, setAttendanceByStatus] = useState(null);
-  const [topUsers, setTopUsers] = useState(null);
+  const [topUsersData, setTopUsersData] = useState(null);
+  const [topUsersPeriod, setTopUsersPeriod] = useState("monthly");
+  const [rankingLoading, setRankingLoading] = useState(false);
 
-  // Cargar todos los datos al montar el componente
+  // Cargar todos los datos al montar el componente (una sola vez)
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -50,17 +53,15 @@ const Dashboard = () => {
 
     try {
       // Ejecutar todas las peticiones en paralelo
-      const [statsRes, weeklyRes, statusRes, topUsers] = await Promise.all([
+      const [statsRes, weeklyRes, statusRes] = await Promise.all([
         dashboardService.getGeneralStats(),
         dashboardService.getWeeklyAttendances(),
         dashboardService.getAttendanceByStatus(),
-        dashboardService.getTopUsers("monthly"),
       ]);
 
       setGeneralStats(statsRes.data);
       setWeeklyAttendances(weeklyRes.data);
       setAttendanceByStatus(statusRes);
-      setTopUsers(topUsers);
     } catch (err) {
       setError(err.message || "Error al cargar los datos del dashboard");
       console.error("Dashboard error:", err);
@@ -68,6 +69,32 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
+  // Fectch exclusivo para el ranking de usuarios
+  const fetchTopUsers = useCallback(async (period) => {
+    setRankingLoading(true);
+    try {
+      const res = await dashboardService.getTopUsers(period);
+      setTopUsersData(res);
+    } catch (err) {
+      console.error("Error al cargar ranking:", err);
+    } finally {
+      setRankingLoading(false);
+    }
+  }, []);
+
+  // useEffect SOLO para el ranking
+  useEffect(() => {
+    fetchTopUsers(topUsersPeriod);
+  }, [topUsersPeriod, fetchTopUsers]);
+
+  const handleSelectPeriod = useCallback((value) => {
+    setTopUsersPeriod(value);
+  }, []);
+
+  const memoizedTopUsersData = useMemo(() => {
+  return topUsersData;
+}, [topUsersData]);
 
   // Componente Header memoizado
   const PageHeader = memo(({ date, isMobile }) => {
@@ -209,6 +236,15 @@ const Dashboard = () => {
 
         <Grid size={{ xs: 12, md: 5 }}>
           <DepartmentDistribution attendanceByStatus={attendanceByStatus} />
+        </Grid>
+
+        <Grid size={12}>
+          <TopUsersRanking
+            data={memoizedTopUsersData}
+            loading={rankingLoading}
+            onSelectPeriod={handleSelectPeriod}
+            period={topUsersPeriod}
+          />
         </Grid>
       </Grid>
     </Box>

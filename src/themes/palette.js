@@ -31,6 +31,7 @@ export const lightColors = {
   background: {
     default: "#f5f5f5",
     paper: "#ffffff",
+    card: "#ffffff",
   },
   text: {
     primary: "rgba(0, 0, 0, 0.87)",
@@ -72,6 +73,7 @@ export const darkColors = {
   background: {
     default: "#0a0e27", // Azul muy oscuro (casi negro)
     paper: "#151a2e", // Azul oscuro para cards
+    card: "#1E253A", //Contrasta con el fondo azul
   },
   text: {
     //primary: '#e4e6eb',      // Gris claro suave (en vez de blanco puro)
