@@ -114,11 +114,16 @@ const AttendanceChart = ({ weeklyAttendances }) => {
         labels: {
           style: {
             fontSize: "12px",
-            colors: "#666",
+            colors: "#666", 
           },
         },
       },
-      colors: ["#2196F3", "#673AB7", "#F44336"],
+      //colors: ["#2196F3", "#673AB7", "#F44336"],
+      colors: [
+        theme.palette.success.main,
+        theme.palette.warning.main,
+        theme.palette.error.main,
+      ],
       fill: {
         type: "gradient",
         gradient: {
@@ -222,7 +227,7 @@ const AttendanceChart = ({ weeklyAttendances }) => {
                     width: 12,
                     height: 12,
                     borderRadius: "50%",
-                    bgcolor: theme.palette.primary.main,
+                    bgcolor: theme.palette.success.main,
                   }}
                 />
               }
@@ -244,7 +249,7 @@ const AttendanceChart = ({ weeklyAttendances }) => {
                     width: 12,
                     height: 12,
                     borderRadius: "50%",
-                    bgcolor: theme.palette.secondary.main,
+                    bgcolor: theme.palette.warning.main,
                   }}
                 />
               }

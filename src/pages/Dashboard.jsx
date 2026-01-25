@@ -37,6 +37,7 @@ const Dashboard = () => {
   const [generalStats, setGeneralStats] = useState(null);
   const [weeklyAttendances, setWeeklyAttendances] = useState([]);
   const [attendanceByStatus, setAttendanceByStatus] = useState(null);
+  const [topUsers, setTopUsers] = useState(null);
 
   // Cargar todos los datos al montar el componente
   useEffect(() => {
@@ -49,15 +50,17 @@ const Dashboard = () => {
 
     try {
       // Ejecutar todas las peticiones en paralelo
-      const [statsRes, weeklyRes, statusRes] = await Promise.all([
+      const [statsRes, weeklyRes, statusRes, topUsers] = await Promise.all([
         dashboardService.getGeneralStats(),
         dashboardService.getWeeklyAttendances(),
         dashboardService.getAttendanceByStatus(),
+        dashboardService.getTopUsers("monthly"),
       ]);
 
       setGeneralStats(statsRes.data);
       setWeeklyAttendances(weeklyRes.data);
       setAttendanceByStatus(statusRes);
+      setTopUsers(topUsers);
     } catch (err) {
       setError(err.message || "Error al cargar los datos del dashboard");
       console.error("Dashboard error:", err);
