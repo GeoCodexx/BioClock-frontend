@@ -48,6 +48,7 @@ const AttendanceWeekView = ({ data }) => {
         label: "A Tiempo",
         Icon: CheckCircle,
         colorHex: "#10b981",
+        //colorHex: theme.palette.success.main,
       },
       late: {
         label: "Tardanza",
@@ -328,7 +329,7 @@ const AttendanceWeekView = ({ data }) => {
                     left: "50%",
                     transform: "translate(-50%, -50%)",
                     zIndex: 1,
-                    bgcolor: "white",
+                    bgcolor: theme.palette.background.card,
                     borderRadius: "50%",
                     width: { xs: 24, sm: 28 },
                     height: { xs: 24, sm: 28 },
@@ -338,7 +339,7 @@ const AttendanceWeekView = ({ data }) => {
                     boxShadow: 2,
                   }}
                 >
-                  <Typography variant="body2" fontWeight={700}>
+                  <Typography variant="body2" fontWeight={600}>
                     {dayNumber}
                   </Typography>
                 </Box>
@@ -448,7 +449,7 @@ const AttendanceWeekView = ({ data }) => {
         }}
       >
         <Stack direction="row" alignItems="center" spacing={1.5} mb={3}>
-          <Avatar sx={{ bgcolor: "secondary.main", width: 40, height: 40 }}>
+          <Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }}>
             <TrendingUp />
           </Avatar>
           <Box>

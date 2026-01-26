@@ -304,7 +304,7 @@ const MyAttendances = () => {
         sx: {
           bgcolor: alpha(theme.palette.success.main, 0.1),
           color: theme.palette.success.dark,
-          border: `2px solid ${theme.palette.success.main}`,
+          //border: `1px solid ${theme.palette.success.main}`,
         },
         label: "A Tiempo",
         Icon: CheckCircle,
@@ -380,8 +380,114 @@ const MyAttendances = () => {
         Icon: Cancel,
         colorHex: "#e5e7eb",
       },
+      in_progress: {
+        sx: {
+          bgcolor: alpha(theme.palette.secondary.main, 0.1),
+          color: theme.palette.secondary.main,
+          //border: `2px solid ${theme.palette.secondary.main}`,
+        },
+        label: "En transcurso",
+        Icon: Cancel,
+        colorHex: theme.palette.secondary.main,
+      },
     }),
-    [theme.palette]
+    [theme.palette],
+  );
+
+  // Función para procesar registros del día de hoy
+  const processTodayRecords = (records) => {
+    if (!records || Object.keys(records).length === 0) return [];
+
+    const processed = [];
+
+    // Iterar sobre cada fecha (aunque "today" debería tener solo una fecha)
+    Object.entries(records).forEach(([dateStr, dayRecords]) => {
+      // Agrupar por scheduleId
+      const scheduleGroups = {};
+
+      dayRecords.forEach((record) => {
+        const scheduleId = record.scheduleId?._id?.toString();
+        const scheduleName = record.scheduleId?.name || "Sin horario";
+
+        if (!scheduleGroups[scheduleId]) {
+          scheduleGroups[scheduleId] = {
+            schedule: record.scheduleId,
+            records: [],
+            isVirtual: false,
+          };
+        }
+
+        scheduleGroups[scheduleId].records.push(record);
+
+        if (record.isVirtual) {
+          scheduleGroups[scheduleId].isVirtual = true;
+        }
+      });
+
+      // Procesar cada grupo de horario
+      Object.values(scheduleGroups).forEach((group) => {
+        const checkIn = group.records.find((r) => r.type === "IN");
+        const checkOut = group.records.find((r) => r.type === "OUT");
+
+        console.log("checkIn", checkIn);
+
+        // Determinar estado del turno
+        let shiftStatus = "absent";
+        if (checkIn?.isVirtual) {
+          shiftStatus = "absent";
+        } else if (checkIn && checkOut) {
+          // Completo
+          if (checkOut.status === "early_exit") {
+            shiftStatus = "early_exit";
+          } else if (checkIn.status === "late") {
+            shiftStatus = "late";
+          } else {
+            shiftStatus = "on_time";
+          }
+        } else if (checkIn && !checkOut && checkIn.inProgress) {
+          shiftStatus = "in_progress";
+        } else if (checkIn && !checkOut) {
+          shiftStatus = "incomplete";
+        } else if (!checkIn && checkOut) {
+          shiftStatus = "incomplete";
+        }
+
+        // Calcular horas trabajadas
+        let hoursWorked = null;
+        if (
+          checkIn &&
+          checkOut &&
+          !checkIn.isVirtual &&
+          !checkOut.isVirtual &&
+          checkIn.timestamp &&
+          checkOut.timestamp
+        ) {
+          const start = new Date(checkIn.timestamp);
+          const end = new Date(checkOut.timestamp);
+          const minutesWorked = Math.floor((end - start) / 60000);
+          const hours = Math.floor(minutesWorked / 60);
+          const mins = minutesWorked % 60;
+          hoursWorked = `${hours}h ${mins}m`;
+        }
+
+        processed.push({
+          schedule: group.schedule,
+          shiftStatus,
+          checkIn: checkIn?.isVirtual ? null : checkIn || null,
+          checkOut: checkOut?.isVirtual ? null : checkOut || null,
+          hoursWorked,
+          isVirtual: group.isVirtual,
+        });
+      });
+    });
+
+    return processed;
+  };
+
+  // Procesar registros de hoy
+  const todayRecords = useMemo(
+    () => processTodayRecords(data.periods?.today?.records),
+    [data.periods?.today?.records],
   );
 
   // Formatear hora usando date-fns
@@ -389,53 +495,6 @@ const MyAttendances = () => {
     if (!timestamp) return "N/A";
     return format(parseISO(timestamp), "HH:mm", { locale: es });
   }, []);
-
-  // Events para FullCalendar
-  /*const calendarEvents = useMemo(() => {
-    const events = [];
-    Object.entries(attendanceByDate).forEach(([date, records]) => {
-      records.forEach((record) => {
-        const status = record.shiftStatus;
-        let color = statusConfig.incomplete.colorHex;
-
-        if (status === "complete") color = statusConfig.complete.colorHex;
-        else if (record.justification) color = statusConfig.justified.colorHex;
-        else if (status === "late") color = "#f59e0b";
-
-        events.push({
-          title: record.schedule.name,
-          date,
-          backgroundColor: color,
-          borderColor: color,
-          extendedProps: { record },
-        });
-      });
-    });
-    return events;
-  }, [attendanceByDate, statusConfig]);*/
-
-  // Manejar click en evento del calendario
- /* const handleEventClick = useCallback(
-    (info) => {
-      const date = info.event.start;
-      const dateStr = format(date, "yyyy-MM-dd");
-      const records = attendanceByDate[dateStr];
-      setSelectedDay({ date, records });
-      setDialogOpen(true);
-    },
-    [attendanceByDate]
-  );*/
-
-  // Abrir diálogo con detalles
-  /*const handleDayClick = useCallback(
-    (date) => {
-      const dateStr = format(date, "yyyy-MM-dd");
-      const records = attendanceByDate[dateStr];
-      setSelectedDay({ date, records });
-      setDialogOpen(true);
-    },
-    [attendanceByDate]
-  );*/
 
   const handleCloseDialog = useCallback(() => {
     setDialogOpen(false);
@@ -502,7 +561,7 @@ const MyAttendances = () => {
                       label={format(
                         new Date(date + "T00:00:00"),
                         "d 'de' MMMM 'de' yyyy",
-                        { locale: es }
+                        { locale: es },
                       )}
                       size="small"
                       sx={{
@@ -535,7 +594,7 @@ const MyAttendances = () => {
                     {format(
                       new Date(date + "T00:00:00"),
                       "EEEE, d 'de' MMMM 'de' yyyy",
-                      { locale: es }
+                      { locale: es },
                     )}
                   </Typography>
                 )}
@@ -585,9 +644,9 @@ const MyAttendances = () => {
               </Box>
             </Stack>
 
-            {data.periods?.today?.records.length > 0 ? (
+            {todayRecords.length > 0 ? (
               <Stack spacing={2}>
-                {data.periods?.today?.records.map((record, idx) => (
+                {todayRecords.map((record, idx) => (
                   <Card
                     key={idx}
                     variant="outlined"
@@ -616,7 +675,7 @@ const MyAttendances = () => {
                             statusConfig[record.shiftStatus]?.Icon
                               ? React.createElement(
                                   statusConfig[record.shiftStatus]?.Icon,
-                                  { sx: { fontSize: 16 } }
+                                  { sx: { fontSize: 16 } },
                                 )
                               : null
                           }
@@ -1044,7 +1103,7 @@ const MyAttendances = () => {
                               //bgcolor: alpha(theme.palette.info.main, 0.08),
                               border: `2px solid ${alpha(
                                 theme.palette.info.main,
-                                0.2
+                                0.2,
                               )}`,
                             }}
                           >
@@ -1143,7 +1202,7 @@ const MyAttendances = () => {
                               bgcolor: alpha(theme.palette.warning.main, 0.08),
                               border: `1px solid ${alpha(
                                 theme.palette.warning.main,
-                                0.2
+                                0.2,
                               )}`,
                             }}
                           >

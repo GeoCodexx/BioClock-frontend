@@ -87,7 +87,7 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
   // Formatear nombre completo
   const getFullName = (user) => {
     const parts = [user.name, user.firstSurname, user.secondSurname].filter(
-      Boolean
+      Boolean,
     );
     return parts.join(" ") || "—";
   };
@@ -269,6 +269,7 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                 //const isOpen = openRows[user._id] || false;
                 const isOpen = openRowId === user._id;
                 const schedulesCount = user.scheduleIds?.length || 0;
+                const devicesCount = user.deviceIds?.length || 0;
                 const fullName = getFullName(user);
 
                 return (
@@ -311,6 +312,12 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                             alignItems="center"
                             flexWrap="wrap"
                           >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {user.roleId?.name || "Sin rol"}
+                            </Typography>
                             <Chip
                               label={
                                 user.status === "active" ? "Activo" : "Inactivo"
@@ -330,12 +337,6 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                                     : theme.palette.error.main,
                               }}
                             />
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {user.roleId?.name || "Sin rol"}
-                            </Typography>
                           </Stack>
                         </Stack>
                       </TableCell>
@@ -453,35 +454,6 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                                       "Sin departamento"}
                                   </Typography>
                                 </Stack>
-
-                                <Stack
-                                  direction="row"
-                                  spacing={1}
-                                  alignItems="center"
-                                >
-                                  <DevicesIcon
-                                    sx={{
-                                      fontSize: 16,
-                                      color: theme.palette.text.secondary,
-                                    }}
-                                  />
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    fontWeight={600}
-                                  >
-                                    DISPOSITIVO:
-                                  </Typography>
-                                  <Typography
-                                    variant="body2"
-                                    sx={{ fontSize: "0.75rem" }}
-                                  >
-                                    {user.deviceId?.name ||
-                                      user.deviceId ||
-                                      "Sin dispositivo"}
-                                  </Typography>
-                                </Stack>
-
                                 <Stack
                                   direction="row"
                                   spacing={1}
@@ -547,7 +519,7 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                                           height: 22,
                                           borderColor: alpha(
                                             theme.palette.primary.main,
-                                            0.3
+                                            0.3,
                                           ),
                                           color: theme.palette.primary.main,
                                         }}
@@ -561,6 +533,63 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                                     fontStyle="italic"
                                   >
                                     Sin horarios asignados
+                                  </Typography>
+                                )}
+                              </Box>
+                              <Divider />
+                              {/* Dispositivos */}
+                              <Box>
+                                <Stack
+                                  direction="row"
+                                  alignItems="center"
+                                  spacing={0.5}
+                                  mb={1}
+                                >
+                                  <DevicesIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      color: theme.palette.text.secondary,
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight={600}
+                                    color="text.secondary"
+                                  >
+                                    DISPOSITIVOS ASIGNADOS ({devicesCount})
+                                  </Typography>
+                                </Stack>
+                                {user.deviceIds?.length ? (
+                                  <Stack
+                                    direction="row"
+                                    flexWrap="wrap"
+                                    gap={0.5}
+                                  >
+                                    {user.deviceIds.map((device) => (
+                                      <Chip
+                                        key={device._id}
+                                        label={device.name}
+                                        size="small"
+                                        variant="outlined"
+                                        sx={{
+                                          fontSize: "0.7rem",
+                                          height: 22,
+                                          borderColor: alpha(
+                                            theme.palette.primary.main,
+                                            0.3,
+                                          ),
+                                          color: theme.palette.primary.main,
+                                        }}
+                                      />
+                                    ))}
+                                  </Stack>
+                                ) : (
+                                  <Typography
+                                    variant="body2"
+                                    color="text.disabled"
+                                    fontStyle="italic"
+                                  >
+                                    Sin dispositivos asignados
                                   </Typography>
                                 )}
                               </Box>
@@ -672,6 +701,7 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
             //const isOpen = openRows[user._id] || false;
             const isOpen = openRowId === user._id;
             const schedulesCount = user.scheduleIds?.length || 0;
+            const devicesCount = user.deviceIds?.length || 0;
             const fullName = getFullName(user);
 
             return (
@@ -793,7 +823,7 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                               "&:hover": {
                                 bgcolor: alpha(
                                   theme.palette.primary.main,
-                                  0.15
+                                  0.15,
                                 ),
                               },
                             }}
@@ -883,7 +913,7 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                                     height: 26,
                                     bgcolor: alpha(
                                       theme.palette.info.main,
-                                      0.1
+                                      0.1,
                                     ),
                                     color: theme.palette.info.main,
                                     fontWeight: 600,
@@ -921,7 +951,7 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                                     variant="caption"
                                     color="text.secondary"
                                   >
-                                    📍 {user.departmentId.location}
+                                    {user.departmentId.location}
                                   </Typography>
                                 )}
                               </Box>
@@ -932,6 +962,7 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                                   direction="row"
                                   spacing={1}
                                   alignItems="center"
+                                  mb={1}
                                 >
                                   <DevicesIcon
                                     sx={{
@@ -944,22 +975,42 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                                     color="text.secondary"
                                     fontWeight={600}
                                   >
-                                    DISPOSITIVO ASIGNADO:
+                                    DISPOSITIVOS ASIGNADOS ({devicesCount}):
                                   </Typography>
                                 </Stack>
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    mt: 0.5,
-                                    fontFamily: "monospace",
-                                    fontSize: "0.8rem",
-                                    color: theme.palette.text.secondary,
-                                  }}
-                                >
-                                  {user.deviceId?.name ||
-                                    user.deviceId ||
-                                    "Sin dispositivo"}
-                                </Typography>
+                                {user.deviceIds?.length ? (
+                                  <Stack
+                                    direction="row"
+                                    flexWrap="wrap"
+                                    gap={0.5}
+                                  >
+                                    {user.deviceIds.map((device) => (
+                                      <Chip
+                                        key={device._id}
+                                        label={device.name}
+                                        size="small"
+                                        variant="outlined"
+                                        sx={{
+                                          fontSize: "0.7rem",
+                                          height: 22,
+                                          borderColor: alpha(
+                                            theme.palette.primary.main,
+                                            0.3,
+                                          ),
+                                          color: theme.palette.primary.main,
+                                        }}
+                                      />
+                                    ))}
+                                  </Stack>
+                                ) : (
+                                  <Typography
+                                    variant="body2"
+                                    color="text.disabled"
+                                    fontStyle="italic"
+                                  >
+                                    Sin dispositivos asignados
+                                  </Typography>
+                                )}
                               </Box>
 
                               {/* Fecha de Creación */}
@@ -1011,12 +1062,12 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                                       p: 1.5,
                                       border: `1px solid ${alpha(
                                         theme.palette.primary.main,
-                                        0.2
+                                        0.2,
                                       )}`,
                                       borderRadius: 1.5,
                                       bgcolor: alpha(
                                         theme.palette.primary.main,
-                                        0.03
+                                        0.03,
                                       ),
                                     }}
                                   >
@@ -1106,7 +1157,7 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                                   bgcolor: alpha(theme.palette.grey[500], 0.05),
                                   border: `1px dashed ${alpha(
                                     theme.palette.grey[500],
-                                    0.3
+                                    0.3,
                                   )}`,
                                   borderRadius: 1.5,
                                 }}
