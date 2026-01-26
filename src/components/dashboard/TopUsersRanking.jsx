@@ -197,6 +197,7 @@ const RankingSkeleton = () => {
                           <ListItemText
                             primary={
                               <Box
+                                component="span"
                                 sx={{
                                   display: "flex",
                                   alignItems: "center",
@@ -217,6 +218,7 @@ const RankingSkeleton = () => {
                             }
                             secondary={
                               <Box
+                                component="span"
                                 sx={{
                                   display: "flex",
                                   gap: 2,
@@ -331,12 +333,23 @@ const CategoryCard = ({ title, icon, color, items, emptyLabel }) => {
                   </ListItemAvatar>
 
                   <ListItemText
+                    component="div"
+                    slotProps={{
+                      primary: {
+                        component: "div",
+                      },
+                      secondary: {
+                        component: "div",
+                      },
+                    }}
                     primary={
                       <Box
+                        component="div"
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
                         <Typography
                           variant="subtitle2"
+                          component="span"
                           sx={{ fontWeight: 700 }}
                         >
                           {formatFullName(it.user)}
@@ -350,6 +363,7 @@ const CategoryCard = ({ title, icon, color, items, emptyLabel }) => {
                     }
                     secondary={
                       <Box
+                        component="div"
                         sx={{
                           display: "flex",
                           gap: 2,
@@ -357,11 +371,19 @@ const CategoryCard = ({ title, icon, color, items, emptyLabel }) => {
                           mt: 0.5,
                         }}
                       >
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          color="text.secondary"
+                        >
                           {it.user?.departmentId?.name || "-"}
                         </Typography>
 
-                        <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          sx={{ fontWeight: 700 }}
+                        >
                           {it.count} veces
                         </Typography>
                       </Box>

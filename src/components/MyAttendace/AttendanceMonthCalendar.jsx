@@ -15,6 +15,7 @@ import {
   alpha,
   useTheme,
   useMediaQuery,
+  Divider,
 } from "@mui/material";
 import {
   CalendarMonth,
@@ -38,134 +39,11 @@ import esLocale from "@fullcalendar/core/locales/es";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 
-// Datos de ejemplo
-const mockData = {
-  periods: {
-    month: {
-      dateRange: {
-        start: "2025-12-01",
-        end: "2025-12-31",
-      },
-      stats: {
-        total: 10,
-        onTime: 3,
-        late: 2,
-        absent: 5,
-        incomplete: 2,
-        justified: 1,
-        earlyExit: 2,
-        totalHoursWorked: "48h 30m",
-      },
-      records: [
-        {
-          date: "2025-12-05",
-          schedule: { _id: "1", name: "Horario Vespertino" },
-          checkIn: null,
-          checkOut: {
-            timestamp: "2025-12-05T23:00:32.218Z",
-            status: "on_time",
-            device: {
-              _id: "1",
-              name: "PC-Oficina-1",
-              location: "Oficina Principal",
-            },
-            verificationMethod: "fingerprint",
-          },
-          hoursWorked: null,
-          minutesWorked: null,
-          shiftStatus: "incomplete",
-        },
-        {
-          date: "2025-12-05",
-          schedule: { _id: "2", name: "Horario Matutino" },
-          checkIn: {
-            timestamp: "2025-12-05T14:49:47.133Z",
-            status: "late",
-            device: {
-              _id: "1",
-              name: "PC-Oficina-1",
-              location: "Oficina Principal",
-            },
-            verificationMethod: "fingerprint",
-          },
-          checkOut: {
-            timestamp: "2025-12-05T14:54:42.864Z",
-            status: "early",
-            device: {
-              _id: "1",
-              name: "PC-Oficina-1",
-              location: "Oficina Principal",
-            },
-            verificationMethod: "fingerprint",
-          },
-          hoursWorked: "0h 4m",
-          minutesWorked: 4,
-          shiftStatus: "early_exit",
-        },
-        {
-          date: "2025-12-03",
-          schedule: { _id: "2", name: "Horario Matutino" },
-          checkIn: {
-            timestamp: "2025-12-03T08:00:00.000Z",
-            status: "on_time",
-            device: {
-              _id: "1",
-              name: "PC-Oficina-1",
-              location: "Oficina Principal",
-            },
-            verificationMethod: "fingerprint",
-          },
-          checkOut: {
-            timestamp: "2025-12-03T17:00:00.000Z",
-            status: "on_time",
-            device: {
-              _id: "1",
-              name: "PC-Oficina-1",
-              location: "Oficina Principal",
-            },
-            verificationMethod: "fingerprint",
-          },
-          hoursWorked: "9h 0m",
-          minutesWorked: 540,
-          shiftStatus: "complete",
-        },
-        {
-          date: "2025-12-10",
-          schedule: { _id: "1", name: "Horario Vespertino" },
-          checkIn: {
-            timestamp: "2025-12-10T14:05:00.000Z",
-            status: "late",
-            device: {
-              _id: "1",
-              name: "PC-Oficina-1",
-              location: "Oficina Principal",
-            },
-            verificationMethod: "facial",
-          },
-          checkOut: {
-            timestamp: "2025-12-10T22:00:00.000Z",
-            status: "on_time",
-            device: {
-              _id: "1",
-              name: "PC-Oficina-1",
-              location: "Oficina Principal",
-            },
-            verificationMethod: "facial",
-          },
-          hoursWorked: "7h 55m",
-          minutesWorked: 475,
-          shiftStatus: "late",
-        },
-      ],
-    },
-  },
-};
-
-const AttendanceMonthCalendar = ({ data = mockData }) => {
+const AttendanceMonthCalendar = ({ data }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedDayData, setSelectedDayData] = useState(null);
 
   const statusConfig = useMemo(
     () => ({
@@ -174,11 +52,6 @@ const AttendanceMonthCalendar = ({ data = mockData }) => {
         Icon: CheckCircle,
         colorHex: "#10b981",
       },
-      /*complete: {
-        label: "Completo",
-        Icon: CheckCircle,
-        colorHex: "#10b981",
-      },*/
       late: {
         label: "Tardanza",
         Icon: ErrorIcon,
@@ -189,18 +62,13 @@ const AttendanceMonthCalendar = ({ data = mockData }) => {
         Icon: InfoIcon,
         colorHex: "#3b82f6",
       },
-      justified: {
-        label: "Justificado",
-        Icon: InfoIcon,
-        colorHex: "#3b82f6",
-      },
-      incomplete: {
-        label: "Incompleto",
+      early_exit: {
+        label: "Salida Temprana",
         Icon: ErrorIcon,
         colorHex: "#f44336",
       },
-      early_exit: {
-        label: "Salida Temprana",
+      incomplete: {
+        label: "Incompleto",
         Icon: ErrorIcon,
         colorHex: "#f44336",
       },
@@ -210,46 +78,110 @@ const AttendanceMonthCalendar = ({ data = mockData }) => {
         colorHex: "#9ca3af",
       },
     }),
-    []
+    [],
   );
 
-  // Convertir records a eventos de FullCalendar
+  /**
+   * Procesar registros agrupados del backend y convertirlos a eventos de FullCalendar
+   * Backend estructura: { "2026-01-19": [{...}, {...}], "2026-01-20": [...] }
+   */
   const calendarEvents = useMemo(() => {
     if (!data?.periods?.month?.records) return [];
 
-    return data.periods.month.records.map((record) => {
-      const config = statusConfig[record.shiftStatus];
-      const isMatutino = record.schedule.name
-        .toLowerCase()
-        .includes("matutino");
-      const abbreviation = isMatutino ? "HM" : "HV";
+    const records = data.periods.month.records;
+    const events = [];
 
-      return {
-        id: `${record.date}-${record.schedule._id}`,
-        title: isMobile ? abbreviation : record.schedule.name,
-        start: record.date,
-        allDay: true,
-        backgroundColor: config.colorHex,
-        borderColor: config.colorHex,
-        textColor: "#ffffff",
-        extendedProps: {
-          record: record,
-          status: record.shiftStatus,
-          scheduleName: record.schedule.name,
-          isMatutino: isMatutino,
-        },
-      };
+    Object.entries(records).forEach(([dateStr, dayRecords]) => {
+      // Procesar cada horario del día
+      const scheduleGroups = {};
+
+      dayRecords.forEach((record) => {
+        const scheduleId = record.scheduleId?._id?.toString();
+        const scheduleName = record.scheduleId?.name || "Sin horario";
+
+        if (!scheduleGroups[scheduleId]) {
+          scheduleGroups[scheduleId] = {
+            scheduleName,
+            scheduleId,
+            records: [],
+            isVirtual: false,
+          };
+        }
+
+        scheduleGroups[scheduleId].records.push(record);
+
+        // Marcar si todo el grupo es virtual (ausencia)
+        if (record.isVirtual) {
+          scheduleGroups[scheduleId].isVirtual = true;
+        }
+      });
+
+      // Crear un evento por cada horario
+      Object.values(scheduleGroups).forEach((group) => {
+        const checkIn = group.records.find((r) => r.type === "IN");
+        const checkOut = group.records.find((r) => r.type === "OUT");
+
+        // Determinar estado del turno
+        let shiftStatus = "absent";
+        if (checkIn?.isVirtual) {
+          shiftStatus = "absent";
+        } else if (checkIn && checkOut) {
+          if (checkOut.status === "early_exit") {
+            shiftStatus = "early_exit";
+          } else if (checkIn.status === "late") {
+            shiftStatus = "late";
+          } else {
+            shiftStatus = "on_time";
+          }
+        } else if (checkIn && !checkOut) {
+          shiftStatus = "incomplete"; // Falta salida → Incompleto
+        } else if (!checkIn && checkOut) {
+          shiftStatus = "incomplete"; // Falta entrada → Incompleto
+        }
+
+        const config = statusConfig[shiftStatus];
+        const isMatutino = group.scheduleName
+          .toLowerCase()
+          .includes("matutino");
+        const abbreviation = isMatutino ? "HM" : "HV";
+
+        events.push({
+          id: `${dateStr}-${group.scheduleId}`,
+          title: isMobile ? abbreviation : group.scheduleName,
+          start: dateStr,
+          allDay: true,
+          backgroundColor: config.colorHex,
+          borderColor: config.colorHex,
+          textColor: "#ffffff",
+          extendedProps: {
+            dateStr,
+            scheduleName: group.scheduleName,
+            shiftStatus,
+            isMatutino,
+            checkIn: checkIn?.isVirtual ? null : checkIn,
+            checkOut: checkOut?.isVirtual ? null : checkOut,
+            isVirtual: group.isVirtual,
+          },
+        });
+      });
     });
+
+    return events;
   }, [data, statusConfig, isMobile]);
 
   const handleEventClick = (clickInfo) => {
-    setSelectedEvent(clickInfo.event.extendedProps);
+    const eventData = clickInfo.event.extendedProps;
+    setSelectedDayData({
+      date: clickInfo.event.start,
+      dateStr: eventData.dateStr,
+      ...eventData,
+    });
     setOpenDialog(true);
   };
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setSelectedEvent(null);
+    setSelectedDayData(null);
   };
 
   return (
@@ -275,11 +207,11 @@ const AttendanceMonthCalendar = ({ data = mockData }) => {
               Mes Actual
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {data.periods?.month?.dateRange?.start &&
+              {data?.periods?.month?.dateRange?.start &&
                 format(
                   parseISO(data.periods.month.dateRange.start),
                   "MMMM yyyy",
-                  { locale: es }
+                  { locale: es },
                 )}
             </Typography>
           </Box>
@@ -325,12 +257,7 @@ const AttendanceMonthCalendar = ({ data = mockData }) => {
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
             locale={esLocale}
-            headerToolbar={false}  // ← Oculta completamente el header
-            /*headerToolbar={{
-              left: isMobile ? "prev,next" : "prev,next today",
-              center: "title",
-              right: isMobile ? "" : "dayGridMonth",
-            }}*/
+            headerToolbar={false}
             events={calendarEvents}
             eventClick={handleEventClick}
             height={isMobile ? "auto" : 600}
@@ -384,35 +311,62 @@ const AttendanceMonthCalendar = ({ data = mockData }) => {
       <AttendanceEventDialog
         open={openDialog}
         onClose={handleCloseDialog}
-        event={selectedEvent}
+        dayData={selectedDayData}
         statusConfig={statusConfig}
       />
     </>
   );
 };
 
-// Componente Dialog para mostrar detalles del evento
-const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
+/**
+ * Componente Dialog mejorado para mostrar detalles del evento
+ */
+const AttendanceEventDialog = ({ open, onClose, dayData, statusConfig }) => {
   const theme = useTheme();
 
-  if (!event) return null;
+  if (!dayData) return null;
 
-  const { record } = event;
-  const config = statusConfig[record.shiftStatus];
+  const config = statusConfig[dayData.shiftStatus];
 
   const formatTime = (timestamp) => {
     if (!timestamp) return "-";
-    return format(parseISO(timestamp), "HH:mm:ss", { locale: es });
+    try {
+      return format(new Date(timestamp), "HH:mm:ss", { locale: es });
+    } catch (error) {
+      return "-";
+    }
   };
 
-  const formatDate = (dateStr) => {
-    return format(parseISO(dateStr), "EEEE, d 'de' MMMM 'de' yyyy", {
+  const formatDate = (date) => {
+    return format(date, "EEEE, d 'de' MMMM 'de' yyyy", {
       locale: es,
     });
   };
 
-  const hasCheckIn = record.checkIn !== null;
-  const hasCheckOut = record.checkOut !== null;
+  const hasCheckIn =
+    dayData.checkIn !== null &&
+    !dayData.isVirtual &&
+    dayData.checkIn?.timestamp;
+  const hasCheckOut =
+    dayData.checkOut !== null &&
+    !dayData.isVirtual &&
+    dayData.checkOut?.timestamp;
+
+  // Calcular horas trabajadas
+  let hoursWorked = null;
+  if (
+    hasCheckIn &&
+    hasCheckOut &&
+    dayData.checkIn.timestamp &&
+    dayData.checkOut.timestamp
+  ) {
+    const start = new Date(dayData.checkIn.timestamp);
+    const end = new Date(dayData.checkOut.timestamp);
+    const minutesWorked = Math.floor((end - start) / 60000);
+    const hours = Math.floor(minutesWorked / 60);
+    const mins = minutesWorked % 60;
+    hoursWorked = `${hours}h ${mins}m`;
+  }
 
   return (
     <Dialog
@@ -420,16 +374,9 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      /*PaperProps={{
+      PaperProps={{
         sx: {
           borderRadius: 3,
-        },
-      }}*/
-      slotProps={{
-        paper: {
-          sx: {
-            borderRadius: 3,
-          },
         },
       }}
     >
@@ -451,10 +398,10 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
             </Avatar>
             <Box>
               <Typography variant="h6" fontWeight={700}>
-                {record.schedule.name}
+                {dayData.scheduleName}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {formatDate(record.date)}
+                {formatDate(dayData.date)}
               </Typography>
             </Box>
           </Stack>
@@ -474,9 +421,8 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
             <Chip
               icon={React.createElement(config.Icon, { sx: { fontSize: 18 } })}
               label={config.label}
-              color={config.colorHex}
               sx={{
-                bgcolor: `${config.colorHex}15`,
+                bgcolor: alpha(config.colorHex, 0.15),
                 border: `1px solid ${alpha(config.colorHex, 0.3)}`,
                 color: config.colorHex,
                 fontWeight: 600,
@@ -485,6 +431,35 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
               }}
             />
           </Box>
+
+          {/* Mensaje de ausencia */}
+          {dayData.isVirtual && (
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.warning.main, 0.08),
+                border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+              }}
+            >
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <InfoIcon sx={{ color: "warning.main", fontSize: 22 }} />
+                <Box>
+                  <Typography
+                    variant="body2"
+                    fontWeight={600}
+                    color="warning.main"
+                  >
+                    Ausencia Detectada
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    No se encontraron registros de asistencia para este turno
+                  </Typography>
+                </Box>
+              </Stack>
+            </Paper>
+          )}
 
           {/* Check In */}
           <Paper
@@ -510,21 +485,23 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
                   <AccessTime sx={{ fontSize: 18, color: "text.secondary" }} />
                   <Typography variant="body2">
                     <strong>Hora:</strong>{" "}
-                    {formatTime(record.checkIn.timestamp)}
+                    {formatTime(dayData.checkIn.timestamp)}
                   </Typography>
                   <Chip
                     label={
-                      statusConfig[record.checkIn.status]?.label ||
-                      record.checkIn.status
+                      statusConfig[dayData.checkIn.status]?.label ||
+                      dayData.checkIn.status
                     }
                     size="small"
                     sx={{
                       bgcolor: alpha(
-                        statusConfig[record.checkIn.status]?.colorHex || "#999",
-                        0.1
+                        statusConfig[dayData.checkIn.status]?.colorHex ||
+                          "#999",
+                        0.1,
                       ),
                       color:
-                        statusConfig[record.checkIn.status]?.colorHex || "#999",
+                        statusConfig[dayData.checkIn.status]?.colorHex ||
+                        "#999",
                       fontSize: "0.7rem",
                       height: 20,
                       fontWeight: 600,
@@ -535,7 +512,7 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
                   <Computer sx={{ fontSize: 18, color: "text.secondary" }} />
                   <Typography variant="body2">
                     <strong>Dispositivo:</strong>{" "}
-                    {record.checkIn.device?.name || "-"}
+                    {dayData.checkIn.deviceId?.name || "-"}
                   </Typography>
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={1}>
@@ -545,7 +522,7 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
                     sx={{ textTransform: "capitalize" }}
                   >
                     <strong>Método:</strong>{" "}
-                    {record.checkIn.verificationMethod || "-"}
+                    {dayData.checkIn.verificationMethod || "-"}
                   </Typography>
                 </Stack>
               </Stack>
@@ -584,22 +561,22 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
                   <AccessTime sx={{ fontSize: 18, color: "text.secondary" }} />
                   <Typography variant="body2">
                     <strong>Hora:</strong>{" "}
-                    {formatTime(record.checkOut.timestamp)}
+                    {formatTime(dayData.checkOut.timestamp)}
                   </Typography>
                   <Chip
                     label={
-                      statusConfig[record.checkOut.status]?.label ||
-                      record.checkOut.status
+                      statusConfig[dayData.checkOut.status]?.label ||
+                      dayData.checkOut.status
                     }
                     size="small"
                     sx={{
                       bgcolor: alpha(
-                        statusConfig[record.checkOut.status]?.colorHex ||
+                        statusConfig[dayData.checkOut.status]?.colorHex ||
                           "#999",
-                        0.1
+                        0.1,
                       ),
                       color:
-                        statusConfig[record.checkOut.status]?.colorHex ||
+                        statusConfig[dayData.checkOut.status]?.colorHex ||
                         "#999",
                       fontSize: "0.7rem",
                       height: 20,
@@ -611,7 +588,7 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
                   <Computer sx={{ fontSize: 18, color: "text.secondary" }} />
                   <Typography variant="body2">
                     <strong>Dispositivo:</strong>{" "}
-                    {record.checkOut.device?.name || "-"}
+                    {dayData.checkOut.deviceId?.name || "-"}
                   </Typography>
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={1}>
@@ -621,7 +598,7 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
                     sx={{ textTransform: "capitalize" }}
                   >
                     <strong>Método:</strong>{" "}
-                    {record.checkOut.verificationMethod || "-"}
+                    {dayData.checkOut.verificationMethod || "-"}
                   </Typography>
                 </Stack>
               </Stack>
@@ -633,7 +610,7 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
           </Paper>
 
           {/* Horas trabajadas */}
-          {record.hoursWorked && (
+          {hoursWorked && (
             <Box
               sx={{
                 p: 2,
@@ -657,7 +634,7 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
                     fontWeight={700}
                     color="success.main"
                   >
-                    {record.hoursWorked}
+                    {hoursWorked}
                   </Typography>
                 </Box>
               </Stack>
@@ -665,8 +642,10 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
           )}
 
           {/* Justificación */}
-          {/* {record.justification && (
-            <Box
+          {(dayData.checkIn?.justification?.approved ||
+            dayData.checkOut?.justification?.approved) && (
+            <Paper
+              elevation={0}
               sx={{
                 p: 2,
                 borderRadius: 2,
@@ -680,20 +659,22 @@ const AttendanceEventDialog = ({ open, onClose, event, statusConfig }) => {
                 />
                 <Box>
                   <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
+                    variant="subtitle2"
+                    fontWeight={700}
+                    color="info.main"
                     mb={0.5}
                   >
-                    Justificación:
+                    Justificación Aprobada
                   </Typography>
-                  <Typography variant="body2">
-                    {record.justification}
+                  <Typography variant="body2" color="text.secondary">
+                    {dayData.checkIn?.justification?.reason ||
+                      dayData.checkOut?.justification?.reason ||
+                      "Sin descripción"}
                   </Typography>
                 </Box>
               </Stack>
-            </Box>
-          )} */}
+            </Paper>
+          )}
         </Stack>
       </DialogContent>
 

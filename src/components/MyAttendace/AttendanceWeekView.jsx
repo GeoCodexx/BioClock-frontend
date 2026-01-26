@@ -37,48 +37,7 @@ import {
 import { format, parseISO, startOfWeek, addDays, isToday } from "date-fns";
 import { es } from "date-fns/locale";
 
-// Datos de ejemplo
-const mockData = {
-  periods: {
-    week: {
-      dateRange: {
-        start: "2025-12-01",
-        end: "2025-12-07",
-      },
-      stats: {
-        total: 2,
-        onTime: 0,
-        late: 1,
-        absent: 5,
-        incomplete: 1,
-        justified: 0,
-        earlyExit: 1,
-        totalHoursWorked: "0h 4m",
-      },
-      records: [
-        {
-          date: "2025-12-05",
-          schedule: { _id: "1", name: "Horario Vespertino" },
-          checkIn: null,
-          checkOut: {
-            timestamp: "2025-12-05T23:00:32.218Z",
-            status: "on_time",
-          },
-          shiftStatus: "incomplete",
-        },
-        {
-          date: "2025-12-05",
-          schedule: { _id: "2", name: "Horario Matutino" },
-          checkIn: { timestamp: "2025-12-05T14:49:47.133Z", status: "late" },
-          checkOut: { timestamp: "2025-12-05T14:54:42.864Z", status: "early" },
-          shiftStatus: "early_exit",
-        },
-      ],
-    },
-  },
-};
-
-const AttendanceWeekView = ({ data = mockData }) => {
+const AttendanceWeekView = ({ data }) => {
   const theme = useTheme();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
@@ -90,11 +49,6 @@ const AttendanceWeekView = ({ data = mockData }) => {
         Icon: CheckCircle,
         colorHex: "#10b981",
       },
-      /*complete: {
-        label: "Completo",
-        Icon: CheckCircle,
-        colorHex: "#10b981",
-      },*/
       late: {
         label: "Tardanza",
         Icon: ErrorIcon,
@@ -104,16 +58,6 @@ const AttendanceWeekView = ({ data = mockData }) => {
         label: "Temprano",
         Icon: InfoIcon,
         colorHex: "#3b82f6",
-      },
-      /*justified: {
-        label: "Justificado",
-        Icon: InfoIcon,
-        colorHex: "#3b82f6",
-      },*/
-      incomplete: {
-        label: "Incompleto",
-        Icon: ErrorIcon,
-        colorHex: "#f44336",
       },
       early_exit: {
         label: "Salida Temprana",
@@ -126,10 +70,13 @@ const AttendanceWeekView = ({ data = mockData }) => {
         colorHex: "#9ca3af",
       },
     }),
-    []
+    [],
   );
 
-  // Generar los 7 días de la semana con sus registros agrupados
+  /**
+   * CLAVE: Procesar la estructura del backend
+   * Backend devuelve: { "2026-01-19": [{...}, {...}], "2026-01-20": [...] }
+   */
   const weekDays = useMemo(() => {
     if (!data?.periods?.week?.dateRange?.start) return [];
 
@@ -137,35 +84,113 @@ const AttendanceWeekView = ({ data = mockData }) => {
       weekStartsOn: 1, // Lunes
     });
 
+    // Los registros vienen agrupados por fecha
+    const records = data.periods.week.records || {};
+
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(weekStart, i);
       const dateStr = format(date, "yyyy-MM-dd");
 
-      // Buscar registros para este día
-      const dayRecords = (data.periods.week.records || []).filter(
-        (record) => record.date === dateStr
-      );
+      // Obtener registros del día
+      const dayRecords = records[dateStr] || [];
 
-      // Separar por horario
-      const matutino = dayRecords.find((r) =>
-        r.schedule.name.toLowerCase().includes("matutino")
-      );
-      const vespertino = dayRecords.find((r) =>
-        r.schedule.name.toLowerCase().includes("vespertino")
-      );
+      /**
+       * Función para procesar registros de un horario específico
+       */
+      const processScheduleRecords = (scheduleName) => {
+        const scheduleRecords = dayRecords.filter((r) =>
+          r.scheduleId?.name
+            ?.toLowerCase()
+            .includes(scheduleName.toLowerCase()),
+        );
+
+        if (scheduleRecords.length === 0) return null;
+
+        const checkIn = scheduleRecords.find((r) => r.type === "IN");
+        const checkOut = scheduleRecords.find((r) => r.type === "OUT");
+
+        // Si checkIn es virtual (ausencia), retornar como ausente
+        if (checkIn?.isVirtual) {
+          return {
+            schedule: checkIn.scheduleId,
+            shiftStatus: "absent",
+            checkIn: null,
+            checkOut: null,
+            minutesWorked: 0,
+            hoursWorked: null,
+            justification: null,
+          };
+        }
+
+        // Determinar estado del turno
+        let shiftStatus = "absent";
+        if (checkIn && checkOut) {
+          // Tiene ambos registros
+          if (checkIn.status === "late") {
+            shiftStatus = "late";
+          } else if (checkOut.status === "early_exit") {
+            shiftStatus = "early_exit";
+          } else {
+            shiftStatus = "on_time";
+          }
+        } else if (checkIn) {
+          // Solo tiene entrada
+          shiftStatus = checkIn.status;
+        }
+
+        // Calcular minutos trabajados
+        let minutesWorked = 0;
+        if (checkIn && checkOut && !checkIn.isVirtual && !checkOut.isVirtual) {
+          const start = new Date(checkIn.timestamp);
+          const end = new Date(checkOut.timestamp);
+          minutesWorked = Math.floor((end - start) / 60000);
+        }
+
+        return {
+          schedule: scheduleRecords[0].scheduleId,
+          shiftStatus,
+          checkIn:
+            checkIn && !checkIn.isVirtual
+              ? {
+                  timestamp: checkIn.timestamp,
+                  status: checkIn.status,
+                  device: checkIn.deviceId,
+                  verificationMethod: checkIn.verificationMethod,
+                }
+              : null,
+          checkOut:
+            checkOut && !checkOut.isVirtual
+              ? {
+                  timestamp: checkOut.timestamp,
+                  status: checkOut.status,
+                  device: checkOut.deviceId,
+                  verificationMethod: checkOut.verificationMethod,
+                }
+              : null,
+          minutesWorked,
+          hoursWorked:
+            minutesWorked > 0
+              ? `${Math.floor(minutesWorked / 60)}h ${minutesWorked % 60}m`
+              : null,
+          justification: checkIn?.justification || checkOut?.justification,
+        };
+      };
+
+      const matutino = processScheduleRecords("matutino");
+      const vespertino = processScheduleRecords("vespertino");
 
       return {
         date,
         dateStr,
-        matutino: matutino || null,
-        vespertino: vespertino || null,
-        hasRecords: dayRecords.length > 0,
+        matutino,
+        vespertino,
+        hasRecords: dayRecords.some((r) => !r.isVirtual), // Solo registros reales
       };
     });
   }, [data]);
 
   const handleDayClick = (day) => {
-    if (day.hasRecords) {
+    if (day.matutino || day.vespertino) {
       setSelectedDay(day);
       setOpenDialog(true);
     }
@@ -182,9 +207,45 @@ const AttendanceWeekView = ({ data = mockData }) => {
     const dayName = format(date, "EEE", { locale: es }).toUpperCase();
     const dayNumber = format(date, "d");
 
-    // Determinar si tiene un solo horario o ambos
     const hasBothShifts = matutino && vespertino;
     const singleShift = matutino || vespertino;
+
+    // Si no tiene ningún turno asignado
+    if (!singleShift) {
+      return (
+        <Grid>
+          <Stack alignItems="center" spacing={1}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: isDayToday ? 700 : 600,
+                color: isDayToday ? "primary.main" : "text.secondary",
+                fontSize: "0.7rem",
+              }}
+            >
+              {dayName}
+            </Typography>
+            <Box
+              sx={{
+                width: { xs: 44, sm: 56 },
+                height: { xs: 44, sm: 56 },
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: `2px dashed ${theme.palette.divider}`,
+                color: theme.palette.text.disabled,
+              }}
+            >
+              <Typography variant="body1" fontWeight={700}>
+                {dayNumber}
+              </Typography>
+            </Box>
+            <Box sx={{ height: 18 }} />
+          </Stack>
+        </Grid>
+      );
+    }
 
     return (
       <Grid>
@@ -243,12 +304,9 @@ const AttendanceWeekView = ({ data = mockData }) => {
                     height: 0,
                     borderStyle: "solid",
                     borderWidth: { xs: "44px 44px 0 0", sm: "56px 56px 0 0" },
-                    borderColor: `${
-                      statusConfig[matutino.shiftStatus]?.colorHex
-                    } transparent transparent transparent`,
+                    borderColor: `${statusConfig[matutino.shiftStatus]?.colorHex} transparent transparent transparent`,
                   }}
                 />
-
                 {/* Triángulo inferior (Vespertino) */}
                 <Box
                   sx={{
@@ -259,12 +317,9 @@ const AttendanceWeekView = ({ data = mockData }) => {
                     height: 0,
                     borderStyle: "solid",
                     borderWidth: { xs: "0 0 44px 44px", sm: "0 0 56px 56px" },
-                    borderColor: `transparent transparent ${
-                      statusConfig[vespertino.shiftStatus]?.colorHex
-                    } transparent`,
+                    borderColor: `transparent transparent ${statusConfig[vespertino.shiftStatus]?.colorHex} transparent`,
                   }}
                 />
-
                 {/* Número del día */}
                 <Box
                   sx={{
@@ -294,10 +349,8 @@ const AttendanceWeekView = ({ data = mockData }) => {
             <Tooltip
               title={
                 singleShift
-                  ? `${singleShift.schedule.name}: ${
-                      statusConfig[singleShift.shiftStatus]?.label
-                    }`
-                  : statusConfig.absent.label
+                  ? `${singleShift.schedule.name}: ${statusConfig[singleShift.shiftStatus]?.label}`
+                  : ""
               }
               arrow
               placement="top"
@@ -312,24 +365,16 @@ const AttendanceWeekView = ({ data = mockData }) => {
                   alignItems: "center",
                   justifyContent: "center",
                   cursor: "pointer",
-                  bgcolor: singleShift
-                    ? alpha(
-                        statusConfig[singleShift.shiftStatus]?.colorHex,
-                        0.15
-                      )
-                    : "transparent",
-                  border: singleShift
-                    ? `2px solid ${
-                        statusConfig[singleShift.shiftStatus]?.colorHex
-                      }`
-                    : `2px dashed ${theme.palette.divider}`,
-                  color: singleShift
-                    ? statusConfig[singleShift.shiftStatus]?.colorHex
-                    : theme.palette.text.disabled,
+                  bgcolor: alpha(
+                    statusConfig[singleShift.shiftStatus]?.colorHex,
+                    0.15,
+                  ),
+                  border: `2px solid ${statusConfig[singleShift.shiftStatus]?.colorHex}`,
+                  color: statusConfig[singleShift.shiftStatus]?.colorHex,
                   transition: "all 0.2s ease",
                   "&:hover": {
                     transform: "scale(1.08)",
-                    boxShadow: singleShift ? theme.shadows[4] : "none",
+                    boxShadow: theme.shadows[4],
                   },
                 }}
               >
@@ -340,7 +385,7 @@ const AttendanceWeekView = ({ data = mockData }) => {
             </Tooltip>
           )}
 
-          {/* Icono de estado */}
+          {/* Iconos de estado */}
           {hasRecords && (
             <Box sx={{ height: 18 }}>
               {hasBothShifts ? (
@@ -352,7 +397,7 @@ const AttendanceWeekView = ({ data = mockData }) => {
                         fontSize: 14,
                         color: statusConfig[matutino.shiftStatus]?.colorHex,
                       },
-                    }
+                    },
                   )}
                   {React.createElement(
                     statusConfig[vespertino.shiftStatus]?.Icon,
@@ -361,7 +406,7 @@ const AttendanceWeekView = ({ data = mockData }) => {
                         fontSize: 14,
                         color: statusConfig[vespertino.shiftStatus]?.colorHex,
                       },
-                    }
+                    },
                   )}
                 </Stack>
               ) : (
@@ -372,7 +417,7 @@ const AttendanceWeekView = ({ data = mockData }) => {
                       fontSize: 18,
                       color: statusConfig[singleShift.shiftStatus]?.colorHex,
                     },
-                  }
+                  },
                 )
               )}
             </Box>
@@ -411,12 +456,12 @@ const AttendanceWeekView = ({ data = mockData }) => {
               Semana Actual
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {data.periods?.week?.dateRange?.start &&
+              {data?.periods?.week?.dateRange?.start &&
                 format(parseISO(data.periods.week.dateRange.start), "d MMM", {
                   locale: es,
                 })}{" "}
               -{" "}
-              {data.periods?.week?.dateRange?.end &&
+              {data?.periods?.week?.dateRange?.end &&
                 format(parseISO(data.periods.week.dateRange.end), "d MMM", {
                   locale: es,
                 })}
@@ -431,13 +476,13 @@ const AttendanceWeekView = ({ data = mockData }) => {
           ))}
         </Grid>
 
-        {/* Estadísticas de la semana */}
+        {/* Estadísticas */}
         <Divider sx={{ my: 2 }} />
         <Grid container spacing={2}>
           <Grid size={{ xs: 2.4 }}>
             <Box textAlign="center">
               <Typography variant="h5" fontWeight={700} color="success.main">
-                {data?.periods?.week?.stats?.onTime || 0}
+                {data?.periods?.week?.stats?.present || 0}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 A Tiempo
@@ -454,33 +499,23 @@ const AttendanceWeekView = ({ data = mockData }) => {
               </Typography>
             </Box>
           </Grid>
-          {/*<Grid size={{ xs: 2 }}>
-            <Box textAlign="center">
-              <Typography variant="h5" fontWeight={700} color="primary.main">
-                {data?.periods?.week?.stats?.justified || 0}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Justificado
-              </Typography>
-            </Box>
-          </Grid>*/}
           <Grid size={{ xs: 2.4 }}>
             <Box textAlign="center">
-              <Typography variant="h5" fontWeight={700} color="error.main">
-                {data?.periods?.week?.stats?.incomplete || 0}
+              <Typography variant="h5" fontWeight={700} color="primary.main">
+                {data?.periods?.week?.stats?.early || 0}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Incompleto
+                Temprano
               </Typography>
             </Box>
           </Grid>
           <Grid size={{ xs: 2.4 }}>
             <Box textAlign="center">
-              <Typography variant="h5" fontWeight={700} color="secondary.main">
+              <Typography variant="h5" fontWeight={700} color="error.main">
                 {data?.periods?.week?.stats?.earlyExit || 0}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Salida temprano
+                Salida Temprana
               </Typography>
             </Box>
           </Grid>
@@ -494,32 +529,9 @@ const AttendanceWeekView = ({ data = mockData }) => {
               </Typography>
             </Box>
           </Grid>
-          <Grid size={{ xs: 12 }}>
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                bgcolor: alpha(theme.palette.primary.main, 0.08),
-                textAlign: "center",
-              }}
-            >
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                display="block"
-                mb={0.5}
-              >
-                Total horas trabajadas
-              </Typography>
-              <Typography variant="h5" fontWeight={700} color="primary.main">
-                {data?.periods?.week?.stats?.totalHoursWorked || "0h 0m"}
-              </Typography>
-            </Box>
-          </Grid>
         </Grid>
       </Paper>
 
-      {/* Dialog de Detalles */}
       <AttendanceDetailsDialog
         open={openDialog}
         onClose={handleCloseDialog}
@@ -530,7 +542,7 @@ const AttendanceWeekView = ({ data = mockData }) => {
   );
 };
 
-// Componente Dialog
+// Componente Dialog (mantiene la misma estructura que tenías)
 const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
   const theme = useTheme();
 
@@ -538,14 +550,14 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
 
   const formatTime = (timestamp) => {
     if (!timestamp) return "-";
-    return format(parseISO(timestamp), "HH:mm:ss", { locale: es });
+    return format(new Date(timestamp), "HH:mm:ss", { locale: es });
   };
 
   const formatDate = (date) => {
     return format(date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
   };
 
-  const ShiftCard = ({ shift, shiftName }) => {
+  const ShiftCard = ({ shift }) => {
     if (!shift) return null;
 
     const config = statusConfig[shift.shiftStatus];
@@ -558,9 +570,7 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
         sx={{
           p: 2.5,
           borderRadius: 2,
-          //border: `2px solid ${config.colorHex}`,
           border: `2px solid ${theme.palette.divider}`,
-          //bgcolor: alpha(config.colorHex, 0.05),
           mb: 2,
         }}
       >
@@ -578,15 +588,11 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
             </Typography>
           </Stack>
           <Chip
-            icon={React.createElement(config.Icon, {
-              sx: { fontSize: 18},
-            })}
-            color={config.colorHex}
+            icon={React.createElement(config.Icon, { sx: { fontSize: 18 } })}
             label={config.label}
             size="small"
             sx={{
               bgcolor: alpha(config.colorHex, 0.15),
-              //color: "white",
               color: config.colorHex,
               border: `1px solid ${config.colorHex}`,
               fontWeight: 600,
@@ -622,7 +628,7 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
                   sx={{
                     bgcolor: alpha(
                       statusConfig[shift.checkIn.status]?.colorHex || "#999",
-                      0.1
+                      0.1,
                     ),
                     color:
                       statusConfig[shift.checkIn.status]?.colorHex || "#999",
@@ -679,7 +685,7 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
                   sx={{
                     bgcolor: alpha(
                       statusConfig[shift.checkOut.status]?.colorHex || "#999",
-                      0.1
+                      0.1,
                     ),
                     color:
                       statusConfig[shift.checkOut.status]?.colorHex || "#999",
@@ -693,13 +699,6 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
                 <Typography variant="body2">
                   <strong>Dispositivo:</strong>{" "}
                   {shift.checkOut.device?.name || "-"}
-                </Typography>
-              </Stack>
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Fingerprint sx={{ fontSize: 16, color: "text.secondary" }} />
-                <Typography variant="body2">
-                  <strong>Método:</strong>{" "}
-                  {shift.checkOut.verificationMethod || "-"}
                 </Typography>
               </Stack>
             </Stack>
@@ -730,7 +729,7 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
         )}
 
         {/* Justificación */}
-        {shift.justification && (
+        {shift.justification?.approved && (
           <Box
             sx={{
               mt: 2,
@@ -749,7 +748,9 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
                 >
                   Justificación:
                 </Typography>
-                <Typography variant="body2">{shift.justification}</Typography>
+                <Typography variant="body2">
+                  {shift.justification.reason || ""}
+                </Typography>
               </Box>
             </Stack>
           </Box>
@@ -764,11 +765,7 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 3,
-        },
-      }}
+      PaperProps={{ sx: { borderRadius: 3 } }}
     >
       <DialogTitle>
         <Stack
@@ -797,17 +794,9 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
 
       <DialogContent dividers>
         <Stack spacing={2}>
-          {/* Turno Matutino */}
-          {day.matutino && (
-            <ShiftCard shift={day.matutino} shiftName="Matutino" />
-          )}
+          {day.matutino && <ShiftCard shift={day.matutino} />}
+          {day.vespertino && <ShiftCard shift={day.vespertino} />}
 
-          {/* Turno Vespertino */}
-          {day.vespertino && (
-            <ShiftCard shift={day.vespertino} shiftName="Vespertino" />
-          )}
-
-          {/* Resumen del día */}
           {day.matutino && day.vespertino && (
             <Paper
               elevation={0}
@@ -826,7 +815,7 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
                 Resumen del Día
               </Typography>
               <Grid container spacing={2}>
-                <Grid size={6}>
+                <Grid xs={6}>
                   <Typography variant="body2" color="text.secondary">
                     Total de turnos:
                   </Typography>
@@ -834,15 +823,15 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
                     2 turnos
                   </Typography>
                 </Grid>
-                <Grid size={6}>
+                <Grid xs={6}>
                   <Typography variant="body2" color="text.secondary">
                     Horas totales:
                   </Typography>
                   <Typography variant="h6" fontWeight={700}>
                     {(() => {
-                      const mat = day.matutino?.minutesWorked || 0;
-                      const vesp = day.vespertino?.minutesWorked || 0;
-                      const total = mat + vesp;
+                      const total =
+                        (day.matutino?.minutesWorked || 0) +
+                        (day.vespertino?.minutesWorked || 0);
                       const hours = Math.floor(total / 60);
                       const mins = total % 60;
                       return `${hours}h ${mins}m`;
