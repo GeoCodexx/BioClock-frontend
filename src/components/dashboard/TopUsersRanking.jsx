@@ -19,6 +19,7 @@ import {
   ToggleButton,
   Skeleton,
   CardContent,
+  alpha,
 } from "@mui/material";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
@@ -324,8 +325,13 @@ const CategoryCard = ({ title, icon, color, items, emptyLabel }) => {
                   <ListItemAvatar>
                     <Avatar
                       sx={{
-                        bgcolor: color[500] ? color[500] : color,
-                        color: "common.white",
+                        // Fondo muy suave (8% - 12%)
+                        bgcolor: alpha(color, 0.12),
+                        // Texto con el color original pero con contraste asegurado
+                        color: color,
+                        fontWeight: 600,
+                        fontSize: "0.875rem",
+                        //border: `1px solid ${alpha(color, 0.2)}`, // Opcional: un borde sutil le da el look de Chip
                       }}
                     >
                       {getInitials(it.user)}
@@ -474,7 +480,7 @@ export default function TopUsersRanking({
                 alignItems: "center",
                 justifyContent: "center",
                 //background: 'linear-gradient(135deg, #673AB7 0%, #512DA8 100%)',
-                background: theme.palette.warning.main,
+                background: theme.palette.primary.main,
                 borderRadius: 2,
                 color: "white",
                 boxShadow: "0 4px 12px rgba(103, 58, 183, 0.3)",

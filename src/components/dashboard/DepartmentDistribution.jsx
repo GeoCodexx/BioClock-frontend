@@ -5,6 +5,8 @@ import {
   Typography,
   Chip,
   useTheme,
+  alpha,
+  darken,
 } from "@mui/material";
 import ReactApexChart from "react-apexcharts";
 import PieChartIcon from "@mui/icons-material/PieChart";
@@ -80,7 +82,10 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
 
   const series = chartData.map((item) => item.count);
   const labels = chartData.map((item) => item.label);
-  const colors = chartData.map((item) => item.color);
+  const colors = chartData.map((item) => alpha(item.color, 0.5));
+
+  // Versión Chip: Borde sólido (o un poco más oscuro que el original)
+  const borderColors = chartData.map((item) => alpha(item.color, 0.8));
 
   // Obtener nombre del mes en español
   const monthNames = [
@@ -126,7 +131,7 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
     plotOptions: {
       pie: {
         donut: {
-          size: "60%",
+          size: "65%",
           labels: {
             show: true,
             name: {
@@ -153,14 +158,30 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
             },
           },
         },
+        expandOnClick: false, // Tip pro: evita que se desfase al hacer click
       },
     },
     dataLabels: {
       enabled: false,
     },
     stroke: {
-      width: 2,
-      colors: ["#fff"],
+      show: true,
+      width: theme.palette.mode === "light" ? 0 : 2,
+      colors: borderColors,
+      lineCap: "round", // Opcional: hace las uniones más suaves
+    },
+    fill: {
+      type: "solid",
+      opacity: 1, // Forzar opacidad 1 para que use exactamente el color del alpha
+    },
+    // Mejorar el efecto visual al pasar el mouse
+    states: {
+      hover: {
+        filter: {
+          type: "darken",
+          value: 0.8, // Oscurece un poco el fondo al hacer hover
+        },
+      },
     },
     tooltip: {
       y: {
@@ -171,6 +192,13 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
       },
       style: {
         fontSize: "13px",
+        //color: theme.palette.text.disabled
+      },
+      shared: false,
+      intersect: true,
+      followCursor: true, // Esto ayuda a que el tooltip no se quede estático
+      fixed: {
+        enabled: false, // Asegúrate de que no esté fijo
       },
     },
     responsive: [
@@ -189,7 +217,7 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
   const topStatus =
     chartData.length > 0
       ? chartData.reduce((prev, current) =>
-          prev.count > current.count ? prev : current
+          prev.count > current.count ? prev : current,
         )
       : null;
 
@@ -233,7 +261,7 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
                 alignItems: "center",
                 justifyContent: "center",
                 //background: 'linear-gradient(135deg, #673AB7 0%, #512DA8 100%)',
-                background: theme.palette.secondary.main,
+                background: theme.palette.primary.main,
                 borderRadius: 2,
                 color: "white",
                 boxShadow: "0 4px 12px rgba(103, 58, 183, 0.3)",
@@ -259,7 +287,7 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
 
           {topStatus && (
             <Chip
-              icon={
+              /*icon={
                 <Box
                   sx={{
                     display: "flex",
@@ -269,16 +297,16 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
                 >
                   {statusConfig[topStatus.status]?.icon}
                 </Box>
-              }
+              }*/
               label={`${topStatus.label}: ${topStatus.percentage}%`}
               sx={{
                 bgcolor: `${topStatus.color}20`,
                 color: topStatus.color,
                 fontWeight: 700,
-                border: `2px solid ${topStatus.color}40`,
+                /*border: `2px solid ${topStatus.color}40`,
                 "& .MuiChip-icon": {
                   color: topStatus.color,
-                },
+                },*/
               }}
             />
           )}

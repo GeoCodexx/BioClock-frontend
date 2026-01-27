@@ -5,7 +5,7 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
     <Card
       sx={{
         p: 3,
-        height: "100%",
+        //height: "100%",
         borderRadius: 4,
         backgroundColor: (theme) => theme.palette.background.paper,
         //background: 'rgba(255, 255, 255, 0.9)',
@@ -20,11 +20,26 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
         "&::after": {
           content: '""',
           position: "absolute",
-          inset: 0,
+          width: "180px",
+          height: "180px",
+          borderRadius: "50%",
+          opacity: 0.5,
           background: `linear-gradient(135deg, ${color} 0%, transparent 100%)`,
-          opacity: 0,
-          transition: "opacity 0.4s ease",
           pointerEvents: "none",
+          top: "-125px",
+          right: "-15px",
+        },
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          width: "180px",
+          height: "180px",
+          borderRadius: "50%",
+          opacity: 0.5,
+          background: `linear-gradient(135deg, ${color} 0%, transparent 100%)`,
+          pointerEvents: "none",
+          top: "-85px",
+          right: "-95px",
         },
         "&:hover": {
           transform: "translateY(-4px) scale(1.02)",

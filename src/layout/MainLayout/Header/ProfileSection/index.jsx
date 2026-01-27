@@ -72,6 +72,12 @@ const ProfileSection = () => {
     setOpenProfileDialog(false);
   };
 
+  const obtenerPrimeraNombre = (name) => {
+    if (!name) return "—";
+    // trim() elimina espacios a los lados, split(' ') divide por espacios
+    return name.trim().split(" ")[0];
+  };
+
   return (
     <Box sx={{ flexShrink: 0, ml: 0.75 }}>
       <Tooltip title="Perfil" arrow>
@@ -109,7 +115,7 @@ const ProfileSection = () => {
                   transform: "scale(1.05)",
                   boxShadow: `0 0 0 4px ${alpha(
                     theme.palette.primary.main,
-                    0.1
+                    0.1,
                   )}`,
                 },
               }}
@@ -151,10 +157,10 @@ const ProfileSection = () => {
               sx={{
                 boxShadow: `0 8px 32px ${alpha(
                   theme.palette.common.black,
-                  0.12
+                  0.12,
                 )}`,
                 borderRadius: 3,
-                width: 300,
+                width: 250, //Ancho del menu o paper
                 overflow: "hidden",
                 border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                 mt: 0.5,
@@ -168,11 +174,11 @@ const ProfileSection = () => {
                       p: 2.5,
                       background: `linear-gradient(135deg, ${alpha(
                         theme.palette.primary.main,
-                        0.08
+                        0.08,
                       )} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
                       borderBottom: `1px solid ${alpha(
                         theme.palette.divider,
-                        0.08
+                        0.08,
                       )}`,
                     }}
                   >
@@ -205,7 +211,7 @@ const ProfileSection = () => {
                           }}
                         >
                           {isAuthenticated && user
-                            ? `${user.name} ${user.firstSurname}`
+                            ? `${obtenerPrimeraNombre(user.name)} ${user.firstSurname}`
                             : "Jhon Doe"}
                         </Typography>
                         <Typography
