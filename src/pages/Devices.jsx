@@ -316,7 +316,7 @@ export default function Devices() {
           borderRadius: isMobile ? 2 : 3,
           mb: 2,
           boxShadow: theme.shadows[1],
-          borderLeft: mode === "dark" ? "none" : "4px solid",
+          borderLeft: mode === "dark" ? "none" : "6px solid",
           borderColor: "primary.main",
         }}
       >

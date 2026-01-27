@@ -112,7 +112,7 @@ const PageHeader = memo(({ date, isMobile }) => {
       sx={{
         borderRadius: 3,
         mb: 3,
-        borderLeft: mode === "dark" ? "none" : "4px solid",
+        borderLeft: mode === "dark" ? "none" : "6px solid",
         borderColor: "primary.main",
       }}
     >

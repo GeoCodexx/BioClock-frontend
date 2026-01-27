@@ -20,7 +20,6 @@ import {
   LocationOn,
   CalendarMonth,
   Schedule,
-  TrendingUp,
 } from "@mui/icons-material";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
@@ -387,7 +386,7 @@ const MyAttendances = () => {
           //border: `2px solid ${theme.palette.secondary.main}`,
         },
         label: "En transcurso",
-        Icon: Cancel,
+        Icon: AccessTime,
         colorHex: theme.palette.secondary.main,
       },
     }),
@@ -539,7 +538,7 @@ const MyAttendances = () => {
         sx={{
           borderRadius: 3,
           mb: 3,
-          borderLeft: mode === "dark" ? "none" : "4px solid",
+          borderLeft: mode === "dark" ? "none" : "6px solid",
           borderColor: "primary.main",
         }}
       >

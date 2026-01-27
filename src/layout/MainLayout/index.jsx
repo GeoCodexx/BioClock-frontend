@@ -52,7 +52,7 @@ const MainLayout = () => {
             : `calc(100% - ${collapsedWidth}px)`,
           minHeight: "calc(100vh - 88px)",
           flexGrow: 1,
-          marginTop: isMobile ? "56px" : "88px",
+          marginTop: isMobile ? "56px" : "70px",
           marginRight: isMobile ? 0 : "20px",
           marginLeft: 0,
           padding: isMobile ? "16px" : "20px",
