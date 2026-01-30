@@ -42,16 +42,24 @@ import { es } from "date-fns/locale";
  * @param {function} onJustify - Callback para justificar asistencia
  * @param {string} source - Origen: 'table' | 'matrix' (opcional)
  */
-const AttendanceDrawer = ({ open, onClose, record, onJustify, source = 'table' }) => {
+const AttendanceDrawer = ({
+  open,
+  onClose,
+  record,
+  onJustify,
+  source = "table",
+}) => {
   const [showJustificationForm, setShowJustificationForm] = useState(false);
   const [justificationReason, setJustificationReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
   // Estados que permiten justificación
-  const canJustify = record && ["early_exit", "late", "absent", "incomplete"].includes(
-    record?.shiftStatus,
-  );
+  const canJustify =
+    record &&
+    ["early_exit", "late", "absent", "incomplete"].includes(
+      record?.shiftStatus,
+    );
 
   // Resetear estado al cerrar
   const handleClose = () => {
@@ -175,10 +183,10 @@ const AttendanceDrawer = ({ open, onClose, record, onJustify, source = 'table' }
           width: { xs: "100%", sm: 450, md: 500 },
           height: "calc(100% - 64px)",
           top: 64,
-          backgroundImage: (theme) =>
-            theme.palette.mode === 'dark'
+          /*backgroundImage: (theme) =>
+            theme.palette.mode === "dark"
               ? "linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))"
-              : "none",
+              : "none",*/
         },
       }}
     >
@@ -212,8 +220,8 @@ const AttendanceDrawer = ({ open, onClose, record, onJustify, source = 'table' }
             sx={{
               p: 2,
               mb: 3,
-              bgcolor: (theme) => 
-                theme.palette.mode === 'dark'
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark"
                   ? `${getStatusColor(record.shiftStatus)}.dark`
                   : `${getStatusColor(record.shiftStatus)}.light`,
               border: 1,
@@ -224,15 +232,21 @@ const AttendanceDrawer = ({ open, onClose, record, onJustify, source = 'table' }
               <Avatar
                 sx={{
                   bgcolor: `${getStatusColor(record.shiftStatus)}.main`,
-                  width: 56,
-                  height: 56,
+                  width: 48,
+                  height: 48,
                 }}
               >
                 {getStatusIcon(record.shiftStatus)}
               </Avatar>
-              <Box>
-                <Typography variant="overline" color="text.secondary">
-                  Estado del Turno
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Typography variant="body2">
+                  Estado del turno:
                 </Typography>
                 <Typography variant="h5" fontWeight="bold">
                   {getStatusLabel(record.shiftStatus)}
@@ -242,7 +256,10 @@ const AttendanceDrawer = ({ open, onClose, record, onJustify, source = 'table' }
           </Paper>
 
           {/* Información del Usuario */}
-          <Paper elevation={0} sx={{ p: 2, mb: 3, bgcolor: "background.default" }}>
+          <Paper
+            elevation={0}
+            sx={{ p: 2, mb: 3, bgcolor: "background.card" }}
+          >
             <Stack direction="row" spacing={2} alignItems="center" mb={2}>
               <Avatar sx={{ bgcolor: "primary.main" }}>
                 <PersonIcon />
@@ -273,7 +290,10 @@ const AttendanceDrawer = ({ open, onClose, record, onJustify, source = 'table' }
           </Paper>
 
           {/* Información del Turno */}
-          <Paper elevation={0} sx={{ p: 2, mb: 3, bgcolor: "background.default" }}>
+          <Paper
+            elevation={0}
+            sx={{ p: 2, mb: 3, bgcolor: "background.card" }}
+          >
             <Stack direction="row" spacing={2} alignItems="center" mb={2}>
               <Avatar sx={{ bgcolor: "secondary.main" }}>
                 <ScheduleIcon />
@@ -303,7 +323,10 @@ const AttendanceDrawer = ({ open, onClose, record, onJustify, source = 'table' }
           </Paper>
 
           {/* Registros de Asistencia */}
-          <Paper elevation={0} sx={{ p: 2, mb: 3, bgcolor: "background.default" }}>
+          <Paper
+            elevation={0}
+            sx={{ p: 2, mb: 3, bgcolor: "background.card" }}
+          >
             <Stack direction="row" spacing={2} alignItems="center" mb={2}>
               <Avatar sx={{ bgcolor: "info.main" }}>
                 <AccessTimeIcon />
@@ -392,7 +415,7 @@ const AttendanceDrawer = ({ open, onClose, record, onJustify, source = 'table' }
                   mt: 2,
                   textAlign: "center",
                   bgcolor: (theme) =>
-                    theme.palette.mode === 'dark'
+                    theme.palette.mode === "dark"
                       ? "primary.dark"
                       : "primary.light",
                   borderColor: "primary.main",
@@ -418,7 +441,10 @@ const AttendanceDrawer = ({ open, onClose, record, onJustify, source = 'table' }
 
           {/* Dispositivo de Registro */}
           {record.checkIn?.device && (
-            <Paper elevation={0} sx={{ p: 2, mb: 3, bgcolor: "background.default" }}>
+            <Paper
+              elevation={0}
+              sx={{ p: 2, mb: 3, bgcolor: "background.default" }}
+            >
               <Typography
                 variant="subtitle2"
                 color="text.secondary"
@@ -465,7 +491,10 @@ const AttendanceDrawer = ({ open, onClose, record, onJustify, source = 'table' }
               </Button>
 
               <Collapse in={showJustificationForm}>
-                <Paper elevation={2} sx={{ p: 3, bgcolor: "background.default" }}>
+                <Paper
+                  elevation={2}
+                  sx={{ p: 3, bgcolor: "background.default" }}
+                >
                   <Typography variant="h6" gutterBottom>
                     Solicitar Justificación
                   </Typography>

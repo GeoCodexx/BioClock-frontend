@@ -20,7 +20,6 @@ import {
   ViewDay,
   ViewWeek,
 } from "@mui/icons-material";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { format, parseISO, isSameMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import AttendanceDrawer from "./AttendanceDrawer";
@@ -28,10 +27,10 @@ import AttendanceDrawer from "./AttendanceDrawer";
 /* ---------------------------------------------
    Configuration
 --------------------------------------------- */
-const ROW_HEIGHT = 60;
-const COLUMN_WIDTH = 100;
-const NAME_COLUMN_WIDTH = 220;
-const HEADER_HEIGHT = 60;
+const ROW_HEIGHT = 40;
+const COLUMN_WIDTH = 80;
+const NAME_COLUMN_WIDTH = 240;
+const HEADER_HEIGHT = 50;
 
 const STATUS_CONFIG = {
   on_time: { dark: "#2e7d32", light: "#66bb6a", label: "A Tiempo" },
@@ -55,10 +54,16 @@ const MatrixCell = memo(
           borderRight: (theme) => `1px solid ${theme.palette.divider}`,
           borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
           display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
           gap: 0.5,
           p: 0.5,
+          px: 3,
           cursor: shifts.length > 0 ? "pointer" : "default",
           transition: "background-color 0.15s ease",
+          "&:hover": {
+            bgcolor:(theme) => `${theme.palette.primary.main}15`
+          },
         }}
       >
         {shifts.length === 0 ? (
@@ -86,12 +91,14 @@ const MatrixCell = memo(
             >
               <Box
                 sx={{
+                  //width: 10,
+                  height: 13.5,
                   flex: 1,
-                  borderRadius: 0.5,
+                  borderRadius: 3,
                   bgcolor: getStatusColor(shift.shiftStatus),
                   transition: "transform 0.15s ease, box-shadow 0.15s ease",
                   "&:hover": {
-                    transform: "scale(1.08)",
+                    transform: "scale(1.3)",
                     boxShadow: 2,
                     zIndex: 2,
                   },
@@ -215,7 +222,7 @@ const TimelineMatrix = ({
       <Paper
         sx={{
           p: 2,
-          mb: 2,
+          //mb: 2,
           borderRadius: 2,
           display: "flex",
           alignItems: "center",
@@ -224,6 +231,52 @@ const TimelineMatrix = ({
           flexWrap: "wrap",
         }}
       >
+        {/* Legend */}
+        <Paper sx={{ p: 2, borderRadius: 2 }}>
+          {/* <Typography variant="subtitle2" gutterBottom fontWeight={600}>
+            Leyenda de Estados:
+          </Typography> */}
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+              <Chip
+                key={key}
+                label={config.label}
+                size="small"
+                sx={{
+                  bgcolor:
+                    theme.palette.mode === "dark" ? config.dark : config.light,
+                  color: alpha("#ffffff", 0.85),
+                  //fontWeight: 500,
+                }}
+              />
+            ))}
+          </Stack>
+        </Paper>
+        {/* View Mode Toggle */}
+        {/* <ToggleButtonGroup
+          value={viewMode}
+          exclusive
+          onChange={handleViewModeChange}
+          size="small"
+          sx={{
+            "& .MuiToggleButton-root": {
+              px: 2,
+              py: 1,
+              textTransform: "none",
+              fontWeight: 500,
+            },
+          }}
+        >
+          <ToggleButton value="day" aria-label="vista diaria">
+            <ViewDay sx={{ mr: 1, fontSize: 20 }} />
+            Día
+          </ToggleButton>
+          <ToggleButton value="week" aria-label="vista semanal">
+            <ViewWeek sx={{ mr: 1, fontSize: 20 }} />
+            Semana
+          </ToggleButton>
+        </ToggleButtonGroup> */}
+
         {/* Month Navigation */}
         <Stack direction="row" spacing={1} alignItems="center">
           <Tooltip title="Mes anterior">
@@ -276,33 +329,8 @@ const TimelineMatrix = ({
           </Tooltip>
         </Stack>
 
-        {/* View Mode Toggle */}
-        <ToggleButtonGroup
-          value={viewMode}
-          exclusive
-          onChange={handleViewModeChange}
-          size="small"
-          sx={{
-            "& .MuiToggleButton-root": {
-              px: 2,
-              py: 1,
-              textTransform: "none",
-              fontWeight: 500,
-            },
-          }}
-        >
-          <ToggleButton value="day" aria-label="vista diaria">
-            <ViewDay sx={{ mr: 1, fontSize: 20 }} />
-            Día
-          </ToggleButton>
-          <ToggleButton value="week" aria-label="vista semanal">
-            <ViewWeek sx={{ mr: 1, fontSize: 20 }} />
-            Semana
-          </ToggleButton>
-        </ToggleButtonGroup>
-
         {/* Stats */}
-        <Stack
+        {/* <Stack
           direction="row"
           spacing={3}
           sx={{ display: { xs: "none", md: "flex" } }}
@@ -323,7 +351,7 @@ const TimelineMatrix = ({
               {visibleDates.length}
             </Typography>
           </Box>
-        </Stack>
+        </Stack> */}
       </Paper>
 
       {/* Matrix Container */}
@@ -365,37 +393,34 @@ const TimelineMatrix = ({
             },
 
             // Resaltar todas las celdas de la misma fila al hacer hover
-            ...Object.fromEntries(
+            /*...Object.fromEntries(
               users.map((_, rowIdx) => [
-                `& .row-${rowIdx}:hover, & .row-${rowIdx}:hover ~ .row-${rowIdx}`,
+                `&:has(.row-${rowIdx}:hover) .row-${rowIdx}`,
                 {
-                  bgcolor: isDark
-                    ? "rgba(255,255,255,0.05)"
-                    : "rgba(0,0,0,0.04)",
+                  bgcolor: `${theme.palette.primary.main}10`,
                 },
               ]),
-            ),
+            ),*/
 
             // Resaltar todas las celdas de la misma columna al hacer hover
-            ...Object.fromEntries(
+            /*...Object.fromEntries(
               visibleDates.map((_, colIdx) => [
-                `& .col-${colIdx}:hover`,
+                `&:has(.col-${colIdx}:hover) .col-${colIdx}`,
                 {
-                  bgcolor: isDark
-                    ? "rgba(255,255,255,0.05)"
-                    : "rgba(0,0,0,0.04)",
+                  bgcolor: `${theme.palette.primary.main}10`,
                 },
               ]),
-            ),
+            ),*/
 
             // Resaltar el header de la columna cuando se hace hover en cualquier celda de esa columna
             ...Object.fromEntries(
               visibleDates.map((_, colIdx) => [
                 `&:has(.col-${colIdx}:hover) .header-col-${colIdx}`,
                 {
-                  bgcolor: isDark
+                  bgcolor: `${theme.palette.primary.main}30`,
+                  /*bgcolor: isDark
                     ? "rgba(255,255,255,0.15)"
-                    : "rgba(0,0,0,0.1)",
+                    : "rgba(0,0,0,0.1)",*/
                 },
               ]),
             ),
@@ -405,9 +430,10 @@ const TimelineMatrix = ({
               users.map((_, rowIdx) => [
                 `&:has(.row-${rowIdx}:hover) .user-row-${rowIdx}`,
                 {
-                  bgcolor: isDark
+                  /*bgcolor: isDark
                     ? "rgba(255,255,255,0.08)"
-                    : "rgba(0,0,0,0.06)",
+                    : "rgba(0,0,0,0.06)",*/
+                  //bgcolor: `${theme.palette.primary.main}14`,
                   color: "primary.main",
                 },
               ]),
@@ -420,18 +446,49 @@ const TimelineMatrix = ({
               position: "sticky",
               top: 0,
               left: 0,
-              zIndex: 30,
-              bgcolor: "primary.main",
-              color: "primary.contrastText",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: 700,
+              zIndex: 40,
+              bgcolor: theme.palette.background.paper, // Fondo sólido
+              color: theme.palette.text.primary,
+              // Eliminamos width/height fijos para que use el tamaño natural del contenido
+              /*minWidth: "120px", 
+    minHeight: "60px",*/
               borderRight: `2px solid ${theme.palette.divider}`,
               borderBottom: `2px solid ${theme.palette.divider}`,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              padding: "8px",
+              // --- SOLUCIÓN A LA DIAGONAL ---
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                zIndex: -1, // Para que el texto quede encima de la línea
+                background: `linear-gradient(to top right, transparent calc(50% - 1px), ${theme.palette.divider}, transparent calc(50% + 1px))`,
+              },
             }}
           >
-            <Typography variant="body2" fontWeight={700}>
+            {/* Texto superior derecho */}
+            <Typography
+              //variant="caption"
+              sx={{ alignSelf: "flex-end", fontWeight: 700 }}
+            >
+              Día
+            </Typography>
+
+            {/* Texto inferior izquierdo */}
+            <Typography
+              sx={{
+                alignSelf: "flex-start",
+                fontWeight: 700,
+                mb: "10px",
+                ml: "8px",
+                lineHeight: 0,
+              }}
+            >
               Usuario
             </Typography>
           </Box>
@@ -456,8 +513,10 @@ const TimelineMatrix = ({
                   position: "sticky",
                   top: 0,
                   zIndex: 20,
-                  bgcolor: "primary.main",
-                  color: "primary.contrastText",
+                  //bgcolor: "primary.main",
+                  bgcolor: alpha(theme.palette.primary.main, 0.08),
+                  //color: "primary.contrastText",
+                  color: theme.palette.text.primary,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -572,337 +631,5 @@ const TimelineMatrix = ({
     </>
   );
 };
-
-/* ---------------------------------------------
-   OPCIÓN 2: Virtualización con throttle
-   Para >100 usuarios o >60 días
---------------------------------------------- */
-const TimelineMatrixVirtual = ({
-  users = [],
-  dates = [],
-  matrix = {},
-  granularity = "day",
-  onJustify,
-}) => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
-  const parentRef = useRef(null);
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [hoverRow, setHoverRow] = useState(null);
-  const [hoverCol, setHoverCol] = useState(null);
-
-  const visibleDates = useMemo(() => {
-    if (!dates?.length) return [];
-    if (granularity === "day")
-      return dates.map((d) => ({ key: d, type: "day" }));
-
-    const map = new Map();
-    dates.forEach((d) => {
-      const date = parseISO(d);
-      const key =
-        granularity === "week"
-          ? `S${format(date, "w", { locale: es })} ${format(date, "MMM", { locale: es })}`
-          : format(date, "MMM yyyy", { locale: es });
-      if (!map.has(key)) map.set(key, []);
-      map.get(key).push(d);
-    });
-    return Array.from(map.entries()).map(([key, values]) => ({
-      key,
-      values,
-      type: granularity,
-    }));
-  }, [dates, granularity]);
-
-  // CLAVE: Reducir overscan al mínimo
-  const rowVirtualizer = useVirtualizer({
-    count: users.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => ROW_HEIGHT,
-    overscan: 1, // Mínimo
-  });
-
-  const columnVirtualizer = useVirtualizer({
-    horizontal: true,
-    count: visibleDates.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => COLUMN_WIDTH,
-    overscan: 1, // Mínimo
-  });
-
-  const getStatusColor = useCallback(
-    (status) => {
-      const config = STATUS_CONFIG[status];
-      return config ? (isDark ? config.dark : config.light) : "#999";
-    },
-    [isDark],
-  );
-
-  const handleShiftClick = useCallback((shift) => {
-    if (shift?.record) {
-      setSelectedRecord(shift.record);
-      setDrawerOpen(true);
-    }
-  }, []);
-
-  if (!users?.length || !visibleDates?.length) {
-    return (
-      <Paper sx={{ p: 6, textAlign: "center" }}>
-        <Typography>No hay datos</Typography>
-      </Paper>
-    );
-  }
-
-  const virtualRows = rowVirtualizer.getVirtualItems();
-  const virtualCols = columnVirtualizer.getVirtualItems();
-
-  return (
-    <>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Stack direction="row" spacing={1} flexWrap="wrap">
-          {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-            <Chip
-              key={key}
-              label={key}
-              size="small"
-              sx={{
-                bgcolor: isDark ? config.dark : config.light,
-                color: "white",
-              }}
-            />
-          ))}
-        </Stack>
-      </Paper>
-
-      <Paper sx={{ borderRadius: 2, overflow: "hidden" }}>
-        <Box
-          ref={parentRef}
-          sx={{
-            height: "calc(100vh - 320px)",
-            maxHeight: 700,
-            overflow: "auto",
-            position: "relative",
-
-            // GPU acceleration
-            transform: "translateZ(0)",
-            willChange: "scroll-position",
-
-            "&::-webkit-scrollbar": { width: 10, height: 10 },
-            "&::-webkit-scrollbar-thumb": {
-              bgcolor: alpha(theme.palette.text.primary, 0.2),
-              borderRadius: 2,
-            },
-          }}
-        >
-          {/* Header */}
-          <Box
-            sx={{
-              position: "sticky",
-              top: 0,
-              zIndex: 12,
-              display: "flex",
-              bgcolor: "background.paper",
-            }}
-          >
-            <Box
-              sx={{
-                position: "sticky",
-                left: 0,
-                zIndex: 13,
-                width: NAME_COLUMN_WIDTH,
-                height: HEADER_HEIGHT,
-                bgcolor: "primary.main",
-                color: "primary.contrastText",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 700,
-                borderRight: `2px solid ${theme.palette.divider}`,
-              }}
-            >
-              <Typography variant="body2" fontWeight={700}>
-                Usuario
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{
-                position: "relative",
-                width: columnVirtualizer.getTotalSize(),
-                height: HEADER_HEIGHT,
-              }}
-            >
-              {virtualCols.map((col) => {
-                const dateInfo = visibleDates[col.index];
-                const dateStr =
-                  dateInfo.type === "day"
-                    ? format(parseISO(dateInfo.key), "dd MMM", { locale: es })
-                    : dateInfo.key;
-
-                return (
-                  <Box
-                    key={col.key}
-                    sx={{
-                      position: "absolute",
-                      left: col.start,
-                      width: col.size,
-                      height: "100%",
-                      bgcolor: "primary.main",
-                      color: "primary.contrastText",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRight: `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      fontWeight={600}
-                      fontSize="0.8rem"
-                    >
-                      {dateStr}
-                    </Typography>
-                  </Box>
-                );
-              })}
-            </Box>
-          </Box>
-
-          {/* Rows */}
-          <Box
-            sx={{ position: "relative", height: rowVirtualizer.getTotalSize() }}
-          >
-            {virtualRows.map((row) => {
-              const user = users[row.index];
-
-              return (
-                <Box
-                  key={row.key}
-                  sx={{
-                    position: "absolute",
-                    top: row.start,
-                    height: row.size,
-                    width: "100%",
-                    display: "flex",
-                    borderBottom: `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 11,
-                      width: NAME_COLUMN_WIDTH,
-                      bgcolor: "background.paper",
-                      display: "flex",
-                      alignItems: "center",
-                      px: 2,
-                      borderRight: `2px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      fontWeight={500}
-                      noWrap
-                      fontSize="0.875rem"
-                    >
-                      {user.fullName}
-                    </Typography>
-                  </Box>
-
-                  <Box
-                    sx={{
-                      position: "relative",
-                      width: columnVirtualizer.getTotalSize(),
-                    }}
-                  >
-                    {virtualCols.map((col) => {
-                      const dateInfo = visibleDates[col.index];
-                      const shifts =
-                        dateInfo.type === "day"
-                          ? matrix[user.id]?.[dateInfo.key] || []
-                          : dateInfo.values.flatMap(
-                              (d) => matrix[user.id]?.[d] || [],
-                            );
-
-                      return (
-                        <Box
-                          key={col.key}
-                          sx={{
-                            position: "absolute",
-                            left: col.start,
-                            width: col.size,
-                            height: "100%",
-                            borderRight: `1px solid ${theme.palette.divider}`,
-                            display: "flex",
-                            gap: 0.5,
-                            p: 0.5,
-                          }}
-                        >
-                          {shifts.length === 0 ? (
-                            <Box
-                              sx={{
-                                width: "100%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <Typography
-                                variant="caption"
-                                color="text.disabled"
-                              >
-                                -
-                              </Typography>
-                            </Box>
-                          ) : (
-                            shifts.map((shift, idx) => (
-                              <Box
-                                key={idx}
-                                onClick={() => handleShiftClick(shift)}
-                                sx={{
-                                  flex: 1,
-                                  borderRadius: 1,
-                                  cursor: "pointer",
-                                  bgcolor: getStatusColor(shift.shiftStatus),
-                                  "&:hover": { transform: "scale(1.05)" },
-                                }}
-                              />
-                            ))
-                          )}
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                </Box>
-              );
-            })}
-          </Box>
-        </Box>
-      </Paper>
-
-      <AttendanceDrawer
-        open={drawerOpen}
-        record={selectedRecord}
-        onClose={() => setDrawerOpen(false)}
-        onJustify={onJustify}
-        source="matrix"
-      />
-    </>
-  );
-};
-
-// Exportar según el tamaño de datos
-/*const TimelineMatrix = (props) => {
-  const { users = [], dates = [] } = props;
-
-  // Si dataset pequeño, usar CSS Grid (mucho más rápido)
-  if (users.length < 100 && dates.length < 120) {
-    return <TimelineMatrixCSS {...props} />;
-  }
-
-  // Si dataset grande, usar virtualización
-  return <TimelineMatrixVirtual {...props} />;
-};*/
 
 export default TimelineMatrix;
