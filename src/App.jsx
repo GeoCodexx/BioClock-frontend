@@ -153,16 +153,16 @@ export default function App() {
                 </PermissionRoute>
               }
             />
-            <Route
+            {/* <Route
               path="reports/daily"
               element={
                 <PermissionRoute permission="daily-report:read">
                   <DailyReport />
                 </PermissionRoute>
               }
-            />
+            /> */}
             <Route
-              path="reports/general"
+              path="general-report"
               element={
                 <PermissionRoute permission="general-report:read">
                   <GeneralReportPage />

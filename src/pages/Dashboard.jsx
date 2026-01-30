@@ -108,7 +108,7 @@ const Dashboard = () => {
           borderColor: "divider",
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
           color: "white",*/
-          borderLeft: mode === "dark" ? "none" : "4px solid",
+          borderLeft: mode === "dark" ? "none" : "6px solid",
           borderColor: "primary.main",
         }}
       >

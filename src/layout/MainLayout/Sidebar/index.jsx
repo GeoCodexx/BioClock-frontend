@@ -24,7 +24,7 @@ import FingerprintIcon from "@mui/icons-material/Fingerprint";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import DevicesIcon from "@mui/icons-material/Devices";
 import { useState } from "react";
-import { ExpandLess, ExpandMore, ReadMore } from "@mui/icons-material";
+import { CalendarMonth, ExpandLess, ExpandMore, ReadMore, Schedule } from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LogoBitel from "../../../assets/images/bitel_logo.png";
@@ -44,7 +44,7 @@ const menuItems = [
     text: "Horarios",
     path: "/schedules",
     permission: "schedules:read",
-    icon: <EventNoteIcon />,
+    icon: <Schedule />,
   },
   {
     text: "Departamentos",
@@ -64,17 +64,17 @@ const menuItems = [
     permission: "fingerprints:read",
     icon: <FingerprintIcon />,
   },
-  {
-    text: "Asistencias",
-    path: "/attendances",
-    permission: "attendances:read",
-    icon: <EventNoteIcon />,
-  },
+  // {
+  //   text: "Asistencias",
+  //   path: "/attendances",
+  //   permission: "attendances:read",
+  //   icon: <EventNoteIcon />,
+  // },
   {
     text: "Mi Asistencia",
     path: "/myattendance",
     permission: "my-attendance:read",
-    icon: <EventNoteIcon />,
+    icon: <CalendarMonth />,
   },
   {
     text: "Gestión de Usuarios",
@@ -102,20 +102,20 @@ const menuItems = [
     ],
   },
   {
-    text: "Reportes",
+    text: "Gestión de Asistencias",
     icon: <AssessmentIcon />,
-    permission: ["daily-report:read", "general-report:read"],
+    permission: ["general-report:read", "attendances:read"],
     children: [
       {
-        text: "Asistencia del día",
-        path: "/reports/daily",
-        permission: "daily-report:read",
+        text: "Reporte General",
+        path: "/general-report",
+        permission: "general-report:read",
         icon: <ChevronRightIcon />,
       },
       {
-        text: "General",
-        path: "/reports/general",
-        permission: "general-report:read",
+        text: "Historial de Registros",
+        path: "/attendances",
+        permission: "attendances:read",
         icon: <ChevronRightIcon />,
       },
     ],

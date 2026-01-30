@@ -23,13 +23,13 @@ import {
 
 // Configuración de las tarjetas de resumen
 const SUMMARY_CONFIG = [
-  {
-    id: "total",
-    label: "Total Empleados",
-    icon: GroupsIcon,
-    color: "primary",
-    getValue: (data) => data.pagination.totalRecords,
-  },
+  // {
+  //   id: "total",
+  //   label: "Total Empleados",
+  //   icon: GroupsIcon,
+  //   color: "primary",
+  //   getValue: (data) => data.pagination.totalRecords,
+  // },
   {
     id: "on_time",
     label: "A tiempo",
@@ -75,14 +75,14 @@ const SUMMARY_CONFIG = [
     getValue: (records) =>
       records.filter((r) => r.shiftStatus === "absent").length,
   },
-  // {
-  //   id: "justified",
-  //   label: "Justificados",
-  //   icon: VerifiedUserIcon,
-  //   color: "info",
-  //   getValue: (records) =>
-  //     records.filter((r) => r.shiftStatus === "justified").length,
-  // },
+  {
+    id: "justified",
+    label: "Justificados",
+    icon: VerifiedUserIcon,
+    color: "info",
+    getValue: (records) =>
+      records.filter((r) => r.shiftStatus === "justified").length,
+  },
   // {
   //   id: "attendance_rate",
   //   label: "Tasa de Asistencia",

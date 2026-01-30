@@ -21,12 +21,14 @@ import {
   Fade,
   Chip,
   Divider,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
-import { format } from "date-fns";
+import { endOfMonth, format, startOfMonth } from "date-fns";
 import HomeIcon from "@mui/icons-material/Home";
 import {
   Search as SearchIcon,
@@ -39,16 +41,19 @@ import { Link as RouterLink } from "react-router-dom";
 import { getGeneralReport } from "../services/reportService";
 import { getSchedules } from "../services/scheduleService";
 import SummaryCards from "../components/Reports/DailyReport/SummaryCards";
-import AttendanceDetailDialog from "../components/Reports/DailyReport/AttendanceDetailDialog";
+//import AttendanceDetailDialog from "../components/Reports/DailyReport/AttendanceDetailDialog";
 /*import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";*/
 import "jspdf-autotable";
-import GeneralReportTable from "../components/Reports/GeneralReport/GeneralReportTable";
+//import GeneralReportTable from "../components/Reports/GeneralReport/GeneralReportTable";
 import GeneralReportExportButtons from "../components/Reports/GeneralReport/GeneralReportExportButtons";
 import { SafeSelect } from "../components/common/SafeSelect";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
+import AttendanceDrawer from "../components/Reports/GeneralReport/AttendanceDrawer";
+//import AttendanceMatrixPage from "./AttendanceMatrixPage";
+import TimelineMatrix from "../components/Reports/GeneralReport/TimeLineMatrix";
 
 // Constantes
 const STATUS_OPTIONS = [
@@ -134,7 +139,7 @@ const PageHeader = memo(({ date, isMobile }) => {
                     label={format(
                       new Date(date + "T00:00:00"),
                       "d 'de' MMMM 'de' yyyy",
-                      { locale: es }
+                      { locale: es },
                     )}
                     size="small"
                     sx={{
@@ -167,7 +172,7 @@ const PageHeader = memo(({ date, isMobile }) => {
                   {format(
                     new Date(date + "T00:00:00"),
                     "EEEE, d 'de' MMMM 'de' yyyy",
-                    { locale: es }
+                    { locale: es },
                   )}
                 </Typography>
               )}
@@ -232,16 +237,17 @@ const FiltersCard = memo(
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
             <Grid container spacing={2}>
               {/* Búsqueda */}
-              <Grid size={{ xs: 12, md: 6 }}>
+              <Grid size={{ xs: 12, md: 3.5 }}>
                 <TextField
                   fullWidth
                   size="small"
-                  label="Buscar colaborador"
+                  label="Buscar"
                   placeholder="Nombre, apellido o DNI"
                   value={search}
                   onChange={onSearchChange}
                   slotProps={{
                     input: {
+                      style: { fontSize: "0.9rem" },
                       startAdornment: (
                         <InputAdornment position="start">
                           <SearchIcon color="action" />
@@ -253,9 +259,9 @@ const FiltersCard = memo(
               </Grid>
 
               {/* Filtro por turno */}
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, md: 2.25 }}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Turno</InputLabel>
+                  <InputLabel sx={{ fontSize: "0.9rem" }}>Turno</InputLabel>
                   <SafeSelect
                     value={scheduleId}
                     label="Turno"
@@ -264,12 +270,17 @@ const FiltersCard = memo(
                     MenuProps={{
                       disableScrollLock: true, // Previene que MUI bloquee el scroll
                     }}
+                    sx={{ fontSize: "0.9rem" }}
                   >
-                    <MenuItem value="">
+                    <MenuItem value="" sx={{ fontSize: "0.9rem" }}>
                       <em>Todos los turnos</em>
                     </MenuItem>
                     {schedules.map((schedule) => (
-                      <MenuItem key={schedule._id} value={schedule._id}>
+                      <MenuItem
+                        key={schedule._id}
+                        value={schedule._id}
+                        sx={{ fontSize: "0.9rem" }}
+                      >
                         {schedule.name}
                       </MenuItem>
                     ))}
@@ -278,19 +289,24 @@ const FiltersCard = memo(
               </Grid>
 
               {/* Filtro por estado */}
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, md: 2.25 }}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Estado</InputLabel>
+                  <InputLabel sx={{ fontSize: "0.9rem" }}>Estado</InputLabel>
                   <SafeSelect
                     value={status}
                     label="Estado"
                     onChange={onStatusChange}
+                    sx={{ fontSize: "0.9rem" }}
                   >
-                    <MenuItem value="">
+                    <MenuItem value="" sx={{ fontSize: "0.9rem" }}>
                       <em>Todos los estados</em>
                     </MenuItem>
                     {STATUS_OPTIONS.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
+                      <MenuItem
+                        key={option.value}
+                        value={option.value}
+                        sx={{ fontSize: "0.9rem" }}
+                      >
                         {option.label}
                       </MenuItem>
                     ))}
@@ -299,7 +315,7 @@ const FiltersCard = memo(
               </Grid>
 
               {/* Fecha Desde */}
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, md: 2 }}>
                 <DatePicker
                   label="Desde"
                   value={dateFrom}
@@ -308,6 +324,11 @@ const FiltersCard = memo(
                     textField: {
                       size: "small",
                       fullWidth: true,
+                      sx: {
+                        "& .MuiPickersOutlinedInput-root": {
+                          fontSize: "0.9rem",
+                        }, // Texto de la fecha
+                      },
                     },
                   }}
                   format="dd/MM/yyyy"
@@ -315,7 +336,7 @@ const FiltersCard = memo(
               </Grid>
 
               {/* Fecha Hasta */}
-              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Grid size={{ xs: 12, sm: 6, md: 2 }}>
                 <DatePicker
                   label="Hasta"
                   value={dateTo}
@@ -325,6 +346,11 @@ const FiltersCard = memo(
                     textField: {
                       size: "small",
                       fullWidth: true,
+                      sx: {
+                        "& .MuiPickersOutlinedInput-root": {
+                          fontSize: "0.9rem",
+                        }, // Texto de la fecha
+                      },
                     },
                   }}
                   format="dd/MM/yyyy"
@@ -346,7 +372,18 @@ const FiltersCard = memo(
               borderColor: "divider",
             }}
           >
-            <Typography
+            <ToggleButtonGroup
+              color="primary"
+              value={"web"}
+              exclusive
+              //onChange={handleChange}
+              aria-label="Platform"
+            >
+              <ToggleButton value="web">Web</ToggleButton>
+              <ToggleButton value="android">Android</ToggleButton>
+              <ToggleButton value="ios">iOS</ToggleButton>
+            </ToggleButtonGroup>
+            {/* <Typography
               variant="body2"
               color="text.secondary"
               sx={{ display: { xs: "none", sm: "block" } }}
@@ -359,7 +396,7 @@ const FiltersCard = memo(
                   <strong>{totalRecords}</strong> registros
                 </>
               )}
-            </Typography>
+            </Typography> */}
             {/* <ExportButtons records={records} date={date} isMobile={isMobile} /> */}
             <Stack
               direction={{ xs: "column", sm: "row" }}
@@ -368,7 +405,7 @@ const FiltersCard = memo(
             >
               <Button
                 variant="outlined"
-                size="small"
+                //size="small"
                 startIcon={<ClearIcon />}
                 onClick={onClearFilters}
                 disabled={
@@ -387,7 +424,7 @@ const FiltersCard = memo(
         </CardContent>
       </Card>
     );
-  }
+  },
 );
 
 FiltersCard.displayName = "FiltersCard";
@@ -422,6 +459,12 @@ export default function GeneralReportPage() {
     },
     date: "",
   });
+  const [dataMatrix, setDataMatrix] = useState({
+    users: [],
+    dates: [],
+    matrix: [],
+  });
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -435,15 +478,26 @@ export default function GeneralReportPage() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [schedules, setSchedules] = useState([]);
 
+  useEffect(() => {
+    fetchData();
+  }, [currentMonth]);
+
   // Fetch de datos
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
+      const startDate = startOfMonth(currentMonth);
+      const endDate = endOfMonth(currentMonth);
+
       const params = new URLSearchParams({
+        startDate: format(startDate, "yyyy-MM-dd"),
+        endDate: format(endDate, "yyyy-MM-dd"),
         page: (page + 1).toString(),
-        limit: rowsPerPage.toString(),
+        //limit: rowsPerPage.toString(),
+        limit: 10000,
+        view: "matrix",
       });
 
       if (search) params.append("search", search);
@@ -453,7 +507,8 @@ export default function GeneralReportPage() {
       if (dateTo) params.append("endDate", format(dateTo, "yyyy-MM-dd"));
 
       const response = await getGeneralReport(params);
-      setData(response);
+      //setData(response);
+      setDataMatrix(response);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -519,6 +574,49 @@ export default function GeneralReportPage() {
   const handleCloseDialog = useCallback(() => {
     setSelectedRecord(null);
   }, []);
+
+  const handleMonthChange = useCallback((newMonth) => {
+    setCurrentMonth(newMonth);
+  }, []);
+
+  // Manejar justificación
+  const handleJustify = useCallback(async (data) => {
+    try {
+      const response = await fetch("/api/attendance/justifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(justificationData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Error al enviar justificación");
+      }
+
+      // Recargar datos de la tabla
+      await fetchAttendanceRecords();
+
+      // Mostrar notificación de éxito (puedes usar Snackbar)
+      alert("Justificación enviada correctamente");
+    } catch (error) {
+      throw error; // El drawer manejará el error
+    }
+  }, []);
+
+  // Abrir drawer con registro seleccionado
+  /*const handleOpenDrawer = (record) => {
+    setSelectedRecord(record);
+    setDrawerOpen(true);
+  };*/
+
+  // Cerrar drawer
+  const handleCloseDrawer = () => {
+    //setDrawerOpen(false);
+    setTimeout(() => setSelectedRecord(null), 300); // Delay para animación
+  };
 
   const handleClearFilters = useCallback(() => {
     setSearch("");
@@ -589,9 +687,18 @@ export default function GeneralReportPage() {
             }}
           >
             {/* Tabla */}
-            <GeneralReportTable
+            {/* <GeneralReportTable
               attendances={data.records}
               setSelectedRecord={setSelectedRecord}
+            /> */}
+            <TimelineMatrix
+              users={dataMatrix.users}
+              dates={dataMatrix.dates}
+              matrix={dataMatrix.matrix}
+              granularity={"day"}
+              //onJustify={handleJustify}
+              currentMonth={currentMonth}
+              onMonthChange={handleMonthChange}
             />
 
             {/* Paginación */}
@@ -635,10 +742,18 @@ export default function GeneralReportPage() {
       )}
 
       {/* Dialog de detalles */}
-      <AttendanceDetailDialog
+      {/* <AttendanceDetailDialog
         open={Boolean(selectedRecord)}
         record={selectedRecord}
         onClose={handleCloseDialog}
+      /> */}
+
+      {/* Drawer de detalles de asistencia */}
+      <AttendanceDrawer
+        open={Boolean(selectedRecord)}
+        record={selectedRecord}
+        onClose={handleCloseDrawer}
+        onJustify={handleJustify}
       />
     </Box>
   );

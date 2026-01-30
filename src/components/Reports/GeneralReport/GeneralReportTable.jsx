@@ -17,7 +17,7 @@ import {
   Fade,
   useMediaQuery,
 } from "@mui/material";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   CheckCircle,
@@ -139,7 +139,7 @@ StatusChip.displayName = "StatusChip";
 // Componente para formatear fecha y hora - Memoizado
 const TimeDisplay = memo(({ timestamp, showStatus, status }) => {
   const theme = useTheme();
-  
+
   const STATUS_CHIP_STYLES = {
     on_time: {
       backgroundColor: alpha(theme.palette.success.main, 0.15),
@@ -240,8 +240,9 @@ const UserCell = memo(({ user, compact = false }) => {
 
   return (
     <Stack direction="row" spacing={compact ? 1 : 1.5} alignItems="center">
-      {/* <Avatar
+      <Avatar
         sx={{
+          display: { xs: "none", sm: "flex" },
           width: compact ? 32 : 36,
           height: compact ? 32 : 36,
           bgcolor: "primary.main",
@@ -250,7 +251,8 @@ const UserCell = memo(({ user, compact = false }) => {
         }}
       >
         {initials}
-      </Avatar> */}
+      </Avatar>
+
       <Box>
         <Typography
           variant="body2"
@@ -279,7 +281,7 @@ UserCell.displayName = "UserCell";
 // Componente de fila de tabla DESKTOP - Memoizado
 const TableRowDesktop = memo(({ record, onClick }) => {
   const formattedDate = useMemo(() => {
-    return format(new Date(record.date), "dd/MM/yyyy", { locale: es });
+    return format(parseISO(record.date), "dd/MM/yyyy", { locale: es });
   }, [record.date]);
 
   const handleClick = useCallback(() => {
@@ -298,16 +300,16 @@ const TableRowDesktop = memo(({ record, onClick }) => {
         },
       }}
     >
+      {/* Colaborador */}
+      <TableCell>
+        <UserCell user={record.user} />
+      </TableCell>
+
       {/* Fecha */}
       <TableCell>
         <Typography variant="body2" fontWeight={500}>
           {formattedDate}
         </Typography>
-      </TableCell>
-
-      {/* Colaborador */}
-      <TableCell>
-        <UserCell user={record.user} />
       </TableCell>
 
       {/* Turno */}
@@ -352,7 +354,9 @@ const TableRowDesktop = memo(({ record, onClick }) => {
             fontWeight={600}
             color={record.hoursWorked ? "primary.main" : "text.secondary"}
           >
-            {record.hoursWorked || "—"}
+            {record.hoursWorked && record.minutesWorked
+              ? `${record.hoursWorked}h ${record.minutesWorked}m`
+              : "—"}
           </Typography>
         </Stack>
       </TableCell>
@@ -390,27 +394,16 @@ const TableRowMobile = memo(({ record, onClick }) => {
       }}
     >
       {/* Fecha y Colaborador */}
-      <TableCell sx={{ py: 1.5, width: "30%" }}>
-        <Typography variant="caption" color="text.secondary" display="block">
+      <TableCell sx={{ py: 1.5, width: "50%" }}>
+        <UserCell user={record.user} compact />
+        <Typography variant="caption" color="text.secondary" display="block" sx={{ml:1}}>
           {formattedDate}
         </Typography>
-        <UserCell user={record.user} compact />
       </TableCell>
 
       {/* Estado y Horas */}
-      <TableCell align="right" sx={{ py: 1.5, width: "70%" }}>
-        <Stack spacing={0.5} alignItems="flex-end">
-          <StatusChip status={record.shiftStatus} size="small" />
-          {record.hoursWorked && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ fontSize: "0.688rem" }}
-            >
-              {record.hoursWorked}
-            </Typography>
-          )}
-        </Stack>
+      <TableCell align="right" sx={{ py: 1.5, width: "50%" }}>
+        <StatusChip status={record.shiftStatus} size="small" />
       </TableCell>
     </TableRow>
   );
@@ -455,11 +448,11 @@ const TableHeader = memo(({ isMobile }) => (
       }}
     >
       <TableCell sx={{ fontWeight: 700 }}>
-        {isMobile ? "Colaborador" : "Fecha"}
+        Colaborador
       </TableCell>
       {!isMobile && (
         <>
-          <TableCell sx={{ fontWeight: 700 }}>Colaborador</TableCell>
+          <TableCell sx={{ fontWeight: 700 }}>Fecha</TableCell>
           <TableCell sx={{ fontWeight: 700 }}>Turno</TableCell>
           <TableCell sx={{ fontWeight: 700 }}>Entrada</TableCell>
           <TableCell sx={{ fontWeight: 700 }}>Salida</TableCell>
@@ -494,7 +487,7 @@ const GeneralReportTable = memo(({ attendances, setSelectedRecord }) => {
   // Memoizar el componente de fila según el tipo
   const RowComponent = useMemo(
     () => (isMobile ? TableRowMobile : TableRowDesktop),
-    [isMobile]
+    [isMobile],
   );
 
   // Si no hay registros
