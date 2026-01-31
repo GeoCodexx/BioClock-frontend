@@ -582,7 +582,7 @@ export default function GeneralReportPage() {
   // Manejar justificación
   const handleJustify = useCallback(async (data) => {
     try {
-      const response = await fetch("/api/attendance/justifications", {
+      /*const response = await fetch("/api/attendance/justifications", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -597,10 +597,11 @@ export default function GeneralReportPage() {
       }
 
       // Recargar datos de la tabla
-      await fetchAttendanceRecords();
+      await fetchAttendanceRecords();*/
 
       // Mostrar notificación de éxito (puedes usar Snackbar)
       alert("Justificación enviada correctamente");
+      console.log(data);
     } catch (error) {
       throw error; // El drawer manejará el error
     }
@@ -697,6 +698,7 @@ export default function GeneralReportPage() {
               matrix={dataMatrix.matrix}
               granularity={"day"}
               //onJustify={handleJustify}
+              setSelectedShift={setSelectedRecord}
               currentMonth={currentMonth}
               onMonthChange={handleMonthChange}
             />

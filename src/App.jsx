@@ -18,6 +18,7 @@ import MyAttendances from "./pages/MyAttendances";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import useAuthStore from "./store/useAuthStore";
 import NoAccessPage from "./pages/NoAccessPage";
+import { CssBaseline } from "@mui/material";
 
 function AuthRoute({ children }) {
   const { isAuthenticated } = useAuthStore();

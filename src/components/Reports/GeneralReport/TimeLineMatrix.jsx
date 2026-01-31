@@ -11,18 +11,18 @@ import {
   Stack,
   Tooltip,
   IconButton,
-  ToggleButtonGroup,
-  ToggleButton,
+  // ToggleButtonGroup,
+  // ToggleButton,
 } from "@mui/material";
 import {
   ChevronLeft,
   ChevronRight,
-  ViewDay,
-  ViewWeek,
+  // ViewDay,
+  // ViewWeek,
 } from "@mui/icons-material";
 import { format, parseISO, isSameMonth } from "date-fns";
 import { es } from "date-fns/locale";
-import AttendanceDrawer from "./AttendanceDrawer";
+//import AttendanceDrawer from "./AttendanceDrawer";
 
 /* ---------------------------------------------
    Configuration
@@ -49,7 +49,7 @@ const MatrixCell = memo(
     return (
       <Box
         className={`matrix-cell row-${rowIdx} col-${colIdx}`}
-        onClick={() => shifts.length > 0 && onClick(shifts[0])}
+        //onClick={() => shifts.length > 0 && onClick(shifts[0])}
         sx={{
           borderRight: (theme) => `1px solid ${theme.palette.divider}`,
           borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
@@ -62,7 +62,7 @@ const MatrixCell = memo(
           cursor: shifts.length > 0 ? "pointer" : "default",
           transition: "background-color 0.15s ease",
           "&:hover": {
-            bgcolor:(theme) => `${theme.palette.primary.main}15`
+            bgcolor: (theme) => `${theme.palette.primary.main}15`,
           },
         }}
       >
@@ -90,6 +90,7 @@ const MatrixCell = memo(
               enterDelay={500}
             >
               <Box
+                onClick={() => shifts.length > 0 && onClick(shift)}
                 sx={{
                   //width: 10,
                   height: 13.5,
@@ -122,14 +123,15 @@ const TimelineMatrix = ({
   dates = [],
   matrix = {},
   granularity = "day",
-  onJustify,
+  //onJustify,
+  setSelectedShift,
   currentMonth, // Nueva prop: fecha del mes actual
   onMonthChange, // Nueva prop: callback para cambiar mes
 }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  //const [selectedRecord, setSelectedRecord] = useState(null);
+  //const [drawerOpen, setDrawerOpen] = useState(false);
   const [viewMode, setViewMode] = useState(granularity);
 
   /* ---------------- Process Dates ---------------- */
@@ -163,16 +165,18 @@ const TimelineMatrix = ({
   /* ---------------- Handlers ---------------- */
   const handleShiftClick = useCallback((shift) => {
     if (shift?.record) {
-      setSelectedRecord(shift.record);
-      setDrawerOpen(true);
+      /*setSelectedRecord(shift.record);
+      setDrawerOpen(true);*/
+      const { record, ...rest } = shift;
+      setSelectedShift({ ...record, ...rest });
     }
   }, []);
 
-  const handleViewModeChange = useCallback((event, newMode) => {
+  /*const handleViewModeChange = useCallback((event, newMode) => {
     if (newMode !== null) {
       setViewMode(newMode);
     }
-  }, []);
+  }, []);*/
 
   const handlePreviousMonth = useCallback(() => {
     if (onMonthChange && currentMonth) {
@@ -618,7 +622,7 @@ const TimelineMatrix = ({
       </Paper>
 
       {/* Drawer */}
-      <AttendanceDrawer
+      {/* <AttendanceDrawer
         open={drawerOpen}
         record={selectedRecord}
         onClose={() => {
@@ -626,8 +630,8 @@ const TimelineMatrix = ({
           setTimeout(() => setSelectedRecord(null), 200);
         }}
         onJustify={onJustify}
-        source="matrix"
-      />
+        source="matrix" 
+      />*/}
     </>
   );
 };

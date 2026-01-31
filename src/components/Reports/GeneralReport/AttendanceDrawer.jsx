@@ -1,6 +1,6 @@
 // components/AttendanceDrawer.jsx
 // Drawer refactorizado para usarse tanto en tabla como en matriz
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Drawer,
   Box,
@@ -30,6 +30,8 @@ import {
   Logout as LogoutIcon,
   Timer as TimerIcon,
   Description as DescriptionIcon,
+  EventNote as EventNoteIcon,
+  Devices as DevicesIcon,
 } from "@mui/icons-material";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -53,6 +55,8 @@ const AttendanceDrawer = ({
   const [justificationReason, setJustificationReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  // Este ref apuntará al final del formulario
+  const endOfFormRef = useRef(null);
 
   // Estados que permiten justificación
   const canJustify =
@@ -67,6 +71,13 @@ const AttendanceDrawer = ({
     setJustificationReason("");
     setError(null);
     onClose();
+  };
+
+  const scrollToBottom = () => {
+    endOfFormRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end", // Empuja el scroll hasta que el final del elemento sea visible
+    });
   };
 
   // Toggle formulario de justificación
@@ -180,7 +191,7 @@ const AttendanceDrawer = ({
       onClose={handleClose}
       PaperProps={{
         sx: {
-          width: { xs: "100%", sm: 450, md: 500 },
+          width: { xs: "100%", sm: 400 },
           height: "calc(100% - 64px)",
           top: 64,
           /*backgroundImage: (theme) =>
@@ -217,27 +228,45 @@ const AttendanceDrawer = ({
           {/* Estado General */}
           <Paper
             elevation={0}
-            sx={{
+            variant="outlined"
+            sx={(theme) => ({
               p: 2,
               mb: 3,
-              bgcolor: (theme) =>
+              /*bgcolor: (theme) =>
                 theme.palette.mode === "dark"
                   ? `${getStatusColor(record.shiftStatus)}.dark`
                   : `${getStatusColor(record.shiftStatus)}.light`,
               border: 1,
-              borderColor: `${getStatusColor(record.shiftStatus)}.main`,
-            }}
+              borderColor: `${getStatusColor(record.shiftStatus)}.main`,*/
+              bgcolor: "background.card",
+              border:
+                theme.palette.mode === "dark"
+                  ? "none"
+                  : `1px solid ${theme.palette.divider}`,
+            })}
           >
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Avatar
-                sx={{
-                  bgcolor: `${getStatusColor(record.shiftStatus)}.main`,
-                  width: 48,
-                  height: 48,
-                }}
-              >
-                {getStatusIcon(record.shiftStatus)}
-              </Avatar>
+            <Stack
+              direction="row"
+              spacing={2}
+              alignItems="center"
+              sx={{ justifyContent: "space-between" }}
+            >
+              <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+                <Avatar
+                  sx={{
+                    //bgcolor: `${getStatusColor(record.shiftStatus)}.main`,
+                    bgcolor: "primary.main",
+                    //width: 48,
+                    //height: 48,
+                  }}
+                >
+                  {getStatusIcon(record.shiftStatus)}
+                </Avatar>
+                <Typography variant="h6" fontWeight="300">
+                  Estado del turno:
+                </Typography>
+              </Stack>
+
               <Box
                 sx={{
                   display: "flex",
@@ -245,26 +274,38 @@ const AttendanceDrawer = ({
                   alignItems: "center",
                 }}
               >
-                <Typography variant="body2">
-                  Estado del turno:
-                </Typography>
-                <Typography variant="h5" fontWeight="bold">
+                {/* <Typography variant="h5" fontWeight="bold">
                   {getStatusLabel(record.shiftStatus)}
-                </Typography>
+                </Typography> */}
+                <Chip
+                  label={getStatusLabel(record.shiftStatus)}
+                  //size="small"
+                  variant="outlined"
+                  color={`${getStatusColor(record.shiftStatus)}`}
+                />
               </Box>
             </Stack>
           </Paper>
 
           {/* Información del Usuario */}
           <Paper
+            variant="outlined"
             elevation={0}
-            sx={{ p: 2, mb: 3, bgcolor: "background.card" }}
+            sx={(theme) => ({
+              p: 2,
+              mb: 3,
+              bgcolor: "background.card",
+              border:
+                theme.palette.mode === "dark"
+                  ? "none"
+                  : `1px solid ${theme.palette.divider}`,
+            })}
           >
             <Stack direction="row" spacing={2} alignItems="center" mb={2}>
               <Avatar sx={{ bgcolor: "primary.main" }}>
                 <PersonIcon />
               </Avatar>
-              <Typography variant="h6" fontWeight="medium">
+              <Typography variant="h6" fontWeight="300">
                 Información del Usuario
               </Typography>
             </Stack>
@@ -291,14 +332,23 @@ const AttendanceDrawer = ({
 
           {/* Información del Turno */}
           <Paper
+            variant="outlined"
             elevation={0}
-            sx={{ p: 2, mb: 3, bgcolor: "background.card" }}
+            sx={(theme) => ({
+              p: 2,
+              mb: 3,
+              bgcolor: "background.card",
+              border:
+                theme.palette.mode === "dark"
+                  ? "none"
+                  : `1px solid ${theme.palette.divider}`,
+            })}
           >
             <Stack direction="row" spacing={2} alignItems="center" mb={2}>
-              <Avatar sx={{ bgcolor: "secondary.main" }}>
+              <Avatar sx={{ bgcolor: "primary.main" }}>
                 <ScheduleIcon />
               </Avatar>
-              <Typography variant="h6" fontWeight="medium">
+              <Typography variant="h6" fontWeight="300">
                 Información del Turno
               </Typography>
             </Stack>
@@ -325,13 +375,21 @@ const AttendanceDrawer = ({
           {/* Registros de Asistencia */}
           <Paper
             elevation={0}
-            sx={{ p: 2, mb: 3, bgcolor: "background.card" }}
+            sx={(theme) => ({
+              p: 2,
+              mb: 3,
+              bgcolor: "background.card",
+              border:
+                theme.palette.mode === "dark"
+                  ? "none"
+                  : `1px solid ${theme.palette.divider}`,
+            })}
           >
             <Stack direction="row" spacing={2} alignItems="center" mb={2}>
-              <Avatar sx={{ bgcolor: "info.main" }}>
-                <AccessTimeIcon />
+              <Avatar sx={{ bgcolor: "primary.main" }}>
+                <EventNoteIcon />
               </Avatar>
-              <Typography variant="h6" fontWeight="medium">
+              <Typography variant="h6" fontWeight="300">
                 Registros
               </Typography>
             </Stack>
@@ -339,7 +397,9 @@ const AttendanceDrawer = ({
             <Grid container spacing={2}>
               {/* Entrada */}
               <Grid size={{ xs: 6 }}>
-                <Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
+                <Paper
+                  sx={{ p: 2, textAlign: "center", bgcolor: "transparent" }}
+                >
                   <LoginIcon color="success" sx={{ fontSize: 32, mb: 1 }} />
                   <Typography
                     variant="caption"
@@ -361,6 +421,7 @@ const AttendanceDrawer = ({
                             : "Temprano"
                       }
                       size="small"
+                      variant="outlined"
                       color={
                         record.checkIn.status === "on_time"
                           ? "success"
@@ -374,7 +435,9 @@ const AttendanceDrawer = ({
 
               {/* Salida */}
               <Grid size={{ xs: 6 }}>
-                <Paper variant="outlined" sx={{ p: 2, textAlign: "center" }}>
+                <Paper
+                  sx={{ p: 2, textAlign: "center", bgcolor: "transparent" }}
+                >
                   <LogoutIcon color="error" sx={{ fontSize: 32, mb: 1 }} />
                   <Typography
                     variant="caption"
@@ -394,6 +457,7 @@ const AttendanceDrawer = ({
                           : "Normal"
                       }
                       size="small"
+                      variant="outlined"
                       color={
                         record.checkOut.status === "early_exit"
                           ? "warning"
@@ -414,10 +478,10 @@ const AttendanceDrawer = ({
                   p: 2,
                   mt: 2,
                   textAlign: "center",
-                  bgcolor: (theme) =>
+                  /*bgcolor: (theme) =>
                     theme.palette.mode === "dark"
                       ? "primary.dark"
-                      : "primary.light",
+                      : "primary.light",*/
                   borderColor: "primary.main",
                 }}
               >
@@ -442,16 +506,18 @@ const AttendanceDrawer = ({
           {/* Dispositivo de Registro */}
           {record.checkIn?.device && (
             <Paper
+              variant="outlined"
               elevation={0}
-              sx={{ p: 2, mb: 3, bgcolor: "background.default" }}
+              sx={{ p: 2, mb: 3, bgcolor: "background.card" }}
             >
-              <Typography
-                variant="subtitle2"
-                color="text.secondary"
-                gutterBottom
-              >
-                Dispositivo de Registro
-              </Typography>
+              <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+                <Avatar sx={{ bgcolor: "primary.main" }}>
+                  <DevicesIcon />
+                </Avatar>
+                <Typography variant="h6" fontWeight="300">
+                  Dispositivo de Registro
+                </Typography>
+              </Stack>
               <Typography variant="body2" fontWeight="medium">
                 {record.checkIn.device.name}
               </Typography>
@@ -472,7 +538,6 @@ const AttendanceDrawer = ({
               </Typography>
             </Alert>
           )}
-
           {/* Formulario de Justificación */}
           {canJustify && !record.justification?.approved && (
             <Box>
@@ -490,21 +555,20 @@ const AttendanceDrawer = ({
                   : "Justificar Asistencia"}
               </Button>
 
-              <Collapse in={showJustificationForm}>
-                <Paper
-                  elevation={2}
-                  sx={{ p: 3, bgcolor: "background.default" }}
-                >
+              <Collapse in={showJustificationForm} onEntered={scrollToBottom}>
+                <Paper elevation={2} sx={{ p: 3, bgcolor: "background.card" }}>
                   <Typography variant="h6" gutterBottom>
                     Solicitar Justificación
                   </Typography>
                   <Typography variant="body2" color="text.secondary" paragraph>
-                    Por favor, indique el motivo de la{" "}
+                    Por favor, indique el motivo de{" "}
                     {record.shiftStatus === "absent"
-                      ? "ausencia"
-                      : record.shiftStatus === "late"
-                        ? "tardanza"
-                        : "salida anticipada"}
+                      ? "la ausencia"
+                      : record.shiftStatus === "incomplete"
+                        ? "no registrar su salida"
+                        : record.shiftStatus === "late"
+                          ? "la tardanza"
+                          : "la salida anticipada"}
                     .
                   </Typography>
 
@@ -523,7 +587,12 @@ const AttendanceDrawer = ({
                     value={justificationReason}
                     onChange={(e) => setJustificationReason(e.target.value)}
                     disabled={isSubmitting}
-                    sx={{ mb: 2 }}
+                    sx={{
+                      mb: 2,
+                      "& .MuiInputBase-input": {
+                        fontSize: "14px", // O 1.2rem, etc.
+                      },
+                    }}
                     helperText={`${justificationReason.length}/500 caracteres`}
                     inputProps={{ maxLength: 500 }}
                   />
@@ -543,7 +612,7 @@ const AttendanceDrawer = ({
                         )
                       }
                     >
-                      {isSubmitting ? "Enviando..." : "Enviar Justificación"}
+                      {isSubmitting ? "Enviando..." : "Enviar"}
                     </Button>
                     <Button
                       variant="outlined"
@@ -559,6 +628,8 @@ const AttendanceDrawer = ({
               </Collapse>
             </Box>
           )}
+          {/* Elemento invisible al final que sirve de guía para el scroll */}
+          <div ref={endOfFormRef} style={{ height: 1 }} />
         </Box>
 
         {/* Footer */}
