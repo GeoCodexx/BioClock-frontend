@@ -28,7 +28,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
-import { endOfMonth, format, startOfMonth } from "date-fns";
+import { endOfMonth, format, parseISO, startOfMonth } from "date-fns";
 import HomeIcon from "@mui/icons-material/Home";
 import {
   Search as SearchIcon,
@@ -54,6 +54,8 @@ import { useThemeMode } from "../contexts/ThemeContext";
 import AttendanceDrawer from "../components/Reports/GeneralReport/AttendanceDrawer";
 //import AttendanceMatrixPage from "./AttendanceMatrixPage";
 import TimelineMatrix from "../components/Reports/GeneralReport/TimeLineMatrix";
+import { createJustification } from "../services/attendanceService";
+import useSnackbarStore from "../store/useSnackbarStore";
 
 // Constantes
 const STATUS_OPTIONS = [
@@ -446,6 +448,7 @@ const LoadingSkeleton = () => (
 export default function GeneralReportPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { showSuccess, showError } = useSnackbarStore();
 
   // Estados
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -582,26 +585,23 @@ export default function GeneralReportPage() {
   // Manejar justificación
   const handleJustify = useCallback(async (data) => {
     try {
-      /*const response = await fetch("/api/attendance/justifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(justificationData),
-      });
+      const formattedDate = format(parseISO(data.date), "yyyy-MM-dd");
+      const response = await createJustification(
+        data.userId,
+        data.scheduleId,
+        formattedDate,
+        data.reason,
+      );
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Error al enviar justificación");
+      if (response.data?.success) {
+        showSuccess(
+          response?.data?.message || "Justificación creada correctamente",
+        );
+
+        fetchData();
+        // Mostrar notificación de éxito (puedes usar Snackbar)
+        console.log(data);
       }
-
-      // Recargar datos de la tabla
-      await fetchAttendanceRecords();*/
-
-      // Mostrar notificación de éxito (puedes usar Snackbar)
-      alert("Justificación enviada correctamente");
-      console.log(data);
     } catch (error) {
       throw error; // El drawer manejará el error
     }

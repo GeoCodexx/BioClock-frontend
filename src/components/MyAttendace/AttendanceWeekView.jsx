@@ -17,6 +17,7 @@ import {
   Button,
   Chip,
   IconButton,
+  useMediaQuery,
 } from "@mui/material";
 import {
   TrendingUp,
@@ -546,6 +547,7 @@ const AttendanceWeekView = ({ data }) => {
 // Componente Dialog (mantiene la misma estructura que tenías)
 const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   if (!day) return null;
 
@@ -764,8 +766,9 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="sm"
       fullWidth
+      fullScreen={isMobile}
       PaperProps={{ sx: { borderRadius: 3 } }}
     >
       <DialogTitle>
