@@ -431,7 +431,7 @@ export default function Attendances() {
    * @param {boolean} approved - Nuevo estado de aprobación (opcional)
    * @param {Function} onSuccess - Callback opcional en caso de éxito
    */
-  const handleUpdateJustification = async (
+  /*const handleUpdateJustification = async (
     attendanceId,
     reason,
     approved,
@@ -458,7 +458,7 @@ export default function Attendances() {
       toast.error(errorMessage);
       return { success: false, error: errorMessage };
     }
-  };
+  };*/
 
   /**
    * Handler para eliminar una justificación

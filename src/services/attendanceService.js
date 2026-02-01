@@ -96,16 +96,12 @@ export const removeJustification = async (attendanceId) => {
 };
 
 /**SERVICIOS PARA JUSTIFICACION EN MODULO GESTION DE ASISTENCIAS */
-export const createJustification = async (userId, scheduleId, date, reason) => {
+export const createJustification = async (data) => {
   try {
-    const response = await api.post("/attendances/justification", {
-      userId,
-      scheduleId,
-      date,
-      reason,
-    });
+    const response = await api.post("/attendances/justification", data);
     return response;
   } catch (error) {
-    handleApiError(error, "Error al crear justificación para asistencia");
+    //handleApiError(error, "Error al crear justificación para asistencia");
+    throw error;
   }
 };

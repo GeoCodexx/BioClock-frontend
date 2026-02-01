@@ -23,6 +23,7 @@ import {
   Divider,
   ToggleButtonGroup,
   ToggleButton,
+  CircularProgress,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -585,13 +586,14 @@ export default function GeneralReportPage() {
   // Manejar justificación
   const handleJustify = useCallback(async (data) => {
     try {
-      const formattedDate = format(parseISO(data.date), "yyyy-MM-dd");
-      const response = await createJustification(
-        data.userId,
-        data.scheduleId,
-        formattedDate,
-        data.reason,
-      );
+      const formattedData = {
+        userId: data.userId,
+        scheduleId: data.scheduleId,
+        date: format(parseISO(data.date), "yyyy-MM-dd"),
+        reason: data.reason,
+      };
+
+      const response = await createJustification(formattedData);
 
       if (response.data?.success) {
         showSuccess(
@@ -629,6 +631,27 @@ export default function GeneralReportPage() {
   }, []);
 
   const hasRecords = data.records.length > 0;
+
+  // Estado de carga inicial
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+          gap: 2,
+        }}
+      >
+        <CircularProgress size={48} />
+        <Typography variant="body1" color="text.secondary">
+          Cargando...
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ width: "100%" }}>

@@ -28,25 +28,27 @@ import {
   Paper,
   Grid,
   Typography,
-  Button,
+  /*Button,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
+  DialogActions,*/
   Stack,
   Chip,
   useTheme,
-  Divider,
+  //Divider,
   Card,
   useMediaQuery,
   Breadcrumbs,
-  Tooltip,
+  //Tooltip,
   Avatar,
   alpha,
-  Fade,
-  Skeleton,
+  /*Fade,
+  Skeleton,*/
   CardContent,
   Link,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import { Link as RouterLink } from "react-router-dom";
@@ -54,9 +56,6 @@ import { getMyAttendance } from "../services/reportService";
 import AttendanceWeekView from "../components/MyAttendace/AttendanceWeekView";
 import AttendanceMonthCalendar from "../components/MyAttendace/AttendanceMonthCalendar";
 import { useThemeMode } from "../contexts/ThemeContext";
-import useSnackbarStore from "../store/useSnackbarStore";
-import { createJustification } from "../services/attendanceService";
-import AttendanceDrawer from "../components/Reports/GeneralReport/AttendanceDrawer";
 
 // Datos de ejemplo
 /*const mockData = [
@@ -233,7 +232,7 @@ import AttendanceDrawer from "../components/Reports/GeneralReport/AttendanceDraw
 // --- COMPONENTES AUXILIARES ---
 
 // Chip de estado pequeño
-const StatusChip = ({ status, label, color }) => (
+/*const StatusChip = ({ status, label, color }) => (
   <Chip
     label={label}
     size="small"
@@ -253,22 +252,17 @@ const StatusChip = ({ status, label, color }) => (
       "& .MuiChip-icon": { color: "inherit" },
     }}
   />
-);
+);*/
 
 const MyAttendances = () => {
   const theme = useTheme();
   const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  //const isTablet = useMediaQuery(theme.breakpoints.down("md"));
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  /*const [selectedDay, setSelectedDay] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);*/
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState({});
-
-  // Estados para justificacion
-  const { showSuccess, showError } = useSnackbarStore();
-  // const [selectedRecord, setSelectedRecord] = useState(null);
 
   // Fetch de datos
   const fetchData = useCallback(async () => {
@@ -278,7 +272,7 @@ const MyAttendances = () => {
     try {
       const response = await getMyAttendance();
       setData(response);
-      console.log(response);
+      //console.log(response);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -502,41 +496,10 @@ const MyAttendances = () => {
     return format(parseISO(timestamp), "HH:mm", { locale: es });
   }, []);
 
-  const handleCloseDialog = useCallback(() => {
+  /*const handleCloseDialog = useCallback(() => {
     setDialogOpen(false);
     setTimeout(() => setSelectedDay(null), 200);
-  }, []);
-
-  // Cerrar drawer
-  const handleCloseDrawer = () => {
-    //setDrawerOpen(false);
-    setTimeout(() => setSelectedRecord(null), 300); // Delay para animación
-  };
-
-  // Manejar justificación
-  const handleJustify = useCallback(async (data) => {
-    try {
-      const formattedDate = format(parseISO(data.date), "yyyy-MM-dd");
-      const response = await createJustification(
-        data.userId,
-        data.scheduleId,
-        formattedDate,
-        data.reason,
-      );
-
-      if (response.data?.success) {
-        showSuccess(
-          response?.data?.message || "Justificación creada correctamente",
-        );
-
-        //fetchData();
-        // Mostrar notificación de éxito (puedes usar Snackbar)
-        console.log("Desde My-Attendance: ", data);
-      }
-    } catch (error) {
-      throw error; // El drawer manejará el error
-    }
-  }, []);
+  }, []);*/
 
   // Componente Header memoizado
   const PageHeader = memo(({ date, isMobile }) => {
@@ -646,12 +609,44 @@ const MyAttendances = () => {
     );
   });
 
+  // Estado de carga inicial
+  if (loading && Object.keys(data).length === 0) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "60vh",
+          gap: 2,
+        }}
+      >
+        <CircularProgress size={48} />
+        <Typography variant="body1" color="text.secondary">
+          Cargando...
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ width: "100%", p: { xs: 2, sm: 3 } }}>
       {/* Header */}
       <PageHeader date={""} isMobile={isMobile} />
 
+      {/* Mensaje de error global */}
+        {error && (
+          <Alert
+            severity="error"
+            sx={{ mb: 2, borderRadius: isMobile ? 2 : 3 }}
+          >
+            {error}
+          </Alert>
+        )}
+
       <Grid container spacing={{ xs: 2, sm: 3 }}>
+        
         {/* Hoy */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper
@@ -858,7 +853,7 @@ const MyAttendances = () => {
 
         {/* Calendario */}
         <Grid size={{ xs: 12 }}>
-          <AttendanceMonthCalendar data={data} />
+          <AttendanceMonthCalendar data={data} fetchData={fetchData} />
           {/* <Paper
             elevation={0}
             sx={{
@@ -932,15 +927,7 @@ const MyAttendances = () => {
         </Grid>
       </Grid>
 
-      {/* Dialog Detalles */}
-
-      {/* Drawer de detalles de asistencia */}
-      <AttendanceDrawer
-        open={Boolean(selectedDay)}
-        record={selectedDay}
-        onClose={handleCloseDrawer}
-        onJustify={handleJustify}
-      />
+      {/* Dialog Detalles - Guardado en archivo desktop (dialog_detail_backup.txt)*/}
     </Box>
   );
 };

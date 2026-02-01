@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   Paper,
   Box,
@@ -16,6 +16,10 @@ import {
   useTheme,
   useMediaQuery,
   Divider,
+  TextField,
+  Collapse,
+  Alert,
+  Grid,
 } from "@mui/material";
 import {
   CalendarMonth,
@@ -31,6 +35,8 @@ import {
   Computer,
   Fingerprint,
   Assignment,
+  AttachFile,
+  Send,
 } from "@mui/icons-material";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -38,8 +44,11 @@ import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from "@fullcalendar/core/locales/es";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
+import { createJustification } from "../../services/attendanceService";
+import useAuthStore from "../../store/useAuthStore";
+import useSnackbarStore from "../../store/useSnackbarStore";
 
-const AttendanceMonthCalendar = ({ data }) => {
+const AttendanceMonthCalendar = ({ data, fetchData }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [openDialog, setOpenDialog] = useState(false);
@@ -51,95 +60,60 @@ const AttendanceMonthCalendar = ({ data }) => {
         label: "A Tiempo",
         Icon: CheckCircle,
         colorHex: "#10b981",
+        color: theme.palette.success.main,
       },
       late: {
         label: "Tardanza",
         Icon: ErrorIcon,
         colorHex: "#f59e0b",
+        color: theme.palette.warning.main,
       },
       early: {
         label: "Temprano",
         Icon: InfoIcon,
         colorHex: "#3b82f6",
+        color: theme.palette.info.main,
       },
       early_exit: {
         label: "Salida Temprana",
         Icon: ErrorIcon,
-        colorHex: "#f44336",
+        colorHex: "#9c27b0", //"#9c27b0"
+        color: theme.palette.secondary.main,
       },
       incomplete: {
         label: "Incompleto",
         Icon: ErrorIcon,
         colorHex: "#f44336",
+        color: theme.palette.warning.dark,
       },
       absent: {
         label: "Ausente",
         Icon: Cancel,
         colorHex: "#9ca3af",
+        color: theme.palette.error.main,
+      },
+      justified: {
+        // NUEVO
+        label: "Justificado",
+        Icon: Assignment,
+        colorHex: "#3b82f6", // Púrpura
+        color: theme.palette.info.main,
       },
     }),
     [],
   );
 
-  /**
-   * Procesar registros agrupados del backend y convertirlos a eventos de FullCalendar
-   * Backend estructura: { "2026-01-19": [{...}, {...}], "2026-01-20": [...] }
-   */
   const calendarEvents = useMemo(() => {
     if (!data?.periods?.month?.records) return [];
 
     const records = data.periods.month.records;
     const events = [];
+    const userId = data?.user?.id;
 
-    Object.entries(records).forEach(([dateStr, dayRecords]) => {
-      // Procesar cada horario del día
-      const scheduleGroups = {};
-
-      dayRecords.forEach((record) => {
-        const scheduleId = record.scheduleId?._id?.toString();
-        const scheduleName = record.scheduleId?.name || "Sin horario";
-
-        if (!scheduleGroups[scheduleId]) {
-          scheduleGroups[scheduleId] = {
-            scheduleName,
-            scheduleId,
-            records: [],
-            isVirtual: false,
-          };
-        }
-
-        scheduleGroups[scheduleId].records.push(record);
-
-        // Marcar si todo el grupo es virtual (ausencia)
-        if (record.isVirtual) {
-          scheduleGroups[scheduleId].isVirtual = true;
-        }
-      });
-
-      // Crear un evento por cada horario
-      Object.values(scheduleGroups).forEach((group) => {
-        const checkIn = group.records.find((r) => r.type === "IN");
-        const checkOut = group.records.find((r) => r.type === "OUT");
-
-        // Determinar estado del turno
-        let shiftStatus = "absent";
-        if (checkIn?.isVirtual) {
-          shiftStatus = "absent";
-        } else if (checkIn && checkOut) {
-          if (checkOut.status === "early_exit") {
-            shiftStatus = "early_exit";
-          } else if (checkIn.status === "late") {
-            shiftStatus = "late";
-          } else {
-            shiftStatus = "on_time";
-          }
-        } else if (checkIn && !checkOut) {
-          shiftStatus = "incomplete"; // Falta salida → Incompleto
-        } else if (!checkIn && checkOut) {
-          shiftStatus = "incomplete"; // Falta entrada → Incompleto
-        }
-
-        const config = statusConfig[shiftStatus];
+    Object.entries(records).forEach(([dateStr, scheduleGroups]) => {
+      // Los datos ya vienen agrupados y procesados desde el backend
+      scheduleGroups.forEach((group) => {
+        const config = statusConfig[group.shiftStatus] || statusConfig.absent;
         const isMatutino = group.scheduleName
           .toLowerCase()
           .includes("matutino");
@@ -150,17 +124,22 @@ const AttendanceMonthCalendar = ({ data }) => {
           title: isMobile ? abbreviation : group.scheduleName,
           start: dateStr,
           allDay: true,
-          backgroundColor: config.colorHex,
-          borderColor: config.colorHex,
-          textColor: "#ffffff",
+          backgroundColor: config.color + "14",
+          borderColor: config.color + "40",
+          //textColor: "#ffffff",
+          textColor: config.color,
           extendedProps: {
             dateStr,
+            userId,
+            scheduleId: group.scheduleId,
             scheduleName: group.scheduleName,
-            shiftStatus,
+            scheduleInfo: group.scheduleInfo,
+            shiftStatus: group.shiftStatus,
             isMatutino,
-            checkIn: checkIn?.isVirtual ? null : checkIn,
-            checkOut: checkOut?.isVirtual ? null : checkOut,
+            checkIn: group.checkIn,
+            checkOut: group.checkOut,
             isVirtual: group.isVirtual,
+            justification: group.justification, // Nueva propiedad
           },
         });
       });
@@ -275,23 +254,29 @@ const AttendanceMonthCalendar = ({ data }) => {
             Leyenda de Estados
           </Typography>
           <Stack direction="row" flexWrap="wrap" gap={1}>
-            {Object.entries(statusConfig).map(([key, config]) => (
-              <Chip
-                key={key}
-                icon={React.createElement(config.Icon, {
+            {Object.entries(statusConfig).map(
+              ([key, config]) =>
+                key !== "early" && (
+                  <Chip
+                    key={key}
+                    /* icon={React.createElement(config.Icon, {
                   sx: { fontSize: 16 },
-                })}
-                label={config.label}
-                size="small"
-                sx={{
-                  bgcolor: alpha(config.colorHex, 0.1),
-                  color: config.colorHex,
-                  border: `1px solid ${alpha(config.colorHex, 0.3)}`,
-                  fontWeight: 600,
-                  fontSize: isMobile ? "0.7rem" : "0.75rem",
-                }}
-              />
-            ))}
+                })}*/
+                    label={config.label}
+                    size="small"
+                    sx={{
+                      //bgcolor: alpha(config.colorHex, 0.1),
+                      bgcolor: config.color + "14",
+                      //color: config.colorHex,
+                      color: config.color,
+                      //border: `1px solid ${alpha(config.colorHex, 0.3)}`,
+                      border: `1px solid ${alpha(config.color, 0.5)}`,
+                      fontWeight: 600,
+                      fontSize: isMobile ? "0.7rem" : "0.75rem",
+                    }}
+                  />
+                ),
+            )}
           </Stack>
           {isMobile && (
             <Typography
@@ -313,6 +298,7 @@ const AttendanceMonthCalendar = ({ data }) => {
         onClose={handleCloseDialog}
         dayData={selectedDayData}
         statusConfig={statusConfig}
+        fetchData={fetchData}
       />
     </>
   );
@@ -321,12 +307,37 @@ const AttendanceMonthCalendar = ({ data }) => {
 /**
  * Componente Dialog mejorado para mostrar detalles del evento
  */
-const AttendanceEventDialog = ({ open, onClose, dayData, statusConfig }) => {
+const AttendanceEventDialog = ({
+  open,
+  onClose,
+  dayData,
+  statusConfig,
+  fetchData,
+}) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [showJustificationForm, setShowJustificationForm] = useState(false);
+  const [justification, setJustification] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { showSuccess, showError } = useSnackbarStore();
+
+  const justificationInputRef = useRef(null);
 
   if (!dayData) return null;
 
   const config = statusConfig[dayData.shiftStatus];
+
+  // Determinar si se puede justificar este turno
+  /*const canJustify = ["late", "early_exit", "absent"].includes(
+    dayData.shiftStatus,
+  );*/
+
+  // Cambiar la lógica para no mostrar justificar si ya existe una
+  const canJustify =
+    ["late", "early_exit", "absent"].includes(dayData.shiftStatus) &&
+    !dayData.justification;
 
   const formatTime = (timestamp) => {
     if (!timestamp) return "-";
@@ -352,6 +363,8 @@ const AttendanceEventDialog = ({ open, onClose, dayData, statusConfig }) => {
     !dayData.isVirtual &&
     dayData.checkOut?.timestamp;
 
+  //const hasJustification = dayData.justification !== null;
+
   // Calcular horas trabajadas
   let hoursWorked = null;
   if (
@@ -368,12 +381,112 @@ const AttendanceEventDialog = ({ open, onClose, dayData, statusConfig }) => {
     hoursWorked = `${hours}h ${mins}m`;
   }
 
+  const handleJustifyClick = () => {
+    setShowJustificationForm(true);
+    // Enfocar el input después de que el formulario se expanda
+    setTimeout(() => {
+      justificationInputRef.current?.focus();
+    }, 100);
+  };
+
+  const handleFileChange = (event) => {
+    const files = Array.from(event.target.files);
+    setSelectedFiles((prev) => [...prev, ...files]);
+  };
+
+  const handleRemoveFile = (index) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmitJustification = async () => {
+    if (!justification.trim()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Aquí iría la lógica para enviar la justificación al backend
+      const formData = new FormData();
+      formData.append("userId", dayData.userId);
+      formData.append("reason", justification);
+      formData.append("date", dayData.dateStr);
+      formData.append("scheduleId", dayData.scheduleId);
+      //formData.append("shiftStatus", dayData.shiftStatus);
+
+      if (selectedFiles.length) {
+        selectedFiles.forEach((file, index) => {
+          formData.append(`documents`, file);
+        });
+      }
+
+      const res = await createJustification(formData);
+
+      showSuccess(res?.data?.message || "Justificación enviada correctamente");
+
+      // Simular llamada al API
+      //await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      /*console.log("Justificación enviada:", {
+        justification,
+        files: selectedFiles,
+        dayData,
+      });*/
+
+      // Resetear el formulario
+      setJustification("");
+      setSelectedFiles([]);
+      setShowJustificationForm(false);
+      fetchData();
+      onClose();
+
+      // Aquí podrías mostrar un mensaje de éxito
+      //alert("Justificación enviada correctamente");
+    } catch (error) {
+      console.error("Error al enviar justificación:", error);
+
+      // 1. Verifica que el servidor realmente respondió (error.response existe)
+      if (error.response) {
+        const status = error.response.status;
+        const serverMessage = error.response.data?.message; // <--- AQUÍ está tu mensaje
+
+        if (status === 400) {
+          showError(serverMessage || "Datos inválidos, revisa la información.");
+        } else {
+          showError(serverMessage || `Error del servidor (${status})`);
+        }
+      }
+      // 2. Si no hay respuesta (error de red o servidor caído)
+      else if (error.request) {
+        showError("No se pudo conectar con el servidor. Revisa tu internet.");
+      }
+      // 3. Otros errores (configuración)
+      else {
+        showError("Ocurrió un error inesperado.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelJustification = () => {
+    setShowJustificationForm(false);
+    setJustification("");
+    setSelectedFiles([]);
+  };
+
+  const handleClose = () => {
+    handleCancelJustification();
+    onClose();
+  };
+
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      fullScreen={isMobile}
       PaperProps={{
         sx: {
           borderRadius: 3,
@@ -389,7 +502,7 @@ const AttendanceEventDialog = ({ open, onClose, dayData, statusConfig }) => {
           <Stack direction="row" alignItems="center" spacing={2}>
             <Avatar
               sx={{
-                bgcolor: config.colorHex,
+                bgcolor: config.color,
                 width: 48,
                 height: 48,
               }}
@@ -405,7 +518,7 @@ const AttendanceEventDialog = ({ open, onClose, dayData, statusConfig }) => {
               </Typography>
             </Box>
           </Stack>
-          <IconButton onClick={onClose} size="small">
+          <IconButton onClick={handleClose} size="small">
             <CloseIcon />
           </IconButton>
         </Stack>
@@ -414,24 +527,29 @@ const AttendanceEventDialog = ({ open, onClose, dayData, statusConfig }) => {
       <DialogContent dividers>
         <Stack spacing={2.5}>
           {/* Estado del turno */}
-          <Box>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <Typography variant="subtitle2" color="text.secondary" mb={1}>
-              Estado del Turno
+              Estado del Turno:
             </Typography>
             <Chip
-              icon={React.createElement(config.Icon, { sx: { fontSize: 18 } })}
+              //icon={React.createElement(config.Icon, { sx: { fontSize: 18 } })}
               label={config.label}
               sx={{
-                bgcolor: alpha(config.colorHex, 0.15),
-                border: `1px solid ${alpha(config.colorHex, 0.3)}`,
-                color: config.colorHex,
+                bgcolor: alpha(config.color, 0.15),
+                border: `1px solid ${alpha(config.color, 0.3)}`,
+                color: alpha(config.color, 0.8),
                 fontWeight: 600,
                 fontSize: "0.875rem",
                 height: 32,
               }}
             />
           </Box>
-
           {/* Mensaje de ausencia */}
           {dayData.isVirtual && (
             <Paper
@@ -448,7 +566,7 @@ const AttendanceEventDialog = ({ open, onClose, dayData, statusConfig }) => {
                 <Box>
                   <Typography
                     variant="body2"
-                    fontWeight={600}
+                    //fontWeight={600}
                     color="warning.main"
                   >
                     Ausencia Detectada
@@ -460,155 +578,185 @@ const AttendanceEventDialog = ({ open, onClose, dayData, statusConfig }) => {
               </Stack>
             </Paper>
           )}
-
-          {/* Check In */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.primary.main, 0.05),
-              border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-            }}
-          >
-            <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-              <LoginIcon
-                sx={{ color: theme.palette.primary.main, fontSize: 22 }}
-              />
-              <Typography variant="subtitle2" fontWeight={700} color="primary">
-                Entrada
-              </Typography>
-            </Stack>
-            {hasCheckIn ? (
-              <Stack spacing={1.5}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <AccessTime sx={{ fontSize: 18, color: "text.secondary" }} />
-                  <Typography variant="body2">
-                    <strong>Hora:</strong>{" "}
-                    {formatTime(dayData.checkIn.timestamp)}
-                  </Typography>
-                  <Chip
-                    label={
-                      statusConfig[dayData.checkIn.status]?.label ||
-                      dayData.checkIn.status
-                    }
-                    size="small"
-                    sx={{
-                      bgcolor: alpha(
-                        statusConfig[dayData.checkIn.status]?.colorHex ||
-                          "#999",
-                        0.1,
-                      ),
-                      color:
-                        statusConfig[dayData.checkIn.status]?.colorHex ||
-                        "#999",
-                      fontSize: "0.7rem",
-                      height: 20,
-                      fontWeight: 600,
-                    }}
-                  />
-                </Stack>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Computer sx={{ fontSize: 18, color: "text.secondary" }} />
-                  <Typography variant="body2">
-                    <strong>Dispositivo:</strong>{" "}
-                    {dayData.checkIn.deviceId?.name || "-"}
-                  </Typography>
-                </Stack>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Fingerprint sx={{ fontSize: 18, color: "text.secondary" }} />
-                  <Typography
-                    variant="body2"
-                    sx={{ textTransform: "capitalize" }}
-                  >
-                    <strong>Método:</strong>{" "}
-                    {dayData.checkIn.verificationMethod || "-"}
-                  </Typography>
-                </Stack>
-              </Stack>
-            ) : (
-              <Typography variant="body2" color="error" fontWeight={600}>
-                ⚠️ Sin registro de entrada
-              </Typography>
-            )}
-          </Paper>
-
-          {/* Check Out */}
-          <Paper
-            elevation={0}
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.secondary.main, 0.05),
-              border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
-            }}
-          >
-            <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
-              <LogoutIcon
-                sx={{ color: theme.palette.secondary.main, fontSize: 22 }}
-              />
-              <Typography
-                variant="subtitle2"
-                fontWeight={700}
-                color="secondary"
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              {" "}
+              {/* Check In */}
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  /*bgcolor: alpha(theme.palette.primary.main, 0.05),
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,*/
+                  bgcolor: "background.card",
+                  border:
+                    theme.palette.mode === "dark"
+                      ? "none"
+                      : `1px solid ${theme.palette.divider}`,
+                }}
               >
-                Salida
-              </Typography>
-            </Stack>
-            {hasCheckOut ? (
-              <Stack spacing={1.5}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <AccessTime sx={{ fontSize: 18, color: "text.secondary" }} />
-                  <Typography variant="body2">
-                    <strong>Hora:</strong>{" "}
-                    {formatTime(dayData.checkOut.timestamp)}
-                  </Typography>
-                  <Chip
-                    label={
-                      statusConfig[dayData.checkOut.status]?.label ||
-                      dayData.checkOut.status
-                    }
-                    size="small"
-                    sx={{
-                      bgcolor: alpha(
-                        statusConfig[dayData.checkOut.status]?.colorHex ||
-                          "#999",
-                        0.1,
-                      ),
-                      color:
-                        statusConfig[dayData.checkOut.status]?.colorHex ||
-                        "#999",
-                      fontSize: "0.7rem",
-                      height: 20,
-                      fontWeight: 600,
-                    }}
+                <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+                  <LoginIcon
+                    sx={{ color: theme.palette.success.main, fontSize: 22 }}
                   />
-                </Stack>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Computer sx={{ fontSize: 18, color: "text.secondary" }} />
-                  <Typography variant="body2">
-                    <strong>Dispositivo:</strong>{" "}
-                    {dayData.checkOut.deviceId?.name || "-"}
-                  </Typography>
-                </Stack>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Fingerprint sx={{ fontSize: 18, color: "text.secondary" }} />
                   <Typography
-                    variant="body2"
-                    sx={{ textTransform: "capitalize" }}
+                    variant="subtitle2"
+                    fontWeight={700}
+                    color="success"
                   >
-                    <strong>Método:</strong>{" "}
-                    {dayData.checkOut.verificationMethod || "-"}
+                    Entrada
                   </Typography>
                 </Stack>
-              </Stack>
-            ) : (
-              <Typography variant="body2" color="error" fontWeight={600}>
-                ⚠️ Sin registro de salida
-              </Typography>
-            )}
-          </Paper>
-
+                {hasCheckIn ? (
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <AccessTime
+                        sx={{ fontSize: 18, color: "text.secondary" }}
+                      />
+                      <Typography variant="body2">
+                        <strong>Hora:</strong>{" "}
+                        {formatTime(dayData.checkIn.timestamp)}
+                      </Typography>
+                      <Chip
+                        label={
+                          statusConfig[dayData.checkIn.status]?.label ||
+                          dayData.checkIn.status
+                        }
+                        size="small"
+                        sx={{
+                          bgcolor: alpha(
+                            statusConfig[dayData.checkIn.status]?.colorHex ||
+                              "#999",
+                            0.1,
+                          ),
+                          color:
+                            statusConfig[dayData.checkIn.status]?.colorHex ||
+                            "#999",
+                          fontSize: "0.7rem",
+                          height: 20,
+                          fontWeight: 600,
+                        }}
+                      />
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Computer
+                        sx={{ fontSize: 18, color: "text.secondary" }}
+                      />
+                      <Typography variant="body2">
+                        <strong>Dispositivo:</strong>{" "}
+                        {dayData.checkIn.deviceId?.name || "-"}
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Fingerprint
+                        sx={{ fontSize: 18, color: "text.secondary" }}
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{ textTransform: "capitalize" }}
+                      >
+                        <strong>Método:</strong>{" "}
+                        {dayData.checkIn.verificationMethod || "-"}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Sin registro de entrada
+                  </Typography>
+                )}
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              {/* Check Out */}
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  /*bgcolor: alpha(theme.palette.secondary.main, 0.05),
+                  border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,*/
+                  bgcolor: "background.card",
+                  border:
+                    theme.palette.mode === "dark"
+                      ? "none"
+                      : `1px solid ${theme.palette.divider}`,
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+                  <LogoutIcon
+                    sx={{ color: theme.palette.error.main, fontSize: 22 }}
+                  />
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={700}
+                    color="error"
+                  >
+                    Salida
+                  </Typography>
+                </Stack>
+                {hasCheckOut ? (
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <AccessTime
+                        sx={{ fontSize: 18, color: "text.secondary" }}
+                      />
+                      <Typography variant="body2">
+                        <strong>Hora:</strong>{" "}
+                        {formatTime(dayData.checkOut.timestamp)}
+                      </Typography>
+                      <Chip
+                        label={
+                          statusConfig[dayData.checkOut.status]?.label ||
+                          dayData.checkOut.status
+                        }
+                        size="small"
+                        sx={{
+                          bgcolor: alpha(
+                            statusConfig[dayData.checkOut.status]?.colorHex ||
+                              "#999",
+                            0.1,
+                          ),
+                          color:
+                            statusConfig[dayData.checkOut.status]?.colorHex ||
+                            "#999",
+                          fontSize: "0.7rem",
+                          height: 20,
+                          fontWeight: 600,
+                        }}
+                      />
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Computer
+                        sx={{ fontSize: 18, color: "text.secondary" }}
+                      />
+                      <Typography variant="body2">
+                        <strong>Dispositivo:</strong>{" "}
+                        {dayData.checkOut.deviceId?.name || "-"}
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Fingerprint
+                        sx={{ fontSize: 18, color: "text.secondary" }}
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{ textTransform: "capitalize" }}
+                      >
+                        <strong>Método:</strong>{" "}
+                        {dayData.checkOut.verificationMethod || "-"}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Sin registro de salida
+                  </Typography>
+                )}
+              </Paper>
+            </Grid>
+          </Grid>
           {/* Horas trabajadas */}
           {hoursWorked && (
             <Box
@@ -640,46 +788,250 @@ const AttendanceEventDialog = ({ open, onClose, dayData, statusConfig }) => {
               </Stack>
             </Box>
           )}
-
-          {/* Justificación */}
-          {(dayData.checkIn?.justification?.approved ||
-            dayData.checkOut?.justification?.approved) && (
+          {/* Estado de Justificación si existe*/}
+          {dayData.justification && (
             <Paper
               elevation={0}
               sx={{
                 p: 2,
                 borderRadius: 2,
-                bgcolor: alpha(theme.palette.info.main, 0.08),
-                border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
+                //bgcolor: alpha(theme.palette.purple?.[500] || "#9c27b0", 0.08),
+                bgcolor:
+                  dayData.justification.status === "approved"
+                    ? alpha(theme.palette.primary.main, 0.08)
+                    : dayData.justification.status === "pending"
+                      ? alpha(theme.palette.warning.main, 0.08)
+                      : alpha(theme.palette.error.main, 0.08),
+                /*border: `1px solid ${alpha(theme.palette.purple?.[500] || "#9c27b0", 0.2)}`,*/
+                border: `1px solid ${
+                  dayData.justification.status === "approved"
+                    ? alpha(theme.palette.primary.main, 0.2)
+                    : dayData.justification.status === "pending"
+                      ? alpha(theme.palette.warning.main, 0.2)
+                      : alpha(theme.palette.error.main, 0.2)
+                }`,
               }}
             >
-              <Stack direction="row" alignItems="flex-start" spacing={1}>
-                <Assignment
-                  sx={{ fontSize: 22, color: "info.main", mt: 0.2 }}
-                />
-                <Box>
+              <Stack spacing={1.5}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Assignment
+                    sx={{
+                      color:
+                        dayData.justification.status === "approved"
+                          ? theme.palette.primary.main
+                          : dayData.justification.status === "pending"
+                            ? theme.palette.warning.main
+                            : theme.palette.error.main,
+                      fontSize: 22,
+                    }}
+                  />
                   <Typography
-                    variant="subtitle2"
+                    variant="body2"
                     fontWeight={700}
-                    color="info.main"
-                    mb={0.5}
+                    // sx={{ color: "#9c27b0" }}
+                    sx={{
+                      color:
+                        dayData.justification.status === "approved"
+                          ? theme.palette.primary.main
+                          : dayData.justification.status === "pending"
+                            ? theme.palette.warning.main
+                            : theme.palette.error.main,
+                    }}
                   >
-                    Justificación Aprobada
+                    Justificación{" "}
+                    {dayData.justification.status === "approved"
+                      ? "Aprobada"
+                      : dayData.justification.status === "pending"
+                        ? "Pendiente"
+                        : "Rechazada"}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {dayData.checkIn?.justification?.reason ||
-                      dayData.checkOut?.justification?.reason ||
-                      "Sin descripción"}
+                </Stack>
+                <Typography variant="body2">
+                  {dayData.justification.reason}
+                </Typography>
+                {dayData.justification.documents?.length > 0 && (
+                  <Typography variant="caption" color="text.secondary">
+                    📎 {dayData.justification.documents.length} documento(s)
+                    adjunto(s)
                   </Typography>
-                </Box>
+                )}
               </Stack>
             </Paper>
+          )}
+
+          {/* Formulario de justificación */}
+          {canJustify && (
+            <>
+              <Divider sx={{ my: 1 }} />
+
+              {!showJustificationForm ? (
+                <Alert
+                  severity="info"
+                  icon={<Assignment />}
+                  action={
+                    <Button
+                      //color="inherit"
+                      size="small"
+                      onClick={handleJustifyClick}
+                      //startIcon={<Assignment />}
+                      variant="outlined"
+                    >
+                      Justificar
+                    </Button>
+                  }
+                >
+                  ¿Quieres agregar una justificación?
+                </Alert>
+              ) : (
+                <Collapse in={showJustificationForm}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2.5,
+                      borderRadius: 2,
+                      bgcolor: alpha(theme.palette.info.main, 0.05),
+                      border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
+                    }}
+                  >
+                    <Stack spacing={2}>
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={1}
+                        mb={1}
+                      >
+                        <Assignment sx={{ color: "info.main", fontSize: 22 }} />
+                        <Typography
+                          variant="subtitle2"
+                          fontWeight={700}
+                          color="info.main"
+                        >
+                          Justificación
+                        </Typography>
+                      </Stack>
+
+                      <TextField
+                        inputRef={justificationInputRef}
+                        fullWidth
+                        multiline
+                        rows={4}
+                        placeholder="Describe el motivo de la tardanza, salida temprana o ausencia..."
+                        value={justification}
+                        onChange={(e) => setJustification(e.target.value)}
+                        variant="outlined"
+                        disabled={isSubmitting}
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            bgcolor: "background.paper",
+                          },
+                        }}
+                      />
+
+                      {/* Área de carga de archivos */}
+                      <Box>
+                        <Button
+                          variant="outlined"
+                          component="label"
+                          startIcon={<AttachFile />}
+                          disabled={isSubmitting}
+                          size="small"
+                          sx={{ mb: 1 }}
+                        >
+                          Adjuntar documentos
+                          <input
+                            type="file"
+                            hidden
+                            multiple
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                            onChange={handleFileChange}
+                          />
+                        </Button>
+
+                        {selectedFiles.length > 0 && (
+                          <Stack spacing={1} mt={1}>
+                            {selectedFiles.map((file, index) => (
+                              <Paper
+                                key={index}
+                                elevation={0}
+                                sx={{
+                                  p: 1,
+                                  bgcolor: alpha(theme.palette.grey[500], 0.1),
+                                  borderRadius: 1,
+                                }}
+                              >
+                                <Stack
+                                  direction="row"
+                                  alignItems="center"
+                                  justifyContent="space-between"
+                                >
+                                  <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    spacing={1}
+                                  >
+                                    <AttachFile sx={{ fontSize: 18 }} />
+                                    <Typography variant="body2">
+                                      {file.name}
+                                    </Typography>
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                    >
+                                      ({(file.size / 1024).toFixed(1)} KB)
+                                    </Typography>
+                                  </Stack>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => handleRemoveFile(index)}
+                                    disabled={isSubmitting}
+                                  >
+                                    <CloseIcon fontSize="small" />
+                                  </IconButton>
+                                </Stack>
+                              </Paper>
+                            ))}
+                          </Stack>
+                        )}
+                      </Box>
+
+                      {/* Botones de acción */}
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        justifyContent="flex-end"
+                      >
+                        <Button
+                          variant="outlined"
+                          onClick={handleCancelJustification}
+                          disabled={isSubmitting}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          variant="contained"
+                          onClick={handleSubmitJustification}
+                          disabled={!justification.trim() || isSubmitting}
+                          startIcon={<Send />}
+                        >
+                          {isSubmitting ? "Enviando..." : "Enviar"}
+                        </Button>
+                      </Stack>
+                    </Stack>
+                  </Paper>
+                </Collapse>
+              )}
+            </>
           )}
         </Stack>
       </DialogContent>
 
       <DialogActions sx={{ p: 2.5 }}>
-        <Button onClick={onClose} variant="contained" size="large" fullWidth>
+        <Button
+          onClick={handleClose}
+          variant="contained"
+          size="large"
+          fullWidth
+        >
           Cerrar
         </Button>
       </DialogActions>
