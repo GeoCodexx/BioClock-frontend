@@ -36,6 +36,9 @@ import {
   NavigateNext as NavigateNextIcon,
   FilterList as FilterListIcon,
   Clear as ClearIcon,
+  ViewDay as ViewDayIcon,
+  //ViewWeek,
+  ViewModule as ViewModuleIcon,
 } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -47,7 +50,7 @@ import SummaryCards from "../components/Reports/DailyReport/SummaryCards";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";*/
 import "jspdf-autotable";
-//import GeneralReportTable from "../components/Reports/GeneralReport/GeneralReportTable";
+import GeneralReportTable from "../components/Reports/GeneralReport/GeneralReportTable";
 import GeneralReportExportButtons from "../components/Reports/GeneralReport/GeneralReportExportButtons";
 import { SafeSelect } from "../components/common/SafeSelect";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
@@ -207,6 +210,8 @@ const FiltersCard = memo(
     onDateFromChange,
     onDateToChange,
     onClearFilters,
+    onChangeViewMode,
+    viewMode,
     totalRecords,
     currentRecords,
     loading,
@@ -214,6 +219,13 @@ const FiltersCard = memo(
     date,
     isMobile,
   }) => {
+    const handleViewModeChange = useCallback((event, newMode) => {
+      if (newMode !== null) {
+        //setViewMode(newMode);
+        onChangeViewMode(newMode);
+      }
+    }, []);
+
     return (
       <Card
         elevation={0}
@@ -240,12 +252,12 @@ const FiltersCard = memo(
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
             <Grid container spacing={2}>
               {/* Búsqueda */}
-              <Grid size={{ xs: 12, md: 3.5 }}>
+              <Grid size={{ xs: 12, md: viewMode === "table" ? 3.5 : 6 }}>
                 <TextField
                   fullWidth
                   size="small"
                   label="Buscar"
-                  placeholder="Nombre, apellido o DNI"
+                  placeholder="Nombres, Apellido o DNI"
                   value={search}
                   onChange={onSearchChange}
                   slotProps={{
@@ -262,7 +274,9 @@ const FiltersCard = memo(
               </Grid>
 
               {/* Filtro por turno */}
-              <Grid size={{ xs: 12, sm: 6, md: 2.25 }}>
+              <Grid
+                size={{ xs: 12, sm: 6, md: viewMode === "table" ? 2.25 : 3 }}
+              >
                 <FormControl fullWidth size="small">
                   <InputLabel sx={{ fontSize: "0.9rem" }}>Turno</InputLabel>
                   <SafeSelect
@@ -292,7 +306,9 @@ const FiltersCard = memo(
               </Grid>
 
               {/* Filtro por estado */}
-              <Grid size={{ xs: 12, sm: 6, md: 2.25 }}>
+              <Grid
+                size={{ xs: 12, sm: 6, md: viewMode === "table" ? 2.25 : 3 }}
+              >
                 <FormControl fullWidth size="small">
                   <InputLabel sx={{ fontSize: "0.9rem" }}>Estado</InputLabel>
                   <SafeSelect
@@ -317,48 +333,52 @@ const FiltersCard = memo(
                 </FormControl>
               </Grid>
 
-              {/* Fecha Desde */}
-              <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                <DatePicker
-                  label="Desde"
-                  value={dateFrom}
-                  onChange={onDateFromChange}
-                  slotProps={{
-                    textField: {
-                      size: "small",
-                      fullWidth: true,
-                      sx: {
-                        "& .MuiPickersOutlinedInput-root": {
-                          fontSize: "0.9rem",
-                        }, // Texto de la fecha
-                      },
-                    },
-                  }}
-                  format="dd/MM/yyyy"
-                />
-              </Grid>
+              {viewMode !== "matrix" && (
+                <>
+                  {/* Fecha Desde */}
+                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+                    <DatePicker
+                      label="Desde"
+                      value={dateFrom}
+                      onChange={onDateFromChange}
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          fullWidth: true,
+                          sx: {
+                            "& .MuiPickersOutlinedInput-root": {
+                              fontSize: "0.9rem",
+                            }, // Texto de la fecha
+                          },
+                        },
+                      }}
+                      format="dd/MM/yyyy"
+                    />
+                  </Grid>
 
-              {/* Fecha Hasta */}
-              <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                <DatePicker
-                  label="Hasta"
-                  value={dateTo}
-                  onChange={onDateToChange}
-                  minDate={dateFrom}
-                  slotProps={{
-                    textField: {
-                      size: "small",
-                      fullWidth: true,
-                      sx: {
-                        "& .MuiPickersOutlinedInput-root": {
-                          fontSize: "0.9rem",
-                        }, // Texto de la fecha
-                      },
-                    },
-                  }}
-                  format="dd/MM/yyyy"
-                />
-              </Grid>
+                  {/* Fecha Hasta */}
+                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+                    <DatePicker
+                      label="Hasta"
+                      value={dateTo}
+                      onChange={onDateToChange}
+                      minDate={dateFrom}
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          fullWidth: true,
+                          sx: {
+                            "& .MuiPickersOutlinedInput-root": {
+                              fontSize: "0.9rem",
+                            }, // Texto de la fecha
+                          },
+                        },
+                      }}
+                      format="dd/MM/yyyy"
+                    />
+                  </Grid>
+                </>
+              )}
             </Grid>
           </LocalizationProvider>
 
@@ -375,7 +395,7 @@ const FiltersCard = memo(
               borderColor: "divider",
             }}
           >
-            <ToggleButtonGroup
+            {/* <ToggleButtonGroup
               color="primary"
               value={"web"}
               exclusive
@@ -385,6 +405,31 @@ const FiltersCard = memo(
               <ToggleButton value="web">Web</ToggleButton>
               <ToggleButton value="android">Android</ToggleButton>
               <ToggleButton value="ios">iOS</ToggleButton>
+            </ToggleButtonGroup> */}
+
+            <ToggleButtonGroup
+              color="primary"
+              value={viewMode}
+              exclusive
+              onChange={handleViewModeChange}
+              size="small"
+              sx={{
+                "& .MuiToggleButton-root": {
+                  px: 2,
+                  //py: 1,
+                  textTransform: "none",
+                  fontWeight: 500,
+                },
+              }}
+            >
+              <ToggleButton value="matrix" aria-label="vista diaria">
+                <ViewModuleIcon sx={{ mr: 1, fontSize: 20 }} />
+                Matriz
+              </ToggleButton>
+              <ToggleButton value="table" aria-label="vista semanal">
+                <ViewDayIcon sx={{ mr: 1, fontSize: 20 }} />
+                Tabla
+              </ToggleButton>
             </ToggleButtonGroup>
             {/* <Typography
               variant="body2"
@@ -482,9 +527,12 @@ export default function GeneralReportPage() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [schedules, setSchedules] = useState([]);
 
-  useEffect(() => {
+  //Vista modo matriz o tabla
+  const [viewMode, setViewMode] = useState("matrix");
+
+  /*useEffect(() => {
     fetchData();
-  }, [currentMonth]);
+  }, [currentMonth]);*/
 
   // Fetch de datos
   const fetchData = useCallback(async () => {
@@ -492,33 +540,54 @@ export default function GeneralReportPage() {
     setError(null);
 
     try {
+      console.log("Mes Actual: ", currentMonth);
       const startDate = startOfMonth(currentMonth);
       const endDate = endOfMonth(currentMonth);
+
+      console.log(startDate, endDate);
 
       const params = new URLSearchParams({
         startDate: format(startDate, "yyyy-MM-dd"),
         endDate: format(endDate, "yyyy-MM-dd"),
-        page: (page + 1).toString(),
-        //limit: rowsPerPage.toString(),
-        limit: 10000,
-        view: "matrix",
       });
+
+      if (viewMode === "table") {
+        params.append("page", (page + 1).toString());
+        params.append("limit", rowsPerPage.toString());
+      }
+
+      if (viewMode === "matrix") params.append("view", "matrix");
 
       if (search) params.append("search", search);
       if (scheduleId) params.append("scheduleId", scheduleId);
       if (status) params.append("status", status);
-      if (dateFrom) params.append("startDate", format(dateFrom, "yyyy-MM-dd"));
-      if (dateTo) params.append("endDate", format(dateTo, "yyyy-MM-dd"));
+
+      if (dateFrom && viewMode === "table")
+        params.set("startDate", format(dateFrom, "yyyy-MM-dd"));
+      if (dateTo && viewMode === "table")
+        params.set("endDate", format(dateTo, "yyyy-MM-dd"));
 
       const response = await getGeneralReport(params);
-      //setData(response);
-      setDataMatrix(response);
+
+      if (viewMode === "matrix") setDataMatrix(response);
+
+      if (viewMode === "table") setData(response);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [search, scheduleId, status, dateFrom, dateTo, page, rowsPerPage]);
+  }, [
+    search,
+    currentMonth,
+    scheduleId,
+    status,
+    dateFrom,
+    dateTo,
+    page,
+    rowsPerPage,
+    viewMode,
+  ]);
 
   // Fetch de turnos
   const fetchSchedules = useCallback(async () => {
@@ -575,12 +644,17 @@ export default function GeneralReportPage() {
     setPage(0);
   }, []);
 
-  const handleCloseDialog = useCallback(() => {
+  /*const handleCloseDialog = useCallback(() => {
     setSelectedRecord(null);
-  }, []);
+  }, []);*/
 
   const handleMonthChange = useCallback((newMonth) => {
     setCurrentMonth(newMonth);
+  }, []);
+
+  const handleChangeViewMode = useCallback((newValue) => {
+    setViewMode(newValue);
+    //setPage(0);
   }, []);
 
   // Manejar justificación
@@ -681,6 +755,8 @@ export default function GeneralReportPage() {
         onDateFromChange={handleDateFromChange}
         onDateToChange={handleDateToChange}
         onClearFilters={handleClearFilters}
+        onChangeViewMode={handleChangeViewMode}
+        viewMode={viewMode}
         totalRecords={data.pagination.totalRecords}
         currentRecords={data.records.length}
         loading={loading}
@@ -711,23 +787,27 @@ export default function GeneralReportPage() {
             }}
           >
             {/* Tabla */}
-            {/* <GeneralReportTable
-              attendances={data.records}
-              setSelectedRecord={setSelectedRecord}
-            /> */}
-            <TimelineMatrix
-              users={dataMatrix.users}
-              dates={dataMatrix.dates}
-              matrix={dataMatrix.matrix}
-              granularity={"day"}
-              //onJustify={handleJustify}
-              setSelectedShift={setSelectedRecord}
-              currentMonth={currentMonth}
-              onMonthChange={handleMonthChange}
-            />
+            {viewMode === "table" && (
+              <GeneralReportTable
+                attendances={data.records}
+                setSelectedRecord={setSelectedRecord}
+              />
+            )}
+            {viewMode === "matrix" && (
+              <TimelineMatrix
+                users={dataMatrix.users}
+                dates={dataMatrix.dates}
+                matrix={dataMatrix.matrix}
+                granularity={"day"}
+                //onJustify={handleJustify}
+                setSelectedShift={setSelectedRecord}
+                currentMonth={currentMonth}
+                onMonthChange={handleMonthChange}
+              />
+            )}
 
             {/* Paginación */}
-            {hasRecords && (
+            {hasRecords && viewMode === "table" && (
               <>
                 <Divider />
                 <SafeTablePagination

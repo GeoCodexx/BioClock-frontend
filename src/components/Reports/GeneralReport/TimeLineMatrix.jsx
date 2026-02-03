@@ -363,7 +363,7 @@ const TimelineMatrix = ({
         <Box
           className="matrix-container"
           sx={{
-            height: "calc(100vh - 380px)",
+            //height: "calc(100vh - 380px)",
             maxHeight: 650,
             overflow: "auto",
             position: "relative",
