@@ -22,7 +22,7 @@ export const getGeneralReport = async (params) => {
     const { data } = await api.get("/reports/general-report", { params });
     return data;
   } catch (error) {
-    handleApiError(error, "Error al obtener reporte general de asistencias paginadas");
+    handleApiError(error, "Error al obtener reporte general de asistencias");
   }
 };
 

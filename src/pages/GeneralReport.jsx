@@ -44,7 +44,7 @@ import { Link as RouterLink } from "react-router-dom";
 
 import { getGeneralReport } from "../services/reportService";
 import { getSchedules } from "../services/scheduleService";
-import SummaryCards from "../components/Reports/DailyReport/SummaryCards";
+import SummaryCards from "../components/Reports/GeneralReport/SummaryCards";
 //import AttendanceDetailDialog from "../components/Reports/DailyReport/AttendanceDetailDialog";
 /*import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -257,7 +257,7 @@ const FiltersCard = memo(
                   fullWidth
                   size="small"
                   label="Buscar"
-                  placeholder="Nombres, Apellido o DNI"
+                  placeholder="Nombres, Apellidos o DNI"
                   value={search}
                   onChange={onSearchChange}
                   slotProps={{
@@ -478,12 +478,36 @@ const FiltersCard = memo(
 FiltersCard.displayName = "FiltersCard";
 
 // Componente de Loading
-const LoadingSkeleton = () => (
+/*const LoadingSkeleton = () => (
   <Card elevation={0} sx={{ borderRadius: 2 }}>
     <CardContent>
       <Stack spacing={2}>
         {[...Array(5)].map((_, i) => (
           <Skeleton key={i} variant="rectangular" height={60} />
+        ))}
+      </Stack>
+    </CardContent>
+  </Card>
+);*/
+
+const TableSkeleton = () => (
+  <Card elevation={0} sx={{ borderRadius: 2 }}>
+    <CardContent>
+      <Stack spacing={2}>
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} variant="rectangular" height={90} />
+        ))}
+      </Stack>
+    </CardContent>
+  </Card>
+);
+
+const MatrixSkeleton = () => (
+  <Card elevation={0} sx={{ borderRadius: 2 }}>
+    <CardContent>
+      <Stack spacing={2}>
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} variant="rectangular" height={80} />
         ))}
       </Stack>
     </CardContent>
@@ -514,8 +538,11 @@ export default function GeneralReportPage() {
     matrix: [],
   });
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [loading, setLoading] = useState(true);
+  //const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loadingTable, setLoadingTable] = useState(false);
+  const [loadingMatrix, setLoadingMatrix] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   // Estados de filtros
   const [search, setSearch] = useState("");
@@ -534,17 +561,47 @@ export default function GeneralReportPage() {
     fetchData();
   }, [currentMonth]);*/
 
+  useEffect(() => {
+    if (viewMode === "table") {
+      setLoadingTable(true);
+    }
+
+    if (viewMode === "matrix") {
+      setLoadingMatrix(true);
+    }
+  }, [viewMode]);
+
+  //Solo para cambio del mes en vista matriz
+  useEffect(() => {
+    if (viewMode === "matrix") {
+      setLoadingMatrix(true);
+    }
+  }, [currentMonth, viewMode]);
+
   // Fetch de datos
   const fetchData = useCallback(async () => {
-    setLoading(true);
+    //setLoading(true);
+    /* if (viewMode === "table") setLoadingTable(true);
+    if (viewMode === "matrix") setLoadingMatrix(true);*/
     setError(null);
+    /*setData({
+      records: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalRecords: 0,
+        recordsPerPage: 10,
+      },
+      date: "",
+    });
+    setDataMatrix({ users: [], dates: [], matrix: [] });*/
 
     try {
-      console.log("Mes Actual: ", currentMonth);
+      //console.log("Mes Actual: ", currentMonth);
       const startDate = startOfMonth(currentMonth);
       const endDate = endOfMonth(currentMonth);
 
-      console.log(startDate, endDate);
+      //console.log(startDate, endDate);
 
       const params = new URLSearchParams({
         startDate: format(startDate, "yyyy-MM-dd"),
@@ -575,7 +632,10 @@ export default function GeneralReportPage() {
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      //setLoading(false);
+      setLoadingStats(false);
+      if (viewMode === "table") setLoadingTable(false);
+      if (viewMode === "matrix") setLoadingMatrix(false);
     }
   }, [
     search,
@@ -605,6 +665,7 @@ export default function GeneralReportPage() {
   }, [fetchSchedules]);
 
   useEffect(() => {
+    setLoadingStats(true);
     const timeoutId = setTimeout(fetchData, 300);
     return () => clearTimeout(timeoutId);
   }, [fetchData]);
@@ -707,7 +768,7 @@ export default function GeneralReportPage() {
   const hasRecords = data.records.length > 0;
 
   // Estado de carga inicial
-  if (loading) {
+  /*if (loading) {
     return (
       <Box
         sx={{
@@ -725,22 +786,24 @@ export default function GeneralReportPage() {
         </Typography>
       </Box>
     );
-  }
+  }*/
 
   return (
     <Box sx={{ width: "100%" }}>
       {/* Header */}
       <PageHeader date={data.date} isMobile={isMobile} />
-
       {/* Resumen - Oculto en mobile */}
       {!isMobile && (
-        <Fade in timeout={500}>
-          <div>
-            <SummaryCards data={data} />
-          </div>
-        </Fade>
+        // <Fade in timeout={500}>
+        //   <div>
+        <SummaryCards
+          data={viewMode === "matrix" ? dataMatrix.stats : data.stats}
+          //isLoading={loading}
+          isLoading={loadingStats}
+        />
+        //   </div>
+        // </Fade>
       )}
-
       {/* Filtros */}
       <FiltersCard
         search={search}
@@ -759,12 +822,12 @@ export default function GeneralReportPage() {
         viewMode={viewMode}
         totalRecords={data.pagination.totalRecords}
         currentRecords={data.records.length}
-        loading={loading}
+        //loading={loading}
+        loading={viewMode === "matrix" ? loadingMatrix : loadingTable}
         records={data.records}
         date={data.date}
         isMobile={isMobile}
       />
-
       {/* Error */}
       {error && (
         <Fade in>
@@ -773,86 +836,85 @@ export default function GeneralReportPage() {
           </Alert>
         </Fade>
       )}
-
       {/* Contenido */}
-      {loading ? (
-        <LoadingSkeleton />
-      ) : (
-        <Fade in timeout={500}>
-          <Card
-            sx={{
-              borderRadius: isMobile ? 2 : 3,
-              boxShadow: theme.shadows[1],
-              overflow: "hidden",
-            }}
-          >
-            {/* Tabla */}
-            {viewMode === "table" && (
-              <GeneralReportTable
-                attendances={data.records}
-                setSelectedRecord={setSelectedRecord}
-              />
-            )}
-            {viewMode === "matrix" && (
-              <TimelineMatrix
-                users={dataMatrix.users}
-                dates={dataMatrix.dates}
-                matrix={dataMatrix.matrix}
-                granularity={"day"}
-                //onJustify={handleJustify}
-                setSelectedShift={setSelectedRecord}
-                currentMonth={currentMonth}
-                onMonthChange={handleMonthChange}
-              />
-            )}
 
-            {/* Paginación */}
-            {hasRecords && viewMode === "table" && (
-              <>
-                <Divider />
-                <SafeTablePagination
-                  component="div"
-                  count={data.pagination.totalRecords}
-                  page={page}
-                  onPageChange={handleChangePage}
-                  rowsPerPage={rowsPerPage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
-                  labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
-                  labelDisplayedRows={({ from, to, count }) =>
-                    isMobile
-                      ? `${from}-${to} de ${count}`
-                      : `${from}-${to} de ${
-                          count !== -1 ? count : `más de ${to}`
-                        }`
-                  }
-                  sx={{
-                    ".MuiTablePagination-toolbar": {
-                      flexWrap: isMobile ? "wrap" : "nowrap",
-                      minHeight: isMobile ? "auto" : 64,
-                      px: isMobile ? 1 : 2,
-                    },
-                    ".MuiTablePagination-selectLabel": {
-                      fontSize: isMobile ? "0.8rem" : "0.875rem",
-                    },
-                    ".MuiTablePagination-displayedRows": {
-                      fontSize: isMobile ? "0.8rem" : "0.875rem",
-                    },
-                  }}
-                />
-              </>
-            )}
-          </Card>
-        </Fade>
-      )}
+      {/* <Fade in timeout={500}> */}
+      <Card
+        sx={{
+          borderRadius: isMobile ? 2 : 3,
+          boxShadow: theme.shadows[1],
+          overflow: "hidden",
+        }}
+      >
+        {/* TABLE */}
+        {viewMode === "table" &&
+          (loadingTable ? (
+            <TableSkeleton />
+          ) : (
+            <GeneralReportTable
+              attendances={data.records}
+              setSelectedRecord={setSelectedRecord}
+            />
+          ))}
 
+        {/* MATRIX */}
+        {viewMode === "matrix" &&
+          (loadingMatrix ? (
+            <MatrixSkeleton />
+          ) : (
+            <TimelineMatrix
+              users={dataMatrix.users}
+              dates={dataMatrix.dates}
+              matrix={dataMatrix.matrix}
+              granularity="day"
+              setSelectedShift={setSelectedRecord}
+              currentMonth={currentMonth}
+              onMonthChange={handleMonthChange}
+            />
+          ))}
+
+        {/* Paginación */}
+        {hasRecords && viewMode === "table" && (
+          <>
+            <Divider />
+            <SafeTablePagination
+              component="div"
+              count={data.pagination.totalRecords}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+              labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
+              labelDisplayedRows={({ from, to, count }) =>
+                isMobile
+                  ? `${from}-${to} de ${count}`
+                  : `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+              }
+              sx={{
+                ".MuiTablePagination-toolbar": {
+                  flexWrap: isMobile ? "wrap" : "nowrap",
+                  minHeight: isMobile ? "auto" : 64,
+                  px: isMobile ? 1 : 2,
+                },
+                ".MuiTablePagination-selectLabel": {
+                  fontSize: isMobile ? "0.8rem" : "0.875rem",
+                },
+                ".MuiTablePagination-displayedRows": {
+                  fontSize: isMobile ? "0.8rem" : "0.875rem",
+                },
+              }}
+            />
+          </>
+        )}
+      </Card>
+      {/* </Fade> */}
       {/* Dialog de detalles */}
       {/* <AttendanceDetailDialog
         open={Boolean(selectedRecord)}
         record={selectedRecord}
         onClose={handleCloseDialog}
       /> */}
-
       {/* Drawer de detalles de asistencia */}
       <AttendanceDrawer
         open={Boolean(selectedRecord)}
