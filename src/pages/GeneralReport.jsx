@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback, memo } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  memo,
+  useMemo,
+  useLayoutEffect,
+} from "react";
 import {
   Box,
   Typography,
@@ -24,6 +31,8 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   CircularProgress,
+  Collapse,
+  IconButton,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -39,6 +48,8 @@ import {
   ViewDay as ViewDayIcon,
   //ViewWeek,
   ViewModule as ViewModuleIcon,
+  ExpandLess,
+  ExpandMore,
 } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -554,54 +565,161 @@ export default function GeneralReportPage() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [schedules, setSchedules] = useState([]);
 
+  //Mostrar u ocultar los statCards
+  const [showSummary, setShowSummary] = useState(true);
+
   //Vista modo matriz o tabla
   const [viewMode, setViewMode] = useState("matrix");
 
-  /*useEffect(() => {
-    fetchData();
-  }, [currentMonth]);*/
+  //Estado para cachear data
+  const [matrixCache, setMatrixCache] = useState({});
 
-  useEffect(() => {
-    if (viewMode === "table") {
-      setLoadingTable(true);
+  //Estado para animación suave entre meses de la matriz
+  const [fadeKey, setFadeKey] = useState(0);
+
+  // Asignar key para cada mes que sera almacenado en cache
+  const monthKey = useMemo(
+    () => format(currentMonth, "yyyy-MM"),
+    [currentMonth],
+  );
+
+  // Función para filtrar la matriz localmente
+  const filterMatrixData = useCallback((matrixData, filters) => {
+    const { search, scheduleId, status } = filters;
+
+    // Si no hay filtros, retornar data original
+    if (!search && !scheduleId && !status) {
+      return matrixData;
     }
 
-    if (viewMode === "matrix") {
-      setLoadingMatrix(true);
-    }
-  }, [viewMode]);
+    let filteredUsers = [...matrixData.users];
+    let filteredMatrix = { ...matrixData.matrix };
 
-  //Solo para cambio del mes en vista matriz
-  useEffect(() => {
-    if (viewMode === "matrix") {
-      setLoadingMatrix(true);
+    // Filtro por búsqueda (nombre completo o DNI)
+    if (search) {
+      const searchLower = search.toLowerCase();
+      const matchedUserIds = new Set();
+
+      filteredUsers = filteredUsers.filter((user) => {
+        const matchesSearch =
+          user.fullName?.toLowerCase().includes(searchLower) ||
+          user.dni?.includes(search);
+
+        if (matchesSearch) {
+          matchedUserIds.add(user.id);
+        }
+        return matchesSearch;
+      });
+
+      // Filtrar la matriz por usuarios que coinciden con la búsqueda
+      filteredMatrix = Object.keys(filteredMatrix)
+        .filter((userId) => matchedUserIds.has(userId))
+        .reduce((acc, userId) => {
+          acc[userId] = filteredMatrix[userId];
+          return acc;
+        }, {});
     }
-  }, [currentMonth, viewMode]);
+
+    // Filtro por scheduleId
+    if (scheduleId) {
+      const newMatrix = {};
+
+      Object.keys(filteredMatrix).forEach((userId) => {
+        const userDates = filteredMatrix[userId];
+        const filteredUserDates = {};
+
+        Object.keys(userDates).forEach((date) => {
+          const shifts = userDates[date];
+          const filteredShifts = shifts.filter(
+            (shift) => shift.scheduleId === scheduleId,
+          );
+
+          if (filteredShifts.length > 0) {
+            filteredUserDates[date] = filteredShifts;
+          }
+        });
+
+        // Solo incluir usuario si tiene al menos un shift del horario filtrado
+        if (Object.keys(filteredUserDates).length > 0) {
+          newMatrix[userId] = filteredUserDates;
+        }
+      });
+
+      filteredMatrix = newMatrix;
+
+      // Actualizar lista de usuarios según matriz filtrada
+      const remainingUserIds = new Set(Object.keys(filteredMatrix));
+      filteredUsers = filteredUsers.filter((user) =>
+        remainingUserIds.has(user.id),
+      );
+    }
+
+    // Filtro por status
+    if (status) {
+      const newMatrix = {};
+
+      Object.keys(filteredMatrix).forEach((userId) => {
+        const userDates = filteredMatrix[userId];
+        const filteredUserDates = {};
+
+        Object.keys(userDates).forEach((date) => {
+          const shifts = userDates[date];
+          const filteredShifts = shifts.filter(
+            (shift) => shift.shiftStatus === status,
+          );
+
+          if (filteredShifts.length > 0) {
+            filteredUserDates[date] = filteredShifts;
+          }
+        });
+
+        // Solo incluir usuario si tiene al menos un shift con el status filtrado
+        if (Object.keys(filteredUserDates).length > 0) {
+          newMatrix[userId] = filteredUserDates;
+        }
+      });
+
+      filteredMatrix = newMatrix;
+
+      // Actualizar lista de usuarios según matriz filtrada
+      const remainingUserIds = new Set(Object.keys(filteredMatrix));
+      filteredUsers = filteredUsers.filter((user) =>
+        remainingUserIds.has(user.id),
+      );
+    }
+
+    return {
+      users: filteredUsers,
+      dates: matrixData.dates, // Se mantiene todas las fechas
+      matrix: filteredMatrix,
+      stats: matrixData.stats, // Se esta manteniendo los stats del mes actual, si se requiere stats del filtrado, recalcular.
+    };
+  }, []);
 
   // Fetch de datos
   const fetchData = useCallback(async () => {
-    //setLoading(true);
-    /* if (viewMode === "table") setLoadingTable(true);
-    if (viewMode === "matrix") setLoadingMatrix(true);*/
     setError(null);
-    /*setData({
-      records: [],
-      pagination: {
-        currentPage: 1,
-        totalPages: 0,
-        totalRecords: 0,
-        recordsPerPage: 10,
-      },
-      date: "",
-    });
-    setDataMatrix({ users: [], dates: [], matrix: [] });*/
+
+    // Revisar cache SOLO para matrix
+    if (viewMode === "matrix" && matrixCache[monthKey]) {
+      const cachedData = matrixCache[monthKey];
+
+      // Aplicar filtros a la data cacheada
+      const filteredData = filterMatrixData(cachedData, {
+        search,
+        scheduleId,
+        status,
+      });
+
+      setDataMatrix(filteredData);
+      setLoadingMatrix(false);
+      setLoadingStats(false);
+      return;
+    }
 
     try {
-      //console.log("Mes Actual: ", currentMonth);
       const startDate = startOfMonth(currentMonth);
       const endDate = endOfMonth(currentMonth);
-
-      //console.log(startDate, endDate);
 
       const params = new URLSearchParams({
         startDate: format(startDate, "yyyy-MM-dd"),
@@ -626,7 +744,18 @@ export default function GeneralReportPage() {
 
       const response = await getGeneralReport(params);
 
-      if (viewMode === "matrix") setDataMatrix(response);
+      if (viewMode === "matrix") {
+        if (viewMode === "matrix") {
+          // Guardar en cache SOLO la data sin filtrar
+          setMatrixCache((prev) => ({
+            ...prev,
+            [monthKey]: response,
+          }));
+
+          setDataMatrix(response);
+        }
+      }
+      //setDataMatrix(response);
 
       if (viewMode === "table") setData(response);
     } catch (err) {
@@ -647,6 +776,9 @@ export default function GeneralReportPage() {
     page,
     rowsPerPage,
     viewMode,
+    matrixCache,
+    monthKey,
+    filterMatrixData,
   ]);
 
   // Fetch de turnos
@@ -669,6 +801,40 @@ export default function GeneralReportPage() {
     const timeoutId = setTimeout(fetchData, 300);
     return () => clearTimeout(timeoutId);
   }, [fetchData]);
+
+  useEffect(() => {
+    if (viewMode === "table") {
+      setLoadingTable(true);
+    }
+
+    if (viewMode === "matrix") {
+      setLoadingMatrix(true);
+    }
+  }, [viewMode]);
+
+  //Solo para cambio del mes en vista matriz
+  //useLayoutEffect para sincronización inmediata
+  useLayoutEffect(() => {
+    if (viewMode === "matrix") {
+      const cacheKey = format(currentMonth, "yyyy-MM");
+
+      if (matrixCache[cacheKey]) {
+        setDataMatrix(matrixCache[cacheKey]);
+        setFadeKey((prev) => prev + 1);
+      } else {
+        setLoadingMatrix(true);
+      }
+    }
+  }, [currentMonth, viewMode, matrixCache]);
+
+  // Cuando se use los filtros de busqueda invalidar o limpiar el cache
+  /*useEffect(() => {
+    setMatrixCache({});
+  }, [search, scheduleId, status]);*/
+
+  /*---------- Funciones Auxiliares --------------*/
+
+  /*---------- Handlers --------------*/
 
   // Handlers memoizados
   const handleSearchChange = useCallback((event) => {
@@ -794,16 +960,39 @@ export default function GeneralReportPage() {
       <PageHeader date={data.date} isMobile={isMobile} />
       {/* Resumen - Oculto en mobile */}
       {!isMobile && (
-        // <Fade in timeout={500}>
-        //   <div>
-        <SummaryCards
-          data={viewMode === "matrix" ? dataMatrix.stats : data.stats}
-          //isLoading={loading}
-          isLoading={loadingStats}
-        />
-        //   </div>
-        // </Fade>
+        <Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              mb: 1,
+              cursor: "pointer",
+              bgcolor: theme.palette.background.paper,
+              px: 2,
+              py: 1,
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+            onClick={() => setShowSummary(!showSummary)}
+          >
+            <Typography variant="h6" sx={{ flexGrow: 1 }}>
+              Resumen Estadístico
+            </Typography>
+            <IconButton size="small">
+              {showSummary ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+          </Box>
+
+          <Collapse in={showSummary} timeout={300}>
+            <SummaryCards
+              data={viewMode === "matrix" ? dataMatrix.stats : data.stats}
+              isLoading={loadingStats}
+            />
+          </Collapse>
+        </Box>
       )}
+
       {/* Filtros */}
       <FiltersCard
         search={search}
@@ -851,10 +1040,14 @@ export default function GeneralReportPage() {
           (loadingTable ? (
             <TableSkeleton />
           ) : (
-            <GeneralReportTable
-              attendances={data.records}
-              setSelectedRecord={setSelectedRecord}
-            />
+            <Fade in timeout={500}>
+              <div>
+                <GeneralReportTable
+                  attendances={data.records}
+                  setSelectedRecord={setSelectedRecord}
+                />
+              </div>
+            </Fade>
           ))}
 
         {/* MATRIX */}
@@ -862,51 +1055,22 @@ export default function GeneralReportPage() {
           (loadingMatrix ? (
             <MatrixSkeleton />
           ) : (
-            <TimelineMatrix
-              users={dataMatrix.users}
-              dates={dataMatrix.dates}
-              matrix={dataMatrix.matrix}
-              granularity="day"
-              setSelectedShift={setSelectedRecord}
-              currentMonth={currentMonth}
-              onMonthChange={handleMonthChange}
-            />
+            <Fade in key={fadeKey} timeout={500}>
+              <div>
+                <TimelineMatrix
+                  users={dataMatrix.users}
+                  dates={dataMatrix.dates}
+                  matrix={dataMatrix.matrix}
+                  granularity="day"
+                  setSelectedShift={setSelectedRecord}
+                  currentMonth={currentMonth}
+                  onMonthChange={handleMonthChange}
+                />
+              </div>
+            </Fade>
           ))}
 
         {/* Paginación */}
-        {hasRecords && viewMode === "table" && (
-          <>
-            <Divider />
-            <SafeTablePagination
-              component="div"
-              count={data.pagination.totalRecords}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
-              labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
-              labelDisplayedRows={({ from, to, count }) =>
-                isMobile
-                  ? `${from}-${to} de ${count}`
-                  : `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
-              }
-              sx={{
-                ".MuiTablePagination-toolbar": {
-                  flexWrap: isMobile ? "wrap" : "nowrap",
-                  minHeight: isMobile ? "auto" : 64,
-                  px: isMobile ? 1 : 2,
-                },
-                ".MuiTablePagination-selectLabel": {
-                  fontSize: isMobile ? "0.8rem" : "0.875rem",
-                },
-                ".MuiTablePagination-displayedRows": {
-                  fontSize: isMobile ? "0.8rem" : "0.875rem",
-                },
-              }}
-            />
-          </>
-        )}
       </Card>
       {/* </Fade> */}
       {/* Dialog de detalles */}
