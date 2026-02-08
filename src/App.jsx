@@ -11,14 +11,12 @@ import Schedules from "./pages/Schedules";
 import Departments from "./pages/Departments";
 import Fingerprint from "./pages/Fingerprints";
 import Attendances from "./pages/Attendances";
-import DailyReport from "./pages/DailyReport";
 import GlobalSnackbar from "./components/GlobalSnackbar";
 import GeneralReportPage from "./pages/GeneralReport";
 import MyAttendances from "./pages/MyAttendances";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import useAuthStore from "./store/useAuthStore";
 import NoAccessPage from "./pages/NoAccessPage";
-import { CssBaseline } from "@mui/material";
 
 function AuthRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
@@ -154,14 +152,6 @@ export default function App() {
                 </PermissionRoute>
               }
             />
-            {/* <Route
-              path="reports/daily"
-              element={
-                <PermissionRoute permission="daily-report:read">
-                  <DailyReport />
-                </PermissionRoute>
-              }
-            /> */}
             <Route
               path="general-report"
               element={

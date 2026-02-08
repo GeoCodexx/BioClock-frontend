@@ -11,6 +11,10 @@ import {
   Stack,
   Tooltip,
   IconButton,
+  Card,
+  CardContent,
+  Skeleton,
+  Fade,
   // ToggleButtonGroup,
   // ToggleButton,
 } from "@mui/material";
@@ -32,13 +36,45 @@ const COLUMN_WIDTH = 80;
 const NAME_COLUMN_WIDTH = 240;
 const HEADER_HEIGHT = 50;
 
-const STATUS_CONFIG = {
+/*const STATUS_CONFIG = {
   on_time: { dark: "#2e7d32", light: "#66bb6a", label: "A Tiempo" },
   late: { dark: "#ed6c02", light: "#ffa726", label: "Tardanza" },
   early_exit: { dark: "#9c27b0", light: "#ba68c8", label: "Salida Anticipada" },
   incomplete: { dark: "#e65100", light: "#ff9800", label: "Incompleto" },
   absent: { dark: "#d32f2f", light: "#f44336", label: "Ausente" },
   justified: { dark: "#0288d1", light: "#29b6f6", label: "Justificado" },
+};*/
+const STATUS_CONFIG = {
+  on_time: {
+    light: "#E8F5E9", // Verde muy suave
+    dark: "#2E7D32", // Verde corporativo
+    label: "A Tiempo",
+  },
+  late: {
+    light: "#FFF8E1", // Ámbar suave
+    dark: "#ed6c02", // Naranja quemado/profundo
+    label: "Tardanza",
+  },
+  early_exit: {
+    light: "#F3E5F5", // Lavanda claro
+    dark: "#7B1FA2", // Púrpura elegante
+    label: "Salida Anticipada",
+  },
+  incomplete: {
+    light: "#d6d6d6", // Naranja pastel
+    dark: "#757575", // Terracota
+    label: "Incompleto",
+  },
+  absent: {
+    light: "#FFEBEE", // Rojo muy claro
+    dark: "#C62828", // Rojo ladrillo profesional
+    label: "Ausente",
+  },
+  justified: {
+    light: "#E1F5FE", // Azul muy claro
+    dark: "#0277BD", // Azul acero
+    label: "Justificado",
+  },
 };
 
 /* ---------------------------------------------
@@ -96,6 +132,8 @@ const MatrixCell = memo(
                   height: 13.5,
                   flex: 1,
                   borderRadius: 3,
+                  //border: `1px solid ${STATUS_CONFIG[shift.shiftStatus].dark}`,
+                  //bgcolor: `${STATUS_CONFIG[shift.shiftStatus].dark}80`,
                   bgcolor: getStatusColor(shift.shiftStatus),
                   transition: "transform 0.15s ease, box-shadow 0.15s ease",
                   "&:hover": {
@@ -127,6 +165,8 @@ const TimelineMatrix = ({
   setSelectedShift,
   currentMonth, // Nueva prop: fecha del mes actual
   onMonthChange, // Nueva prop: callback para cambiar mes
+  loadingMatrix,
+  fadeKey, // Nueva prop: para forzar re-render con fade al cambiar de mes
 }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
@@ -157,7 +197,7 @@ const TimelineMatrix = ({
   const getStatusColor = useCallback(
     (status) => {
       const config = STATUS_CONFIG[status];
-      return config ? (isDark ? config.dark : config.light) : "#999";
+      return config ? (isDark ? config.dark : `${config.dark}80`) : "#999";
     },
     [isDark],
   );
@@ -205,6 +245,29 @@ const TimelineMatrix = ({
     return format(currentMonth, "MMMM yyyy", { locale: es });
   }, [currentMonth]);
 
+  /* --------------- Skeleton Loader ---------------- */
+  const MatrixSkeleton = () => (
+    <Card elevation={0} sx={{ borderRadius: 2, width: "100%" }}>
+      <CardContent>
+        <Stack spacing={1.5}>
+          {[...Array(7)].map((_, i) => (
+            <Box key={i} sx={{ display: "flex", gap: 1 }}>
+              <Skeleton variant="rectangular" width={240} height={35} />
+              {[...Array(10)].map((_, j) => (
+                <Skeleton
+                  key={j}
+                  variant="rectangular"
+                  width={80}
+                  height={35}
+                />
+              ))}
+            </Box>
+          ))}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+
   /* ---------------- Empty State ---------------- */
   if (!users?.length || !visibleDates?.length) {
     return (
@@ -249,7 +312,9 @@ const TimelineMatrix = ({
                 sx={{
                   bgcolor:
                     theme.palette.mode === "dark" ? config.dark : config.light,
-                  color: alpha("#ffffff", 0.85),
+                  //color: alpha("#ffffff", 0.85),
+                  color:
+                    theme.palette.mode === "dark" ? config.light : config.dark,
                   //fontWeight: 500,
                 }}
               />
@@ -359,45 +424,51 @@ const TimelineMatrix = ({
       </Paper>
 
       {/* Matrix Container */}
-      <Paper sx={{ borderRadius: 2, overflow: "hidden", boxShadow: 2 }}>
-        <Box
-          className="matrix-container"
-          sx={{
-            //height: "calc(100vh - 380px)",
-            maxHeight: 650,
-            overflow: "auto",
-            position: "relative",
-            display: "grid",
-            gridTemplateColumns: `${NAME_COLUMN_WIDTH}px repeat(${visibleDates.length}, ${COLUMN_WIDTH}px)`,
-            gridTemplateRows: `${HEADER_HEIGHT}px repeat(${users.length}, ${ROW_HEIGHT}px)`,
+      {loadingMatrix ? (
+        <MatrixSkeleton />
+      ) : (
+        <Fade in key={fadeKey} timeout={800}>
+          <Paper sx={{ borderRadius: 2, overflow: "hidden", boxShadow: 2 }}>
+            <Box
+              className="matrix-container"
+              sx={{
+                //height: "calc(100vh - 380px)",
+                maxHeight: 650,
+                overflow: "auto",
+                position: "relative",
+                display: "grid",
+                gridTemplateColumns: `${NAME_COLUMN_WIDTH}px repeat(${visibleDates.length}, ${COLUMN_WIDTH}px)`,
+                gridTemplateRows: `${HEADER_HEIGHT}px repeat(${users.length}, ${ROW_HEIGHT}px)`,
 
-            // GPU acceleration
-            transform: "translateZ(0)",
+                // GPU acceleration
+                transform: "translateZ(0)",
 
-            // Custom scrollbar
-            "&::-webkit-scrollbar": {
-              width: 10,
-              height: 10,
-            },
-            "&::-webkit-scrollbar-track": {
-              bgcolor: "transparent",
-            },
-            "&::-webkit-scrollbar-thumb": {
-              bgcolor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)",
-              borderRadius: 2,
-              "&:hover": {
-                bgcolor: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
-              },
-            },
+                // Custom scrollbar
+                "&::-webkit-scrollbar": {
+                  width: 10,
+                  height: 10,
+                },
+                "&::-webkit-scrollbar-track": {
+                  bgcolor: "transparent",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  bgcolor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)",
+                  borderRadius: 2,
+                  "&:hover": {
+                    bgcolor: isDark
+                      ? "rgba(255,255,255,0.3)"
+                      : "rgba(0,0,0,0.3)",
+                  },
+                },
 
-            // HOVER CRUZADO CON CSS PURO (sin estado)
-            // Cuando haces hover en una celda, resalta su fila y columna
-            "& .matrix-cell": {
-              position: "relative",
-            },
+                // HOVER CRUZADO CON CSS PURO (sin estado)
+                // Cuando haces hover en una celda, resalta su fila y columna
+                "& .matrix-cell": {
+                  position: "relative",
+                },
 
-            // Resaltar todas las celdas de la misma fila al hacer hover
-            /*...Object.fromEntries(
+                // Resaltar todas las celdas de la misma fila al hacer hover
+                /*...Object.fromEntries(
               users.map((_, rowIdx) => [
                 `&:has(.row-${rowIdx}:hover) .row-${rowIdx}`,
                 {
@@ -406,8 +477,8 @@ const TimelineMatrix = ({
               ]),
             ),*/
 
-            // Resaltar todas las celdas de la misma columna al hacer hover
-            /*...Object.fromEntries(
+                // Resaltar todas las celdas de la misma columna al hacer hover
+                /*...Object.fromEntries(
               visibleDates.map((_, colIdx) => [
                 `&:has(.col-${colIdx}:hover) .col-${colIdx}`,
                 {
@@ -416,222 +487,213 @@ const TimelineMatrix = ({
               ]),
             ),*/
 
-            // Resaltar el header de la columna cuando se hace hover en cualquier celda de esa columna
-            ...Object.fromEntries(
-              visibleDates.map((_, colIdx) => [
-                `&:has(.col-${colIdx}:hover) .header-col-${colIdx}`,
-                {
-                  bgcolor: `${theme.palette.primary.main}30`,
-                  /*bgcolor: isDark
+                // Resaltar el header de la columna cuando se hace hover en cualquier celda de esa columna
+                ...Object.fromEntries(
+                  visibleDates.map((_, colIdx) => [
+                    `&:has(.col-${colIdx}:hover) .header-col-${colIdx}`,
+                    {
+                      bgcolor: `${theme.palette.primary.main}30`,
+                      /*bgcolor: isDark
                     ? "rgba(255,255,255,0.15)"
                     : "rgba(0,0,0,0.1)",*/
-                },
-              ]),
-            ),
+                    },
+                  ]),
+                ),
 
-            // Resaltar el nombre del usuario cuando se hace hover en cualquier celda de esa fila
-            ...Object.fromEntries(
-              users.map((_, rowIdx) => [
-                `&:has(.row-${rowIdx}:hover) .user-row-${rowIdx}`,
-                {
-                  /*bgcolor: isDark
+                // Resaltar el nombre del usuario cuando se hace hover en cualquier celda de esa fila
+                ...Object.fromEntries(
+                  users.map((_, rowIdx) => [
+                    `&:has(.row-${rowIdx}:hover) .user-row-${rowIdx}`,
+                    {
+                      /*bgcolor: isDark
                     ? "rgba(255,255,255,0.08)"
                     : "rgba(0,0,0,0.06)",*/
-                  //bgcolor: `${theme.palette.primary.main}14`,
-                  color: "primary.main",
-                },
-              ]),
-            ),
-          }}
-        >
-          {/* Corner Cell (Sticky) */}
-          <Box
-            sx={{
-              position: "sticky",
-              top: 0,
-              left: 0,
-              zIndex: 40,
-              bgcolor: theme.palette.background.paper, // Fondo sólido
-              color: theme.palette.text.primary,
-              // Eliminamos width/height fijos para que use el tamaño natural del contenido
-              /*minWidth: "120px", 
-    minHeight: "60px",*/
-              borderRight: `2px solid ${theme.palette.divider}`,
-              borderBottom: `2px solid ${theme.palette.divider}`,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              padding: "8px",
-              // --- SOLUCIÓN A LA DIAGONAL ---
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                zIndex: -1, // Para que el texto quede encima de la línea
-                background: `linear-gradient(to top right, transparent calc(50% - 1px), ${theme.palette.divider}, transparent calc(50% + 1px))`,
-              },
-            }}
-          >
-            {/* Texto superior derecho */}
-            <Typography
-              //variant="caption"
-              sx={{ alignSelf: "flex-end", fontWeight: 700 }}
-            >
-              Día
-            </Typography>
-
-            {/* Texto inferior izquierdo */}
-            <Typography
-              sx={{
-                alignSelf: "flex-start",
-                fontWeight: 700,
-                mb: "10px",
-                ml: "8px",
-                lineHeight: 0,
+                      //bgcolor: `${theme.palette.primary.main}14`,
+                      color: "primary.main",
+                    },
+                  ]),
+                ),
               }}
             >
-              Usuario
-            </Typography>
-          </Box>
-
-          {/* Date Headers (Sticky Top) */}
-          {visibleDates.map((dateInfo, colIdx) => {
-            const dateStr =
-              dateInfo.type === "day"
-                ? format(parseISO(dateInfo.key), "dd MMM", { locale: es })
-                : dateInfo.key;
-
-            const dayOfWeek =
-              dateInfo.type === "day"
-                ? format(parseISO(dateInfo.key), "EEE", { locale: es })
-                : null;
-
-            return (
+              {/* Corner Cell (Sticky) */}
               <Box
-                key={colIdx}
-                className={`header-col-${colIdx}`}
                 sx={{
                   position: "sticky",
                   top: 0,
-                  zIndex: 20,
-                  //bgcolor: "primary.main",
-                  bgcolor: alpha(theme.palette.primary.main, 0.08),
-                  //color: "primary.contrastText",
+                  left: 0,
+                  zIndex: 40,
+                  bgcolor: theme.palette.background.paper, // Fondo sólido
                   color: theme.palette.text.primary,
+                  // Eliminamos width/height fijos para que use el tamaño natural del contenido
+                  /*minWidth: "120px", 
+    minHeight: "60px",*/
+                  borderRight: `2px solid ${theme.palette.divider}`,
+                  borderBottom: `2px solid ${theme.palette.divider}`,
                   display: "flex",
                   flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-                  borderBottom: `2px solid ${theme.palette.divider}`,
-                  transition: "background-color 0.15s ease",
-                  cursor: "default",
+                  justifyContent: "space-between",
+                  padding: "8px",
+                  // --- SOLUCIÓN A LA DIAGONAL ---
+                  "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    zIndex: -1, // Para que el texto quede encima de la línea
+                    background: `linear-gradient(to top right, transparent calc(50% - 1px), ${theme.palette.divider}, transparent calc(50% + 1px))`,
+                  },
                 }}
               >
-                {dayOfWeek && (
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: "0.65rem",
-                      opacity: 0.85,
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {dayOfWeek}
-                  </Typography>
-                )}
+                {/* Texto superior derecho */}
                 <Typography
-                  variant="body2"
-                  fontWeight={600}
+                  //variant="caption"
+                  sx={{ alignSelf: "flex-end", fontWeight: 700 }}
+                >
+                  Día
+                </Typography>
+
+                {/* Texto inferior izquierdo */}
+                <Typography
                   sx={{
-                    fontSize: "0.8rem",
-                    textTransform: "capitalize",
+                    alignSelf: "flex-start",
+                    fontWeight: 700,
+                    mb: "10px",
+                    ml: "8px",
+                    lineHeight: 0,
                   }}
                 >
-                  {dateStr}
+                  Usuario
                 </Typography>
               </Box>
-            );
-          })}
 
-          {/* User Rows */}
-          {users.map((user, rowIdx) => (
-            <React.Fragment key={user.id}>
-              {/* User Name Cell (Sticky Left) */}
-              <Box
-                className={`user-row-${rowIdx}`}
-                sx={{
-                  position: "sticky",
-                  left: 0,
-                  zIndex: 10,
-                  bgcolor: "background.paper",
-                  px: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  borderRight: `2px solid ${theme.palette.divider}`,
-                  borderBottom: `1px solid ${theme.palette.divider}`,
-                  transition: "background-color 0.15s ease, color 0.15s ease",
-                  cursor: "default",
-                }}
-              >
-                <Tooltip
-                  title={user.fullName}
-                  placement="right"
-                  enterDelay={500}
-                >
-                  <Typography
-                    variant="body2"
-                    fontWeight={500}
-                    noWrap
-                    sx={{
-                      fontSize: "0.875rem",
-                      transition: "color 0.15s ease",
-                    }}
-                  >
-                    {user.fullName}
-                  </Typography>
-                </Tooltip>
-              </Box>
-
-              {/* Data Cells */}
+              {/* Date Headers (Sticky Top) */}
               {visibleDates.map((dateInfo, colIdx) => {
-                const shifts =
+                const dateStr =
                   dateInfo.type === "day"
-                    ? matrix[user.id]?.[dateInfo.key] || []
-                    : dateInfo.values.flatMap(
-                        (d) => matrix[user.id]?.[d] || [],
-                      );
+                    ? format(parseISO(dateInfo.key), "dd MMM", { locale: es })
+                    : dateInfo.key;
+
+                const dayOfWeek =
+                  dateInfo.type === "day"
+                    ? format(parseISO(dateInfo.key), "EEE", { locale: es })
+                    : null;
 
                 return (
-                  <MatrixCell
-                    key={`${user.id}-${dateInfo.key}`}
-                    shifts={shifts}
-                    getStatusColor={getStatusColor}
-                    onClick={handleShiftClick}
-                    rowIdx={rowIdx}
-                    colIdx={colIdx}
-                  />
+                  <Box
+                    key={colIdx}
+                    className={`header-col-${colIdx}`}
+                    sx={{
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 20,
+                      //bgcolor: "primary.main",
+                      bgcolor: alpha(theme.palette.primary.main, 0.08),
+                      //color: "primary.contrastText",
+                      color: theme.palette.text.primary,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                      borderBottom: `2px solid ${theme.palette.divider}`,
+                      transition: "background-color 0.15s ease",
+                      cursor: "default",
+                    }}
+                  >
+                    {dayOfWeek && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: "0.65rem",
+                          opacity: 0.85,
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {dayOfWeek}
+                      </Typography>
+                    )}
+                    <Typography
+                      variant="body2"
+                      fontWeight={600}
+                      sx={{
+                        fontSize: "0.8rem",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {dateStr}
+                    </Typography>
+                  </Box>
                 );
               })}
-            </React.Fragment>
-          ))}
-        </Box>
-      </Paper>
 
-      {/* Drawer */}
-      {/* <AttendanceDrawer
-        open={drawerOpen}
-        record={selectedRecord}
-        onClose={() => {
-          setDrawerOpen(false);
-          setTimeout(() => setSelectedRecord(null), 200);
-        }}
-        onJustify={onJustify}
-        source="matrix" 
-      />*/}
+              {/* User Rows */}
+              {users.map((user, rowIdx) => (
+                <React.Fragment key={user.id}>
+                  {/* User Name Cell (Sticky Left) */}
+                  <Box
+                    className={`user-row-${rowIdx}`}
+                    sx={{
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 10,
+                      bgcolor: "background.paper",
+                      px: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      borderRight: `2px solid ${theme.palette.divider}`,
+                      borderBottom: `1px solid ${theme.palette.divider}`,
+                      transition:
+                        "background-color 0.15s ease, color 0.15s ease",
+                      cursor: "default",
+                    }}
+                  >
+                    <Tooltip
+                      title={user.fullName}
+                      placement="right"
+                      enterDelay={500}
+                    >
+                      <Typography
+                        variant="body2"
+                        fontWeight={500}
+                        noWrap
+                        sx={{
+                          fontSize: "0.875rem",
+                          transition: "color 0.15s ease",
+                        }}
+                      >
+                        {user.fullName}
+                      </Typography>
+                    </Tooltip>
+                  </Box>
+
+                  {/* Data Cells */}
+                  {visibleDates.map((dateInfo, colIdx) => {
+                    const shifts =
+                      dateInfo.type === "day"
+                        ? matrix[user.id]?.[dateInfo.key] || []
+                        : dateInfo.values.flatMap(
+                            (d) => matrix[user.id]?.[d] || [],
+                          );
+
+                    return (
+                      <MatrixCell
+                        key={`${user.id}-${dateInfo.key}`}
+                        shifts={shifts}
+                        getStatusColor={getStatusColor}
+                        onClick={handleShiftClick}
+                        rowIdx={rowIdx}
+                        colIdx={colIdx}
+                      />
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </Box>
+          </Paper>
+        </Fade>
+      )}
     </>
   );
 };

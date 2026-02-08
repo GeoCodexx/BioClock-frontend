@@ -56,10 +56,6 @@ import { Link as RouterLink } from "react-router-dom";
 import { getGeneralReport } from "../services/reportService";
 import { getSchedules } from "../services/scheduleService";
 import SummaryCards from "../components/Reports/GeneralReport/SummaryCards";
-//import AttendanceDetailDialog from "../components/Reports/DailyReport/AttendanceDetailDialog";
-/*import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
-import jsPDF from "jspdf";*/
 import "jspdf-autotable";
 import GeneralReportTable from "../components/Reports/GeneralReport/GeneralReportTable";
 import GeneralReportExportButtons from "../components/Reports/GeneralReport/GeneralReportExportButtons";
@@ -67,7 +63,6 @@ import { SafeSelect } from "../components/common/SafeSelect";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
 import AttendanceDrawer from "../components/Reports/GeneralReport/AttendanceDrawer";
-//import AttendanceMatrixPage from "./AttendanceMatrixPage";
 import TimelineMatrix from "../components/Reports/GeneralReport/TimeLineMatrix";
 import { createJustification } from "../services/attendanceService";
 import useSnackbarStore from "../store/useSnackbarStore";
@@ -223,14 +218,16 @@ const FiltersCard = memo(
     onClearFilters,
     onChangeViewMode,
     viewMode,
-    totalRecords,
+    /*totalRecords,
     currentRecords,
-    loading,
+    loading,*/
     records,
     date,
     isMobile,
+    error,
   }) => {
     const handleViewModeChange = useCallback((event, newMode) => {
+      // Si el usuario hace click en el modo ya seleccionado, newMode sera null, entonces no cambiar el modo de vista
       if (newMode !== null) {
         //setViewMode(newMode);
         onChangeViewMode(newMode);
@@ -361,6 +358,8 @@ const FiltersCard = memo(
                               fontSize: "0.9rem",
                             }, // Texto de la fecha
                           },
+                          error: error, // Se pone rojo si el rango está mal
+                          helperText: error ? "Rango inválido" : "",
                         },
                       }}
                       format="dd/MM/yyyy"
@@ -383,6 +382,13 @@ const FiltersCard = memo(
                               fontSize: "0.9rem",
                             }, // Texto de la fecha
                           },
+                          // Se pone rojo si falta o si el rango está mal
+                          error: error || (dateFrom && !dateTo),
+                          helperText: error
+                            ? "Debe ser posterior al inicio"
+                            : dateFrom && !dateTo
+                              ? "Completa el rango"
+                              : "",
                         },
                       }}
                       format="dd/MM/yyyy"
@@ -406,18 +412,6 @@ const FiltersCard = memo(
               borderColor: "divider",
             }}
           >
-            {/* <ToggleButtonGroup
-              color="primary"
-              value={"web"}
-              exclusive
-              //onChange={handleChange}
-              aria-label="Platform"
-            >
-              <ToggleButton value="web">Web</ToggleButton>
-              <ToggleButton value="android">Android</ToggleButton>
-              <ToggleButton value="ios">iOS</ToggleButton>
-            </ToggleButtonGroup> */}
-
             <ToggleButtonGroup
               color="primary"
               value={viewMode}
@@ -506,19 +500,7 @@ const TableSkeleton = () => (
     <CardContent>
       <Stack spacing={2}>
         {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} variant="rectangular" height={90} />
-        ))}
-      </Stack>
-    </CardContent>
-  </Card>
-);
-
-const MatrixSkeleton = () => (
-  <Card elevation={0} sx={{ borderRadius: 2 }}>
-    <CardContent>
-      <Stack spacing={2}>
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} variant="rectangular" height={80} />
+          <Skeleton key={i} variant="rectangular" height={55} />
         ))}
       </Stack>
     </CardContent>
@@ -559,11 +541,14 @@ export default function GeneralReportPage() {
   const [search, setSearch] = useState("");
   const [scheduleId, setScheduleId] = useState("");
   const [status, setStatus] = useState("");
-  const [dateFrom, setDateFrom] = useState(null);
-  const [dateTo, setDateTo] = useState(null);
+  const [dateFrom, setDateFrom] = useState(startOfMonth(new Date()));
+  const [dateTo, setDateTo] = useState(endOfMonth(new Date()));
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [schedules, setSchedules] = useState([]);
+
+  // Estado para saber si se esta reseteando los filtros y ajustar el debounce
+  const [isResetting, setIsResetting] = useState(false);
 
   //Mostrar u ocultar los statCards
   const [showSummary, setShowSummary] = useState(true);
@@ -582,6 +567,11 @@ export default function GeneralReportPage() {
     () => format(currentMonth, "yyyy-MM"),
     [currentMonth],
   );
+
+  // Validar rango de fechas
+  // Validación de fechas
+  const isDateRangeComplete = dateFrom !== null && dateTo !== null;
+  const isRangeValid = isDateRangeComplete && dateFrom <= dateTo;
 
   // Función para filtrar la matriz localmente
   const filterMatrixData = useCallback((matrixData, filters) => {
@@ -700,6 +690,8 @@ export default function GeneralReportPage() {
   const fetchData = useCallback(async () => {
     setError(null);
 
+    if (viewMode === "table") setLoadingTable(true);
+
     // Revisar cache SOLO para matrix
     if (viewMode === "matrix" && matrixCache[monthKey]) {
       const cachedData = matrixCache[monthKey];
@@ -713,6 +705,23 @@ export default function GeneralReportPage() {
 
       setDataMatrix(filteredData);
       setLoadingMatrix(false);
+      setLoadingStats(false);
+      return;
+    }
+
+    // Revisar para vista tabla si el rango de fechas es null
+    if (viewMode === "table" && (!dateFrom || !dateTo)) {
+      setData({
+        records: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 0,
+          totalRecords: 0,
+          recordsPerPage: 10,
+        },
+        date: "",
+      });
+      setLoadingTable(false);
       setLoadingStats(false);
       return;
     }
@@ -797,18 +806,39 @@ export default function GeneralReportPage() {
   }, [fetchSchedules]);
 
   useEffect(() => {
+    const isReset = dateFrom === null && dateTo === null;
+    // BLOQUEO: Si el rango no está completo o es inválido,
+    // no hacemos nada, ignorando el cambio de fetchData por ahora.
+    if (
+      viewMode === "table" &&
+      !isReset &&
+      (!isDateRangeComplete || !isRangeValid)
+    ) {
+      return;
+    }
+    // Si pasó la validación, activamos el loading de stats y el debouncing
     setLoadingStats(true);
-    const timeoutId = setTimeout(fetchData, 300);
-    return () => clearTimeout(timeoutId);
-  }, [fetchData]);
+    const timeout = isResetting ? 50 : 700; // Si resetea, ejecución inmediata (0ms)
+
+    const handler = setTimeout(() => {
+      fetchData();
+      setIsResetting(false); // Apagamos la bandera después de ejecutar
+    }, timeout);
+
+    // Limpieza: si fetchData cambia antes de los 600ms, cancelamos el anterior
+    return () => clearTimeout(handler);
+  }, [fetchData, isDateRangeComplete, isRangeValid, dateFrom, dateTo]);
 
   useEffect(() => {
     if (viewMode === "table") {
+      //setDateFrom(startOfMonth(new Date()));
+      //setDateTo(endOfMonth(new Date()));
       setLoadingTable(true);
     }
 
     if (viewMode === "matrix") {
       setLoadingMatrix(true);
+      handleClearFilters();
     }
   }, [viewMode]);
 
@@ -826,11 +856,6 @@ export default function GeneralReportPage() {
       }
     }
   }, [currentMonth, viewMode, matrixCache]);
-
-  // Cuando se use los filtros de busqueda invalidar o limpiar el cache
-  /*useEffect(() => {
-    setMatrixCache({});
-  }, [search, scheduleId, status]);*/
 
   /*---------- Funciones Auxiliares --------------*/
 
@@ -870,10 +895,6 @@ export default function GeneralReportPage() {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   }, []);
-
-  /*const handleCloseDialog = useCallback(() => {
-    setSelectedRecord(null);
-  }, []);*/
 
   const handleMonthChange = useCallback((newMonth) => {
     setCurrentMonth(newMonth);
@@ -923,6 +944,7 @@ export default function GeneralReportPage() {
   };
 
   const handleClearFilters = useCallback(() => {
+    setIsResetting(true); // Bandera para indicar reseteo de filtros
     setSearch("");
     setScheduleId("");
     setStatus("");
@@ -1051,34 +1073,56 @@ export default function GeneralReportPage() {
           ))}
 
         {/* MATRIX */}
-        {viewMode === "matrix" &&
-          (loadingMatrix ? (
-            <MatrixSkeleton />
-          ) : (
-            <Fade in key={fadeKey} timeout={500}>
-              <div>
-                <TimelineMatrix
-                  users={dataMatrix.users}
-                  dates={dataMatrix.dates}
-                  matrix={dataMatrix.matrix}
-                  granularity="day"
-                  setSelectedShift={setSelectedRecord}
-                  currentMonth={currentMonth}
-                  onMonthChange={handleMonthChange}
-                />
-              </div>
-            </Fade>
-          ))}
+        {viewMode === "matrix" && (
+          <TimelineMatrix
+            users={dataMatrix.users}
+            dates={dataMatrix.dates}
+            matrix={dataMatrix.matrix}
+            granularity="day"
+            setSelectedShift={setSelectedRecord}
+            currentMonth={currentMonth}
+            onMonthChange={handleMonthChange}
+            loadingMatrix={loadingMatrix}
+            fadeKey={fadeKey}
+          />
+        )}
 
         {/* Paginación */}
+        {hasRecords && viewMode === "table" && (
+          <>
+            <Divider />
+            <SafeTablePagination
+              component="div"
+              count={data.pagination.totalRecords}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+              labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
+              labelDisplayedRows={({ from, to, count }) =>
+                isMobile
+                  ? `${from}-${to} de ${count}`
+                  : `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+              }
+              sx={{
+                ".MuiTablePagination-toolbar": {
+                  flexWrap: isMobile ? "wrap" : "nowrap",
+                  minHeight: isMobile ? "auto" : 64,
+                  px: isMobile ? 1 : 2,
+                },
+                ".MuiTablePagination-selectLabel": {
+                  fontSize: isMobile ? "0.8rem" : "0.875rem",
+                },
+                ".MuiTablePagination-displayedRows": {
+                  fontSize: isMobile ? "0.8rem" : "0.875rem",
+                },
+              }}
+            />
+          </>
+        )}
       </Card>
       {/* </Fade> */}
-      {/* Dialog de detalles */}
-      {/* <AttendanceDetailDialog
-        open={Boolean(selectedRecord)}
-        record={selectedRecord}
-        onClose={handleCloseDialog}
-      /> */}
       {/* Drawer de detalles de asistencia */}
       <AttendanceDrawer
         open={Boolean(selectedRecord)}

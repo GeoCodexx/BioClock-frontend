@@ -49,7 +49,7 @@ const SUMMARY_CONFIG = [
     label: "Incompletos",
     subtitle: "Sin entrada o salida",
     icon: ErrorOutlineIcon,
-    color: "error",
+    color: "disabled",
     getValue: (data) => data.incomplete ?? 0,
   },
   {
@@ -94,7 +94,7 @@ const StatValue = memo(({ value, color, isPercentage, isLoading }) => {
       <Typography
         variant="h3"
         fontWeight={700}
-        color={color + ".main"}
+        color={color === "disabled" ? "text." + color : color + ".main"}
         sx={{
           lineHeight: 1,
           fontSize: { xs: "2rem", sm: "2.5rem" },
@@ -118,7 +118,12 @@ StatValue.displayName = "StatValue";
 const StatCard = memo(({ label, subtitle, icon: Icon, color, children }) => {
   const theme = useTheme();
 
-  const colorValue = theme.palette[color]?.main || theme.palette.grey[500];
+  const colorValue =
+    color === "disabled"
+      ? theme.palette.text.disabled
+      : color !== "disabled"
+        ? theme.palette[color]?.main
+        : theme.palette.grey[500];
   const bgColor = alpha(colorValue, 0.08);
 
   return (
@@ -208,21 +213,21 @@ const SummaryCards = memo(({ data, isLoading = false }) => {
         <Grid
           key={stat.id}
           size={{ xs: 12, sm: 6, md: 3, lg: 3 }}
-        //   sx={{
-        //     animation: isLoading
-        //       ? "none"
-        //       : `fadeInUp 0.5s ease-out ${index * 0.1}s both`,
-        //     "@keyframes fadeInUp": {
-        //       from: {
-        //         opacity: 0,
-        //         transform: "translateY(20px)",
-        //       },
-        //       to: {
-        //         opacity: 1,
-        //         transform: "translateY(0)",
-        //       },
-        //     },
-        //   }}
+          //   sx={{
+          //     animation: isLoading
+          //       ? "none"
+          //       : `fadeInUp 0.5s ease-out ${index * 0.1}s both`,
+          //     "@keyframes fadeInUp": {
+          //       from: {
+          //         opacity: 0,
+          //         transform: "translateY(20px)",
+          //       },
+          //       to: {
+          //         opacity: 1,
+          //         transform: "translateY(0)",
+          //       },
+          //     },
+          //   }}
         >
           <StatCard
             label={stat.label}
