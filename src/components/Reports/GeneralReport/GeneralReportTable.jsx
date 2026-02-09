@@ -396,7 +396,12 @@ const TableRowMobile = memo(({ record, onClick }) => {
       {/* Fecha y Colaborador */}
       <TableCell sx={{ py: 1.5, width: "50%" }}>
         <UserCell user={record.user} compact />
-        <Typography variant="caption" color="text.secondary" display="block" sx={{ml:1}}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          display="block"
+          sx={{ ml: 1 }}
+        >
           {formattedDate}
         </Typography>
       </TableCell>
@@ -447,9 +452,7 @@ const TableHeader = memo(({ isMobile }) => (
         bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
       }}
     >
-      <TableCell sx={{ fontWeight: 700 }}>
-        Colaborador
-      </TableCell>
+      <TableCell sx={{ fontWeight: 700 }}>Colaborador</TableCell>
       {!isMobile && (
         <>
           <TableCell sx={{ fontWeight: 700 }}>Fecha</TableCell>
@@ -469,7 +472,7 @@ const TableHeader = memo(({ isMobile }) => (
 TableHeader.displayName = "TableHeader";
 
 // Componente principal
-const GeneralReportTable = memo(({ attendances, setSelectedRecord }) => {
+const GeneralReportTable = memo(({ attendances, setSelectedRecord, error }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -491,7 +494,7 @@ const GeneralReportTable = memo(({ attendances, setSelectedRecord }) => {
   );
 
   // Si no hay registros
-  if (!attendances || attendances.length === 0) {
+  if (!attendances || attendances.length === 0 || error) {
     return (
       <Paper
         elevation={0}
@@ -537,4 +540,4 @@ const GeneralReportTable = memo(({ attendances, setSelectedRecord }) => {
 
 GeneralReportTable.displayName = "GeneralReportTable";
 
-export default GeneralReportTable;
+export default memo(GeneralReportTable);

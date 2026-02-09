@@ -364,19 +364,19 @@ const AttendanceTable = ({
     return [...attendances].sort(getComparator(order, orderBy));
   }, [attendances, order, orderBy]);
 
-  const InfoItem = ({ icon, label, children, color }) => (
-    <Box>
-      <Stack direction="row" spacing={1} alignItems="center">
-        {icon}
-        <Typography variant="caption" color="text.secondary" fontWeight={600}>
-          {label}
-        </Typography>
-      </Stack>
-      <Typography variant="body2" sx={{ mt: 0.4 }}>
-        {children}
-      </Typography>
-    </Box>
-  );
+  // const InfoItem = ({ icon, label, children, color }) => (
+  //   <Box>
+  //     <Stack direction="row" spacing={1} alignItems="center">
+  //       {icon}
+  //       <Typography variant="caption" color="text.secondary" fontWeight={600}>
+  //         {label}
+  //       </Typography>
+  //     </Stack>
+  //     <Typography variant="body2" sx={{ mt: 0.4 }}>
+  //       {children}
+  //     </Typography>
+  //   </Box>
+  // );
 
   // Estado vacío
   if (attendances.length === 0 && !loading) {

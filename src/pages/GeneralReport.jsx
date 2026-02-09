@@ -30,7 +30,7 @@ import {
   Divider,
   ToggleButtonGroup,
   ToggleButton,
-  CircularProgress,
+  //CircularProgress,
   Collapse,
   IconButton,
 } from "@mui/material";
@@ -66,6 +66,7 @@ import AttendanceDrawer from "../components/Reports/GeneralReport/AttendanceDraw
 import TimelineMatrix from "../components/Reports/GeneralReport/TimeLineMatrix";
 import { createJustification } from "../services/attendanceService";
 import useSnackbarStore from "../store/useSnackbarStore";
+import LoadingOverlay from "../components/common/LoadingOverlay";
 
 // Constantes
 const STATUS_OPTIONS = [
@@ -79,14 +80,14 @@ const STATUS_OPTIONS = [
   { value: "justified", label: "Justificado" },
 ];
 
-const STATUS_LABELS = {
+/*const STATUS_LABELS = {
   on_time: "A tiempo",
   late: "Tardanza",
   early_exit: "Salida temprana",
   imcomplete: "Incompleto",
   absent: "Ausente",
   justified: "Justificado",
-};
+};*/
 
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25, 50, 100];
 
@@ -495,7 +496,7 @@ FiltersCard.displayName = "FiltersCard";
   </Card>
 );*/
 
-const TableSkeleton = () => (
+/*const TableSkeleton = () => (
   <Card elevation={0} sx={{ borderRadius: 2 }}>
     <CardContent>
       <Stack spacing={2}>
@@ -505,7 +506,7 @@ const TableSkeleton = () => (
       </Stack>
     </CardContent>
   </Card>
-);
+);*/
 
 // Componente Principal
 export default function GeneralReportPage() {
@@ -548,7 +549,7 @@ export default function GeneralReportPage() {
   const [schedules, setSchedules] = useState([]);
 
   // Estado para saber si se esta reseteando los filtros y ajustar el debounce
-  const [isResetting, setIsResetting] = useState(false);
+  //const [isResetting, setIsResetting] = useState(false);
 
   //Mostrar u ocultar los statCards
   const [showSummary, setShowSummary] = useState(true);
@@ -690,7 +691,7 @@ export default function GeneralReportPage() {
   const fetchData = useCallback(async () => {
     setError(null);
 
-    if (viewMode === "table") setLoadingTable(true);
+    if (viewMode === "table" && isRangeValid) setLoadingTable(true);
 
     // Revisar cache SOLO para matrix
     if (viewMode === "matrix" && matrixCache[monthKey]) {
@@ -805,7 +806,7 @@ export default function GeneralReportPage() {
     fetchSchedules();
   }, [fetchSchedules]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     const isReset = dateFrom === null && dateTo === null;
     // BLOQUEO: Si el rango no está completo o es inválido,
     // no hacemos nada, ignorando el cambio de fetchData por ahora.
@@ -818,7 +819,7 @@ export default function GeneralReportPage() {
     }
     // Si pasó la validación, activamos el loading de stats y el debouncing
     setLoadingStats(true);
-    const timeout = isResetting ? 50 : 700; // Si resetea, ejecución inmediata (0ms)
+    const timeout = isResetting ? 0 : 700; // Si resetea, ejecución inmediata (0ms)
 
     const handler = setTimeout(() => {
       fetchData();
@@ -827,21 +828,96 @@ export default function GeneralReportPage() {
 
     // Limpieza: si fetchData cambia antes de los 600ms, cancelamos el anterior
     return () => clearTimeout(handler);
-  }, [fetchData, isDateRangeComplete, isRangeValid, dateFrom, dateTo]);
+  }, [fetchData, isDateRangeComplete, isRangeValid, dateFrom, dateTo]);*/
 
+  // SIN debounce → paginación inmediata
+  // TABLE pagination
   useEffect(() => {
-    if (viewMode === "table") {
-      //setDateFrom(startOfMonth(new Date()));
-      //setDateTo(endOfMonth(new Date()));
-      setLoadingTable(true);
+    if (viewMode !== "table") return;
+
+    if (!dateFrom || !dateTo || !isRangeValid) return;
+
+    setLoadingTable(true);
+    setLoadingStats(true);
+
+    fetchData();
+  }, [page, rowsPerPage, viewMode]);
+
+  // MATRIX
+  useEffect(() => {
+    if (viewMode !== "matrix") return;
+
+    const handler = setTimeout(fetchData, 300);
+    return () => clearTimeout(handler);
+  }, [currentMonth, search, scheduleId, status]);
+
+  // CON debounce → filtros table
+  useEffect(() => {
+    if (viewMode !== "table") return;
+
+    // no ejecutar si rango incompleto
+    if (!dateFrom || !dateTo || !isRangeValid) return;
+
+    setLoadingTable(true);
+    setLoadingStats(true);
+
+    const handler = setTimeout(() => {
+      fetchData();
+    }, 700);
+
+    return () => clearTimeout(handler);
+  }, [viewMode, dateFrom, dateTo, search, scheduleId, status]);
+
+  /*useEffect(() => {
+    if (viewMode !== "table") return;
+
+    handleClearFilters();
+
+    // no hacer fetch si rango no válido
+    if (!dateFrom || !dateTo || !isRangeValid) {
+      setLoadingTable(false);
+      return;
     }
 
-    if (viewMode === "matrix") {
-      setLoadingMatrix(true);
-      handleClearFilters();
-    }
-  }, [viewMode]);
+    setLoadingTable(true);
+    setLoadingStats(true);
 
+    fetchData();
+  }, [viewMode]);*/
+  useEffect(() => {
+  if (viewMode === "matrix") {
+    // limpiar estado exclusivo de Table
+    setDateFrom(null);
+    setDateTo(null);
+    setPage(0);
+
+    setData({
+      records: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalRecords: 0,
+        recordsPerPage: rowsPerPage,
+      },
+      date: "",
+    });
+
+    setLoadingTable(false);
+
+    // cargar matrix
+    setLoadingMatrix(true);
+    fetchData();
+  }
+
+  if (viewMode === "table") {
+    // limpiar estado exclusivo de Matrix si quieres
+    setLoadingMatrix(false);
+
+    // NO hacer fetch automáticamente
+    // esperar que el usuario seleccione fechas
+  }
+
+}, [viewMode]);
   //Solo para cambio del mes en vista matriz
   //useLayoutEffect para sincronización inmediata
   useLayoutEffect(() => {
@@ -902,7 +978,6 @@ export default function GeneralReportPage() {
 
   const handleChangeViewMode = useCallback((newValue) => {
     setViewMode(newValue);
-    //setPage(0);
   }, []);
 
   // Manejar justificación
@@ -931,12 +1006,6 @@ export default function GeneralReportPage() {
     }
   }, []);
 
-  // Abrir drawer con registro seleccionado
-  /*const handleOpenDrawer = (record) => {
-    setSelectedRecord(record);
-    setDrawerOpen(true);
-  };*/
-
   // Cerrar drawer
   const handleCloseDrawer = () => {
     //setDrawerOpen(false);
@@ -944,7 +1013,7 @@ export default function GeneralReportPage() {
   };
 
   const handleClearFilters = useCallback(() => {
-    setIsResetting(true); // Bandera para indicar reseteo de filtros
+    //setIsResetting(true); // Bandera para indicar reseteo de filtros
     setSearch("");
     setScheduleId("");
     setStatus("");
@@ -1033,11 +1102,11 @@ export default function GeneralReportPage() {
         viewMode={viewMode}
         totalRecords={data.pagination.totalRecords}
         currentRecords={data.records.length}
-        //loading={loading}
         loading={viewMode === "matrix" ? loadingMatrix : loadingTable}
         records={data.records}
         date={data.date}
         isMobile={isMobile}
+        error={!isRangeValid && isDateRangeComplete}
       />
       {/* Error */}
       {error && (
@@ -1058,19 +1127,16 @@ export default function GeneralReportPage() {
         }}
       >
         {/* TABLE */}
-        {viewMode === "table" &&
-          (loadingTable ? (
-            <TableSkeleton />
-          ) : (
-            <Fade in timeout={500}>
-              <div>
-                <GeneralReportTable
-                  attendances={data.records}
-                  setSelectedRecord={setSelectedRecord}
-                />
-              </div>
-            </Fade>
-          ))}
+        {viewMode === "table" && (
+          <Box sx={{ position: "relative" }}>
+            <LoadingOverlay show={loadingTable} />
+            <GeneralReportTable
+              attendances={data.records}
+              setSelectedRecord={setSelectedRecord}
+              error={error}
+            />
+          </Box>
+        )}
 
         {/* MATRIX */}
         {viewMode === "matrix" && (
@@ -1084,6 +1150,7 @@ export default function GeneralReportPage() {
             onMonthChange={handleMonthChange}
             loadingMatrix={loadingMatrix}
             fadeKey={fadeKey}
+            error={error}
           />
         )}
 
@@ -1099,11 +1166,13 @@ export default function GeneralReportPage() {
               rowsPerPage={rowsPerPage}
               onRowsPerPageChange={handleChangeRowsPerPage}
               rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+              showFirstButton
+              showLastButton
               labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
-              labelDisplayedRows={({ from, to, count }) =>
+              labelDisplayedRows={({ from, to, count, page }) =>
                 isMobile
                   ? `${from}-${to} de ${count}`
-                  : `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+                  : `Página ${page + 1} |  ${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
               }
               sx={{
                 ".MuiTablePagination-toolbar": {

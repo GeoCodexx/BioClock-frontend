@@ -86,7 +86,7 @@ const SUMMARY_CONFIG = [
 // Componente individual de tarjeta de estadística (valor numerico)
 const StatValue = memo(({ value, color, isPercentage, isLoading }) => {
   if (isLoading) {
-    return <Skeleton variant="text" width="60%" height={48} />;
+    return <Skeleton variant="text" width="50%" height={40} />;
   }
 
   return (

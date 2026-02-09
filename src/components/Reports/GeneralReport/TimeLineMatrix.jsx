@@ -252,7 +252,7 @@ const MatrixCell = memo(
                         //bgcolor: alpha(style.border, 0.2),
                       },
                       // Shine effect
-                     /* "&::before": {
+                      /* "&::before": {
                         content: '""',
                         position: "absolute",
                         top: 0,
@@ -314,6 +314,7 @@ const TimelineMatrix = ({
   onMonthChange,
   loadingMatrix,
   fadeKey,
+  error,
 }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
@@ -360,11 +361,11 @@ const TimelineMatrix = ({
     const formattedDate = format(currentMonth, "MMMM yyyy", { locale: es });
 
     const handlePreviousMonth = () => {
-      onMonthChange(subMonths(currentMonth, 1));
+      if (!error) onMonthChange(subMonths(currentMonth, 1));
     };
 
     const handleNextMonth = () => {
-      if (!isCurrentMonth) {
+      if (!isCurrentMonth && !error) {
         onMonthChange(addMonths(currentMonth, 1));
       }
     };
@@ -619,7 +620,7 @@ const TimelineMatrix = ({
   );
 
   /* ---------------- Empty State ---------------- */
-  if (!users?.length || !visibleDates?.length) {
+  if (!users?.length || !visibleDates?.length || error) {
     return (
       <Paper
         sx={{
@@ -957,4 +958,4 @@ const TimelineMatrix = ({
   );
 };
 
-export default TimelineMatrix;
+export default memo(TimelineMatrix);

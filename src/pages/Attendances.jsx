@@ -279,7 +279,7 @@ export default function Attendances() {
         throw err;
       }
     },
-    [dialog.editAttendance, showSuccess, showError, refreshAttendances]
+    [dialog.editAttendance, showSuccess, showError, refreshAttendances],
   );
 
   const handleEdit = useCallback((attendance) => {
@@ -344,7 +344,7 @@ export default function Attendances() {
         page: 0,
       }));
     },
-    [searchInput]
+    [searchInput],
   );
 
   const handleOpenDialog = useCallback(() => {
@@ -392,7 +392,7 @@ export default function Attendances() {
     attendanceId,
     reason,
     approved,
-    onSuccess
+    onSuccess,
   ) => {
     try {
       const response = await justifyAttendance(attendanceId, {
@@ -401,7 +401,7 @@ export default function Attendances() {
       });
 
       showSuccess(
-        response.data.message || "Justificación registrada exitosamente"
+        response.data.message || "Justificación registrada exitosamente",
       );
 
       if (onSuccess) {
@@ -469,7 +469,7 @@ export default function Attendances() {
       const response = await removeJustification(attendanceId);
 
       showSuccess(
-        response.data.message || "Justificación eliminada exitosamente"
+        response.data.message || "Justificación eliminada exitosamente",
       );
 
       console.log("Justificación eliminada:", attendanceId);
@@ -521,7 +521,7 @@ export default function Attendances() {
         </Typography>
       </Breadcrumbs>
     ),
-    [isMobile]
+    [isMobile],
   );
 
   // Memorizar tabla
@@ -541,7 +541,7 @@ export default function Attendances() {
       handleDelete,
       handleOpenJustifyDialog,
       handleOpenDeleteJustifyDialog,
-    ]
+    ],
   );
 
   // Verifica si hay filtros activos
@@ -613,8 +613,8 @@ export default function Attendances() {
                     !attendances || attendances.length === 0
                       ? "No hay asistencias para filtrar"
                       : openFilters
-                      ? "Ocultar filtros"
-                      : "Mostrar filtros"
+                        ? "Ocultar filtros"
+                        : "Mostrar filtros"
                   }
                 >
                   <span>
@@ -856,11 +856,13 @@ export default function Attendances() {
           onPageChange={handleChangePage}
           rowsPerPage={pagination.rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          showFirstButton
+          showLastButton
           labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
-          labelDisplayedRows={({ from, to, count }) =>
+          labelDisplayedRows={({ from, to, count, page }) =>
             isMobile
               ? `${from}-${to} de ${count}`
-              : `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+              : `Página ${page + 1} |  ${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
           }
           rowsPerPageOptions={[5, 10, 25, 50]}
           sx={{
