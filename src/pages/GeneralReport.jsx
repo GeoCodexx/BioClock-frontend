@@ -354,6 +354,9 @@ const FiltersCard = memo(
                         textField: {
                           size: "small",
                           fullWidth: true,
+                          InputLabelProps: {
+                            sx: { fontSize: "0.9rem" },
+                          },
                           sx: {
                             "& .MuiPickersOutlinedInput-root": {
                               fontSize: "0.9rem",
@@ -378,6 +381,9 @@ const FiltersCard = memo(
                         textField: {
                           size: "small",
                           fullWidth: true,
+                          InputLabelProps: {
+                            sx: { fontSize: "0.9rem" },
+                          },
                           sx: {
                             "& .MuiPickersOutlinedInput-root": {
                               fontSize: "0.9rem",
@@ -535,7 +541,7 @@ export default function GeneralReportPage() {
   //const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [loadingTable, setLoadingTable] = useState(false);
-  const [loadingMatrix, setLoadingMatrix] = useState(false);
+  const [loadingMatrix, setLoadingMatrix] = useState(true);
   const [loadingStats, setLoadingStats] = useState(false);
 
   // Estados de filtros
@@ -568,6 +574,9 @@ export default function GeneralReportPage() {
     () => format(currentMonth, "yyyy-MM"),
     [currentMonth],
   );
+
+  //Detectar cache
+  const isMatrixCached = !!matrixCache[monthKey];
 
   // Validar rango de fechas
   // Validación de fechas
@@ -705,6 +714,7 @@ export default function GeneralReportPage() {
       });
 
       setDataMatrix(filteredData);
+      setFadeKey((prev) => prev + 1);
       setLoadingMatrix(false);
       setLoadingStats(false);
       return;
@@ -763,6 +773,7 @@ export default function GeneralReportPage() {
           }));
 
           setDataMatrix(response);
+          setFadeKey((prev) => prev + 1);
         }
       }
       //setDataMatrix(response);
@@ -800,6 +811,12 @@ export default function GeneralReportPage() {
       console.error("Error al cargar turnos:", err);
     }
   }, []);
+
+  /*useEffect(() => {
+    if (viewMode === "matrix") {
+      fetchData();
+    }
+  }, []);*/
 
   // Efectos
   useEffect(() => {
@@ -847,8 +864,8 @@ export default function GeneralReportPage() {
   useEffect(() => {
     if (viewMode !== "matrix") return;
 
-    const handler = setTimeout(fetchData, 300);
-    return () => clearTimeout(handler);
+    setLoadingMatrix(true); // ← esto es clave
+    fetchData();
   }, [currentMonth, search, scheduleId, status]);
 
   // CON debounce → filtros table
@@ -885,42 +902,41 @@ export default function GeneralReportPage() {
     fetchData();
   }, [viewMode]);*/
   useEffect(() => {
-  if (viewMode === "matrix") {
-    // limpiar estado exclusivo de Table
-    setDateFrom(null);
-    setDateTo(null);
-    setPage(0);
+    if (viewMode === "matrix") {
+      // limpiar estado exclusivo de Table
+      setDateFrom(null);
+      setDateTo(null);
+      setPage(0);
 
-    setData({
-      records: [],
-      pagination: {
-        currentPage: 1,
-        totalPages: 0,
-        totalRecords: 0,
-        recordsPerPage: rowsPerPage,
-      },
-      date: "",
-    });
+      setData({
+        records: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 0,
+          totalRecords: 0,
+          recordsPerPage: rowsPerPage,
+        },
+        date: "",
+      });
 
-    setLoadingTable(false);
+      setLoadingTable(false);
 
-    // cargar matrix
-    setLoadingMatrix(true);
-    fetchData();
-  }
+      // cargar matrix
+      setLoadingMatrix(true);
+      fetchData();
+    }
 
-  if (viewMode === "table") {
-    // limpiar estado exclusivo de Matrix si quieres
-    setLoadingMatrix(false);
+    if (viewMode === "table") {
+      // limpiar estado exclusivo de Matrix si quieres
+      setLoadingMatrix(false);
 
-    // NO hacer fetch automáticamente
-    // esperar que el usuario seleccione fechas
-  }
-
-}, [viewMode]);
+      // NO hacer fetch automáticamente
+      // esperar que el usuario seleccione fechas
+    }
+  }, [viewMode]);
   //Solo para cambio del mes en vista matriz
   //useLayoutEffect para sincronización inmediata
-  useLayoutEffect(() => {
+  /* useLayoutEffect(() => {
     if (viewMode === "matrix") {
       const cacheKey = format(currentMonth, "yyyy-MM");
 
@@ -931,7 +947,22 @@ export default function GeneralReportPage() {
         setLoadingMatrix(true);
       }
     }
-  }, [currentMonth, viewMode, matrixCache]);
+  }, [currentMonth, viewMode, matrixCache]);*/
+  useEffect(() => {
+    if (viewMode !== "matrix") return;
+
+    const cachedData = matrixCache[monthKey];
+    if (!cachedData) return;
+
+    const filteredData = filterMatrixData(cachedData, {
+      search,
+      scheduleId,
+      status,
+    });
+
+    setDataMatrix(filteredData);
+    setFadeKey((prev) => prev + 1);
+  }, [search, scheduleId, status, viewMode, monthKey]);
 
   /*---------- Funciones Auxiliares --------------*/
 
@@ -1013,14 +1044,30 @@ export default function GeneralReportPage() {
   };
 
   const handleClearFilters = useCallback(() => {
-    //setIsResetting(true); // Bandera para indicar reseteo de filtros
+    // limpiar filtros
     setSearch("");
     setScheduleId("");
     setStatus("");
     setDateFrom(null);
     setDateTo(null);
     setPage(0);
-  }, []);
+
+    // limpiar data inmediatamente
+    setData({
+      records: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalRecords: 0,
+        recordsPerPage: rowsPerPage,
+      },
+      date: "",
+    });
+
+    // apagar loading
+    setLoadingTable(false);
+    setLoadingStats(false);
+  }, [rowsPerPage]);
 
   const hasRecords = data.records.length > 0;
 
@@ -1079,6 +1126,7 @@ export default function GeneralReportPage() {
             <SummaryCards
               data={viewMode === "matrix" ? dataMatrix.stats : data.stats}
               isLoading={loadingStats}
+              error={error}
             />
           </Collapse>
         </Box>
@@ -1149,6 +1197,7 @@ export default function GeneralReportPage() {
             currentMonth={currentMonth}
             onMonthChange={handleMonthChange}
             loadingMatrix={loadingMatrix}
+            isFromCache={isMatrixCached}
             fadeKey={fadeKey}
             error={error}
           />

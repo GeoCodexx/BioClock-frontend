@@ -84,7 +84,7 @@ const SUMMARY_CONFIG = [
 ];
 
 // Componente individual de tarjeta de estadística (valor numerico)
-const StatValue = memo(({ value, color, isPercentage, isLoading }) => {
+const StatValue = memo(({ value, color, isPercentage, isLoading, error }) => {
   if (isLoading) {
     return <Skeleton variant="text" width="50%" height={40} />;
   }
@@ -100,7 +100,7 @@ const StatValue = memo(({ value, color, isPercentage, isLoading }) => {
           fontSize: { xs: "2rem", sm: "2.5rem" },
         }}
       >
-        {value}
+        {error ? 0 : value}
       </Typography>
 
       {isPercentage && (
@@ -199,7 +199,7 @@ const StatCard = memo(({ label, subtitle, icon: Icon, color, children }) => {
 StatCard.displayName = "StatCard";
 
 // Componente principal
-const SummaryCards = memo(({ data, isLoading = false }) => {
+const SummaryCards = memo(({ data, isLoading = false, error }) => {
   const stats = useMemo(() => {
     return SUMMARY_CONFIG.map((config) => ({
       ...config,
@@ -240,6 +240,7 @@ const SummaryCards = memo(({ data, isLoading = false }) => {
               color={stat.color}
               isPercentage={stat.isPercentage}
               isLoading={isLoading}
+              error={error}
             />
           </StatCard>
         </Grid>

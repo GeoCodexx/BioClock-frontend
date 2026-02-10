@@ -313,12 +313,17 @@ const TimelineMatrix = ({
   currentMonth,
   onMonthChange,
   loadingMatrix,
+  isFromCache,
   fadeKey,
   error,
 }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   const [viewMode, setViewMode] = useState(granularity);
+
+  const showSkeleton = loadingMatrix && !isFromCache;
+  const showEmpty =
+    !loadingMatrix && (!users?.length || !dates?.length) /*|| error*/;
 
   /* ---------------- Process Dates ---------------- */
   const visibleDates = useMemo(() => {
@@ -620,25 +625,23 @@ const TimelineMatrix = ({
   );
 
   /* ---------------- Empty State ---------------- */
-  if (!users?.length || !visibleDates?.length || error) {
-    return (
-      <Paper
-        sx={{
-          p: 6,
-          textAlign: "center",
-          borderRadius: 2,
-          bgcolor: alpha(theme.palette.primary.main, 0.02),
-        }}
-      >
-        <Typography variant="h6" color="text.secondary" gutterBottom>
-          No hay datos disponibles
-        </Typography>
-        <Typography variant="body2" color="text.disabled">
-          Selecciona otro mes o ajusta los filtros
-        </Typography>
-      </Paper>
-    );
-  }
+  const EmptyState = () => (
+    <Paper
+      sx={{
+        p: 6,
+        textAlign: "center",
+        borderRadius: 2,
+        bgcolor: alpha(theme.palette.primary.main, 0.02),
+      }}
+    >
+      <Typography variant="h6" color="text.secondary" gutterBottom>
+        No hay datos disponibles
+      </Typography>
+      <Typography variant="body2" color="text.disabled">
+        Selecciona otro mes o ajusta los filtros
+      </Typography>
+    </Paper>
+  );
 
   /* ---------------- Render ---------------- */
   return (
@@ -693,8 +696,15 @@ const TimelineMatrix = ({
       </Paper>
 
       {/* Matrix Container */}
-      {loadingMatrix ? (
+      {/* Skeleton solo si NO hay cache */}
+      {showSkeleton ? (
         <MatrixSkeleton />
+      ) : error ? (
+        <Paper sx={{ p: 6, textAlign: "center" }}>
+          <Typography>Error al cargar datos</Typography>
+        </Paper>
+      ) : showEmpty ? (
+        <EmptyState />
       ) : (
         <Fade in key={fadeKey} timeout={600}>
           <Paper
