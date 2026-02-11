@@ -1,19 +1,6 @@
+import { Button, Stack, Tooltip, useMediaQuery, useTheme } from "@mui/material";
 import {
-  Button,
-  IconButton,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
-  Stack,
-  Tooltip,
-  useMediaQuery,
-  useTheme,
-} from "@mui/material";
-import {
-  //Download as DownloadIcon,
   Description as DescriptionIcon,
-  FileDownload as FileDownloadIcon,
   PictureAsPdf as PictureAsPdfIcon,
 } from "@mui/icons-material";
 import ExcelJS from "exceljs";
@@ -29,39 +16,28 @@ const STATUS_LABELS = {
   on_time: "A tiempo",
   late: "Tardanza",
   early: "Entrada temprana",
-  early_exit: "Salida temprana",
+  early_exit: "Salida anticipada",
   incomplete: "Incompleto",
   absent: "Ausente",
   justified: "Justificado",
 };
 
-export default function GeneralReportExportButtons({ records, date }) {
+export default function GeneralReportExportButtons({ records }) {
   const [exporting, setExporting] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  //const isTablet = useMediaQuery(theme.breakpoints.down("md"));
-  //const [anchorEl, setAnchorEl] = useState(null);
-  //const open = Boolean(anchorEl);
-
-  /* const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };*/
 
   // Exportar a Excel
   const handleExportExcel = async () => {
     setExporting(true);
     try {
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Reporte Diario");
+      const worksheet = workbook.addWorksheet("Reporte General");
 
       // Configurar columnas
       worksheet.columns = [
-        { header: "DNI", key: "dni", width: 12 },
         { header: "Colaborador", key: "user", width: 30 },
+        { header: "Fecha", key: "date", width: 12 },
         { header: "Turno", key: "schedule", width: 20 },
         { header: "Hora Entrada", key: "checkIn", width: 15 },
         { header: "Estado Entrada", key: "checkInStatus", width: 15 },
@@ -90,12 +66,12 @@ export default function GeneralReportExportButtons({ records, date }) {
       // Agregar datos
       records.forEach((record) => {
         const row = worksheet.addRow({
-          dni: record.user?.dni || "—",
           user: record.user
             ? `${record.user.name || ""} ${record.user.firstSurname || ""} ${
                 record.user.secondSurname || ""
               }`.trim()
             : "—",
+          date: record.date.split("-").reverse().join("/") || "—",
           schedule: record.schedule?.name || "Sin turno",
           checkIn: record.checkIn?.timestamp
             ? format(new Date(record.checkIn.timestamp), "HH:mm:ss", {
@@ -106,12 +82,12 @@ export default function GeneralReportExportButtons({ records, date }) {
             ? record.checkIn.status === "on_time"
               ? "A tiempo"
               : record.checkIn.status === "late"
-              ? "Tarde"
-              : record.checkIn.status === "early"
-              ? "Entrada temprana"
-              : record.checkIn.status === "justified"
-              ? "Justificado"
-              : "—"
+                ? "Tarde"
+                : record.checkIn.status === "early"
+                  ? "Entrada temprana"
+                  : record.checkIn.status === "justified"
+                    ? "Justificado"
+                    : "—"
             : "—",
           checkOut: record.checkOut?.timestamp
             ? format(new Date(record.checkOut.timestamp), "HH:mm:ss", {
@@ -122,23 +98,25 @@ export default function GeneralReportExportButtons({ records, date }) {
             ? record.checkOut.status === "on_time"
               ? "A tiempo"
               : record.checkOut.status === "late"
-              ? "Tarde"
-              : record.checkOut.status === "early_exit"
-              ? "Salida temprana"
-              : record.checkOut.status === "justified"
-              ? "Justificado"
-              : "—"
+                ? "Tarde"
+                : record.checkOut.status === "early_exit"
+                  ? "Salida anticipada"
+                  : record.checkOut.status === "justified"
+                    ? "Justificado"
+                    : "—"
             : "—",
           hoursWorked: record.hoursWorked || "—",
           shiftStatus: STATUS_LABELS[record.shiftStatus] || "—",
           deviceIn: record.checkIn?.device?.name || "—",
           deviceOut: record.checkOut?.device?.name || "—",
-          justification: record.justification || "—",
-          approvedBy: record.approvedBy
-            ? `${record.approvedBy.name || ""} ${
-                record.approvedBy.firstSurname || ""
-              } ${record.approvedBy.secondSurname || ""}`.trim()
-            : "—",
+          justification:
+            record.justification && record.justification?.reason
+              ? record.justification.reason
+              : "—",
+          approvedBy:
+            record.justification && record.justification?.approvedBy
+              ? record.justification.approvedBy
+              : "—",
         });
 
         // Aplicar color según el estado del turno
@@ -181,9 +159,10 @@ export default function GeneralReportExportButtons({ records, date }) {
 
       // Generar archivo
       const buffer = await workbook.xlsx.writeBuffer();
-      const fileName = `Reporte_Diario_${
-        date || format(new Date(), "yyyy-MM-dd")
-      }.xlsx`;
+      const fileName = `Reporte_General_${format(
+        new Date(),
+        "yyyy-MM-dd",
+      )}.xlsx`;
       saveAs(new Blob([buffer]), fileName);
     } catch (error) {
       console.error("Error exporting to Excel:", error);
@@ -207,7 +186,7 @@ export default function GeneralReportExportButtons({ records, date }) {
       doc.setFontSize(20);
       doc.setTextColor(25, 118, 210);
       doc.setFont(undefined, "bold");
-      doc.text("Reporte Diario de Asistencias", margins, 20);
+      doc.text("Reporte General de Asistencias", margins, 20);
 
       // Línea decorativa
       doc.setDrawColor(25, 118, 210);
@@ -219,23 +198,21 @@ export default function GeneralReportExportButtons({ records, date }) {
       doc.setTextColor(100);
       doc.setFont(undefined, "normal");
       doc.text(
-        `Fecha: ${
-          date
-            ? format(new Date(date), "d 'de' MMMM 'de' yyyy", { locale: es })
-            : "—"
-        }`,
+        `Fecha: ${format(new Date(), "d 'de' MMMM 'de' yyyy", {
+          locale: es,
+        })}`,
         margins,
-        30
+        30,
       );
       doc.text(`Total de registros: ${records.length}`, margins, 36);
 
       // Preparar datos de la tabla con numeración consecutiva
       const tableData = records.map((record, index) => [
         index + 1, // Columna #
-        record.user?.dni || "—",
         record.user
           ? `${record.user.name || ""} ${record.user.firstSurname || ""}`.trim()
           : "—",
+        record.date.split("-").reverse().join("/") || "—",
         record.schedule?.name || "Sin turno",
         record.checkIn?.timestamp
           ? format(new Date(record.checkIn.timestamp), "HH:mm", { locale: es })
@@ -253,8 +230,8 @@ export default function GeneralReportExportButtons({ records, date }) {
         head: [
           [
             "#",
-            "DNI",
             "Colaborador",
+            "Fecha",
             "Turno",
             "Entrada",
             "Salida",
@@ -280,8 +257,8 @@ export default function GeneralReportExportButtons({ records, date }) {
         },
         columnStyles: {
           0: { cellWidth: 12, halign: "center", fontStyle: "bold" }, // #
-          1: { cellWidth: 24, halign: "center" }, // DNI
-          2: { cellWidth: 60, fontStyle: "bold" }, // Colaborador
+          1: { cellWidth: 60, fontStyle: "bold" }, // Colaborador
+          2: { cellWidth: 24, halign: "center" }, // DNI
           3: { cellWidth: 45 }, // Turno
           4: { cellWidth: 22, halign: "center" }, // Entrada
           5: { cellWidth: 22, halign: "center" }, // Salida
@@ -345,7 +322,7 @@ export default function GeneralReportExportButtons({ records, date }) {
           margins,
           doc.internal.pageSize.getHeight() - 18,
           pageWidth - margins,
-          doc.internal.pageSize.getHeight() - 18
+          doc.internal.pageSize.getHeight() - 18,
         );
 
         // Número de página centrado
@@ -353,23 +330,19 @@ export default function GeneralReportExportButtons({ records, date }) {
           `Página ${i} de ${pageCount}`,
           pageWidth / 2,
           doc.internal.pageSize.getHeight() - 12,
-          { align: "center" }
+          { align: "center" },
         );
 
         // Fecha de generación a la izquierda
         doc.text(
           `Generado el ${format(new Date(), "dd/MM/yyyy HH:mm")}`,
           margins,
-          doc.internal.pageSize.getHeight() - 12
+          doc.internal.pageSize.getHeight() - 12,
         );
       }
 
       // Guardar PDF
-      const fileName = `Reporte_Diario_${
-        date
-          ? format(new Date(date), "yyyy-MM-dd")
-          : format(new Date(), "yyyy-MM-dd")
-      }.pdf`;
+      const fileName = `Reporte_General_${format(new Date(), "yyyy-MM-dd")}.pdf`;
       doc.save(fileName);
     } catch (error) {
       console.error("Error exporting to PDF:", error);

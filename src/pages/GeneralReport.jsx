@@ -58,7 +58,7 @@ import { getSchedules } from "../services/scheduleService";
 import SummaryCards from "../components/Reports/GeneralReport/SummaryCards";
 import "jspdf-autotable";
 import GeneralReportTable from "../components/Reports/GeneralReport/GeneralReportTable";
-import GeneralReportExportButtons from "../components/Reports/GeneralReport/GeneralReportExportButtons";
+/*import GeneralReportExportButtons from "../components/Reports/GeneralReport/GeneralReportExportButtons";*/
 import { SafeSelect } from "../components/common/SafeSelect";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
@@ -67,6 +67,7 @@ import TimelineMatrix from "../components/Reports/GeneralReport/TimeLineMatrix";
 import { createJustification } from "../services/attendanceService";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
+import AttendanceExportButtons from "../components/Reports/GeneralReport/AttendanceExportButtons";
 
 // Constantes
 const STATUS_OPTIONS = [
@@ -219,13 +220,15 @@ const FiltersCard = memo(
     onClearFilters,
     onChangeViewMode,
     viewMode,
-    /*totalRecords,
-    currentRecords,
+    totalRecords,
+    /*currentRecords,
     loading,*/
-    records,
-    date,
-    isMobile,
+    //records,
+    //date,
+    //isMobile,
     error,
+    page,
+    currentMonth,
   }) => {
     const handleViewModeChange = useCallback((event, newMode) => {
       // Si el usuario hace click en el modo ya seleccionado, newMode sera null, entonces no cambiar el modo de vista
@@ -474,11 +477,33 @@ const FiltersCard = memo(
               >
                 Limpiar filtros
               </Button>
-              <GeneralReportExportButtons
+
+              {viewMode === "matrix" ? (
+                <AttendanceExportButtons
+                  viewType="matrix"
+                  dateRange={{
+                    dateFrom: format(startOfMonth(currentMonth), "yyyy-MM-dd"),
+                    dateTo: format(endOfMonth(currentMonth), "yyyy-MM-dd"),
+                  }}
+                  totalRecords={totalRecords || 0}
+                  //apiEndpoint="/api/attendance/export"
+                />
+              ) : (
+                <AttendanceExportButtons
+                  viewType="table"
+                  filters={{ search, scheduleId, status }}
+                  dateRange={{ dateFrom, dateTo }}
+                  currentPage={page}
+                  totalRecords={totalRecords}
+                  //apiEndpoint="/api/attendance/export"
+                />
+              )}
+
+              {/* <GeneralReportExportButtons
                 records={records}
                 date={date}
                 isMobile={isMobile}
-              />
+              /> */}
             </Stack>
           </Stack>
         </CardContent>
@@ -536,6 +561,7 @@ export default function GeneralReportPage() {
     users: [],
     dates: [],
     matrix: [],
+    stats: {},
   });
   const [currentMonth, setCurrentMonth] = useState(new Date());
   //const [loading, setLoading] = useState(true);
@@ -922,8 +948,8 @@ export default function GeneralReportPage() {
       setLoadingTable(false);
 
       // cargar matrix
-      setLoadingMatrix(true);
-      fetchData();
+      /* setLoadingMatrix(true);
+      fetchData();*/
     }
 
     if (viewMode === "table") {
@@ -1148,13 +1174,19 @@ export default function GeneralReportPage() {
         onClearFilters={handleClearFilters}
         onChangeViewMode={handleChangeViewMode}
         viewMode={viewMode}
-        totalRecords={data.pagination.totalRecords}
+        totalRecords={
+          viewMode === "matrix"
+            ? dataMatrix.stats.totalRecords
+            : data.pagination.totalRecords
+        }
         currentRecords={data.records.length}
         loading={viewMode === "matrix" ? loadingMatrix : loadingTable}
         records={data.records}
         date={data.date}
         isMobile={isMobile}
         error={!isRangeValid && isDateRangeComplete}
+        page={page}
+        currentMonth={currentMonth}
       />
       {/* Error */}
       {error && (

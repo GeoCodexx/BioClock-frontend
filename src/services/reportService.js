@@ -46,3 +46,12 @@ export const getMonthlyReport = async (month, year) => {
   const res = await api.get("reports/monthly", { params: { month, year } });
   return res.data;
 };
+
+export const getFileExport = async (config) => {
+  try {
+    const { data } = await api.get("/reports/general-report", config);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al obtener el archivo de exportación");
+  }
+};

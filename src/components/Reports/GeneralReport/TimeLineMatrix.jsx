@@ -53,6 +53,7 @@ const STATUS_CONFIG = {
     },
     label: "A Tiempo",
     icon: "✓",
+    text: "AT",
   },
   late: {
     light: {
@@ -67,6 +68,7 @@ const STATUS_CONFIG = {
     },
     label: "Tardanza",
     icon: "⏱",
+    text: "T",
   },
   early_exit: {
     light: {
@@ -81,6 +83,7 @@ const STATUS_CONFIG = {
     },
     label: "Salida Anticipada",
     icon: "⏰",
+    text: "SA",
   },
   incomplete: {
     light: {
@@ -95,6 +98,7 @@ const STATUS_CONFIG = {
     },
     label: "Incompleto",
     icon: "◐",
+    text: "I",
   },
   absent: {
     light: {
@@ -109,6 +113,7 @@ const STATUS_CONFIG = {
     },
     label: "Ausente",
     icon: "✕",
+    text: "A",
   },
   justified: {
     light: {
@@ -123,6 +128,7 @@ const STATUS_CONFIG = {
     },
     label: "Justificado",
     icon: "📋",
+    text: "J",
   },
 };
 
@@ -236,6 +242,9 @@ const MatrixCell = memo(
                       onClick(shift);
                     }}
                     sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
                       flex: 1,
                       height: hasMultipleShifts ? 16 : 20,
                       minWidth: hasMultipleShifts ? 20 : 28,
@@ -266,7 +275,16 @@ const MatrixCell = memo(
                         left: "100%",
                       },*/
                     }}
-                  />
+                  >
+                    <Typography
+                      //align="center"
+                      variant="caption"
+                      fontWeight={600}
+                      sx={{ color: style.text, fontSize: "0.75rem" }}
+                    >
+                      {config?.text || "?"}
+                    </Typography>
+                  </Box>
                 </Tooltip>
               );
             })}
@@ -323,7 +341,7 @@ const TimelineMatrix = ({
 
   const showSkeleton = loadingMatrix && !isFromCache;
   const showEmpty =
-    !loadingMatrix && (!users?.length || !dates?.length) /*|| error*/;
+    !loadingMatrix && (!users?.length || !dates?.length); /*|| error*/
 
   /* ---------------- Process Dates ---------------- */
   const visibleDates = useMemo(() => {
@@ -670,7 +688,7 @@ const TimelineMatrix = ({
               return (
                 <Chip
                   key={key}
-                  label={config.label}
+                  label={`${config.text}: ${config.label}`}
                   size="small"
                   sx={{
                     bgcolor: mode.bg,
