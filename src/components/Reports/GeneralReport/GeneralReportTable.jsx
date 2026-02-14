@@ -55,7 +55,7 @@ const STATUS_CONFIG = {
   },
   incomplete: {
     label: "Incompleto",
-    color: "error",
+    color: "text.disabled",
     icon: ErrorOutline,
   },
   absent: {
@@ -113,7 +113,7 @@ const StatusChip = memo(({ status, size = "small" }) => {
 
   //const Icon = config.icon;
   const colorValue =
-    theme.palette[config.color]?.main || theme.palette.grey[500];
+    theme.palette[config.color]?.main || theme.palette.text.disabled;
 
   return (
     <Chip
@@ -126,9 +126,9 @@ const StatusChip = memo(({ status, size = "small" }) => {
         color: colorValue,
         //border: "none",
         border: `1px solid ${alpha(colorValue, 0.5)}`,
-        "& .MuiChip-icon": {
+        /*"& .MuiChip-icon": {
           color: colorValue,
-        },
+        },*/
       }}
     />
   );
@@ -315,7 +315,7 @@ const TableRowDesktop = memo(({ record, onClick }) => {
       {/* Turno */}
       <TableCell>
         <Stack direction="row" spacing={1} alignItems="center">
-          <ScheduleIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+          {/* <ScheduleIcon sx={{ fontSize: 18, color: "text.secondary" }} /> */}
           <Typography variant="body2" fontWeight={500}>
             {record.schedule?.name || "Sin turno"}
           </Typography>
@@ -417,7 +417,7 @@ const TableRowMobile = memo(({ record, onClick }) => {
 TableRowMobile.displayName = "TableRowMobile";
 
 // Estado vacío mejorado
-const EmptyState = memo(() => (
+const EmptyState = memo(({message}) => (
   <Box
     sx={{
       p: 8,
@@ -437,7 +437,7 @@ const EmptyState = memo(() => (
       No hay registros para mostrar
     </Typography>
     <Typography variant="body2" color="text.secondary">
-      Los registros de asistencia aparecerán aquí
+      {message ? message : "Los registros de asistencia aparecerán aquí"}
     </Typography>
   </Box>
 ));
@@ -472,71 +472,90 @@ const TableHeader = memo(({ isMobile }) => (
 TableHeader.displayName = "TableHeader";
 
 // Componente principal
-const GeneralReportTable = memo(({ attendances, setSelectedRecord, error }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+const GeneralReportTable = memo(
+  ({ attendances, setSelectedRecord, startDate, endDate, error }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  // Generar keys únicas de forma optimizada
-  const recordsWithKeys = useMemo(() => {
-    if (!attendances || attendances.length === 0) return [];
-    return attendances.map((record, index) => ({
-      record,
-      key: `${record._id || index}-${record.user?._id || "no-user"}-${
-        record.date || index
-      }`,
-    }));
-  }, [attendances]);
+    // Generar keys únicas de forma optimizada
+    const recordsWithKeys = useMemo(() => {
+      if (!attendances || attendances.length === 0) return [];
+      return attendances.map((record, index) => ({
+        record,
+        key: `${record._id || index}-${record.user?._id || "no-user"}-${
+          record.date || index
+        }`,
+      }));
+    }, [attendances]);
 
-  // Memoizar el componente de fila según el tipo
-  const RowComponent = useMemo(
-    () => (isMobile ? TableRowMobile : TableRowDesktop),
-    [isMobile],
-  );
-
-  // Si no hay registros
-  if (!attendances || attendances.length === 0 || error) {
-    return (
-      <Paper
-        elevation={0}
-        sx={{
-          borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
-          overflow: "hidden",
-        }}
-      >
-        <EmptyState />
-      </Paper>
+    // Memoizar el componente de fila según el tipo
+    const RowComponent = useMemo(
+      () => (isMobile ? TableRowMobile : TableRowDesktop),
+      [isMobile],
     );
-  }
 
-  return (
-    <Fade in timeout={500}>
-      <TableContainer
-        component={Paper}
-        elevation={0}
-        sx={{
-          borderRadius: 0,
-          borderColor: "divider",
-          overflow: "hidden",
-        }}
-      >
-        <Table>
-          <TableHeader isMobile={isMobile} />
-          <TableBody>
-            {recordsWithKeys.map(({ record, key }) => (
-              <RowComponent
-                key={key}
-                record={record}
-                onClick={setSelectedRecord}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Fade>
-  );
-});
+    // Si no ha escogido un rango de fechas
+    if (!startDate && !endDate) {
+      return (
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "divider",
+            overflow: "hidden",
+          }}
+        >
+          <EmptyState message="Seleccione un rango de fechas válido." />
+        </Paper>
+      );
+    }
+
+    // Si no hay registros
+    if (!attendances || attendances.length === 0 || error) {
+      return (
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "divider",
+            overflow: "hidden",
+          }}
+        >
+          <EmptyState message="" />
+        </Paper>
+      );
+    }
+
+    return (
+      <Fade in timeout={500}>
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{
+            borderRadius: 0,
+            borderColor: "divider",
+            overflow: "hidden",
+          }}
+        >
+          <Table>
+            <TableHeader isMobile={isMobile} />
+            <TableBody>
+              {recordsWithKeys.map(({ record, key }) => (
+                <RowComponent
+                  key={key}
+                  record={record}
+                  onClick={setSelectedRecord}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Fade>
+    );
+  },
+);
 
 GeneralReportTable.displayName = "GeneralReportTable";
 

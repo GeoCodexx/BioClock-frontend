@@ -15,6 +15,8 @@ import {
   Chip,
   Divider,
   AlertTitle,
+  useTheme,
+  alpha,
   //Chip,
 } from "@mui/material";
 import {
@@ -42,14 +44,15 @@ const AttendanceForm = ({
   loading = false,
   //setLoadingData,
 }) => {
+  const theme = useTheme();
   // Obtener el color del chip según el status
   const getStatusConfig = (status) => {
     const statusMap = {
-      on_time: { label: "A tiempo", color: "success" },
-      late: { label: "Tarde", color: "warning" },
+      on_time: { label: "A Tiempo", color: "success" },
+      late: { label: "Tardanza", color: "warning" },
       absent: { label: "Ausente", color: "error" },
       early: { label: "Temprano", color: "info" },
-      early_exit: { label: "Salida anticipada", color: "warning" },
+      early_exit: { label: "Salida Anticipada", color: "warning" },
     };
     return statusMap[status] || { label: status, color: "default" };
   };
@@ -78,11 +81,11 @@ const AttendanceForm = ({
 
   const statusConfig = useMemo(
     () => getStatusConfig(defaultValues?.status),
-    [defaultValues?.status]
+    [defaultValues?.status],
   );
   const fixedDate = useMemo(
     () => (isEditMode ? new Date(defaultValues.timestamp) : null),
-    [isEditMode, defaultValues.timestamp]
+    [isEditMode, defaultValues.timestamp],
   );
 
   const {
@@ -102,7 +105,7 @@ const AttendanceForm = ({
   const formatUserName = useCallback((user) => {
     if (!user) return "";
     const parts = [user.name, user.firstSurname, user.secondSurname].filter(
-      Boolean
+      Boolean,
     );
     return parts.join(" ");
   }, []);
@@ -191,7 +194,7 @@ const AttendanceForm = ({
         ? "Hora fuera del rango permitido"
         : true;
     },
-    [defaultValues, isEditMode]
+    [defaultValues, isEditMode],
   );
 
   const normalizeDateKeepingDay = useCallback(
@@ -205,12 +208,12 @@ const AttendanceForm = ({
       normalized.setMilliseconds(0);
       return normalized;
     },
-    [fixedDate]
+    [fixedDate],
   );
 
   const hasDefaultValues = useMemo(
     () => Object.keys(defaultValues || {}).length > 0,
-    [defaultValues]
+    [defaultValues],
   );
 
   // Si aún se cargan las listas, mostrar un loader o skeleton. Solo mostrar skeleton en la carga INICIAL
@@ -249,7 +252,7 @@ const AttendanceForm = ({
         component="form"
         id="attendance-form"
         onSubmit={handleSubmit((data) =>
-          onSubmit({ ...data, verificationMethod: "Manual" })
+          onSubmit({ ...data, verificationMethod: "Manual" }),
         )}
         noValidate
       >
@@ -290,9 +293,18 @@ const AttendanceForm = ({
                 </Box>
                 <Chip
                   label={statusConfig?.label}
-                  color={statusConfig?.color}
+                  //color={statusConfig?.color}
+                  variant="outlined"
                   size="small"
-                  sx={{ fontWeight: 500 }}
+                  sx={{
+                    //fontWeight: 500,
+                    border: `1px solid ${alpha(theme.palette[statusConfig?.color].main, 0.5)}`,
+                    color: theme.palette[statusConfig?.color].main,
+                    /*bgcolor: alpha(
+                      theme.palette[statusConfig?.color].main,
+                      0.1,
+                    ),*/
+                  }}
                 />
               </Box>
 
@@ -444,7 +456,7 @@ const AttendanceForm = ({
                     onChange={(event, newValue) => {
                       onChange(newValue);
                       setUserInputValue(
-                        newValue ? formatUserName(newValue) : ""
+                        newValue ? formatUserName(newValue) : "",
                       );
                     }}
                     onInputChange={(event, newInputValue, reason) => {
@@ -467,8 +479,8 @@ const AttendanceForm = ({
                       loadingUsers
                         ? "Cargando usuarios..."
                         : userSearchTerm.length < 2
-                        ? "Escriba al menos 2 caracteres"
-                        : "No se encontraron usuarios"
+                          ? "Escriba al menos 2 caracteres"
+                          : "No se encontraron usuarios"
                     }
                     renderInput={(params) => (
                       <TextField

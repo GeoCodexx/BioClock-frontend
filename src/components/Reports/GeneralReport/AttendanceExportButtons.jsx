@@ -19,7 +19,6 @@ import {
   FilterList as FilterListIcon,
   SelectAll as SelectAllIcon,
 } from "@mui/icons-material";
-import axios from "axios";
 import { saveAs } from "file-saver";
 import { getFileExport } from "../../../services/reportService";
 
@@ -59,8 +58,6 @@ export default function AttendanceExportButtons({
     setExcelAnchor(null);
     setPdfAnchor(null);
   };
-
-  console.log("dateRange: ", dateRange);
 
   /**
    * Función para exportar datos
@@ -261,11 +258,7 @@ export default function AttendanceExportButtons({
           </ListItemIcon>
           <ListItemText
             primary="Vista Actual"
-            secondary={
-              viewType === "table"
-                ? `Página ${currentPage} con filtros aplicados`
-                : "Datos visibles con filtros actuales"
-            }
+            secondary="Datos visibles con filtros actuales"
             secondaryTypographyProps={{ variant: "caption" }}
           />
         </MenuItem>
@@ -304,11 +297,7 @@ export default function AttendanceExportButtons({
           </ListItemIcon>
           <ListItemText
             primary="Vista Actual"
-            secondary={
-              viewType === "table"
-                ? `Página ${currentPage} con filtros aplicados`
-                : "Datos visibles con filtros actuales"
-            }
+            secondary="Datos con filtros actuales"
             secondaryTypographyProps={{ variant: "caption" }}
           />
         </MenuItem>

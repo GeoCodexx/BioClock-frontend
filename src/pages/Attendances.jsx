@@ -43,8 +43,8 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import ClearIcon from "@mui/icons-material/Clear";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
-import JustifyAttendanceDialog from "../components/Attendance/JustifyAttendanceDialog";
-import { ConfirmDeleteJustificationDialog } from "../components/Attendance/ConfirmDeleteJustificationDialog";
+/*import JustifyAttendanceDialog from "../components/Attendance/JustifyAttendanceDialog";
+import { ConfirmDeleteJustificationDialog } from "../components/Attendance/ConfirmDeleteJustificationDialog";*/
 import { useThemeMode } from "../contexts/ThemeContext";
 import { usePermission } from "../utils/permissions";
 //import SearchIcon from "@mui/icons-material/Search";
@@ -531,8 +531,6 @@ export default function Attendances() {
         attendances={attendances}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onJustify={handleOpenJustifyDialog}
-        onDeleteJustification={handleOpenDeleteJustifyDialog}
       />
     ),
     [
@@ -901,21 +899,21 @@ export default function Attendances() {
       />
 
       {/* Dialog de justificación */}
-      <JustifyAttendanceDialog
+      {/* <JustifyAttendanceDialog
         open={justifyDialogOpen}
         onOpenChange={setJustifyDialogOpen}
         attendance={selectedAttendance}
         handleJustifyAttendance={handleJustifyAttendance}
         onSuccess={handleJustifySuccess}
-      />
+      /> */}
 
       {/* Dialog de confirmación de eliminar justificación */}
-      <ConfirmDeleteJustificationDialog
+      {/* <ConfirmDeleteJustificationDialog
         open={deleteJustificationDialogOpen}
         onOpenChange={setDeleteJustificationDialogOpen}
         attendance={selectedAttendance}
         onConfirm={handleDeleteJustification}
-      />
+      /> */}
     </Box>
   );
 }

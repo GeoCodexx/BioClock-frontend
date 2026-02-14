@@ -25,8 +25,6 @@ import {
   Divider,
 } from "@mui/material";
 import {
-  Check as CheckIcon,
-  Close as CloseIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
   EditNote as EditNoteIcon,
@@ -56,8 +54,6 @@ const AttendanceTable = ({
   attendances = [],
   onEdit,
   onDelete,
-  onJustify,
-  onDeleteJustification,
   loading = false,
 }) => {
   const { can } = usePermission();
@@ -175,10 +171,10 @@ const AttendanceTable = ({
   // Normalizar estado
   const formatStatus = (status) => {
     const statuses = {
-      on_time: "A tiempo",
+      on_time: "A Tiempo",
       late: "Tardanza",
       early: "Temprano",
-      early_exit: "Salida anticipada",
+      early_exit: "Salida Anticipada",
       absent: "Ausente",
       justified: "Justificado",
       pending: "Pendiente",
@@ -261,6 +257,11 @@ const AttendanceTable = ({
           bgcolor: alpha(theme.palette.warning.main, 0.15),
         };
       case "early":
+        return {
+          color: theme.palette.success.main,
+          bgcolor: alpha(theme.palette.success.main, 0.15),
+        };
+      case "early_exit":
         return {
           color: theme.palette.secondary.main,
           bgcolor: alpha(theme.palette.secondary.main, 0.15),
@@ -356,9 +357,9 @@ const AttendanceTable = ({
   };
 
   // Determinar si un registro necesita justificación
-  const needsJustification = (attendance) => {
+  /*const needsJustification = (attendance) => {
     return ["late", "absent", "early_exit"].includes(attendance.status);
-  };
+  };*/
 
   const sortedAttendances = useMemo(() => {
     return [...attendances].sort(getComparator(order, orderBy));
@@ -517,10 +518,10 @@ const AttendanceTable = ({
                               size="small"
                               sx={{
                                 height: 24,
-                                fontSize: "0.7rem",
-                                fontWeight: 600,
+                                fontSize: "0.8rem",
+                                //fontWeight: 600,
                                 bgcolor: typeConfig.bgcolor,
-                                color: typeConfig.color,
+                                //color: typeConfig.color,
                                 "& .MuiChip-icon": {
                                   color: typeConfig.color,
                                 },
@@ -536,12 +537,12 @@ const AttendanceTable = ({
                                 fontWeight: 600,
                                 bgcolor: statusConfig.bgcolor,
                                 color: statusConfig.color,
-                                "& .MuiChip-icon": {
-                                  color: statusConfig.color,
-                                },
+                                /*"& .MuiChip-icon": {
+                                  color: statusConfig.color,  
+                                },*/
                               }}
                             />
-                            {attendance.justification?.approved && (
+                            {/* {attendance.justification?.approved && (
                               <Typography
                                 variant="caption"
                                 color="info"
@@ -549,7 +550,7 @@ const AttendanceTable = ({
                               >
                                 (Justificado)
                               </Typography>
-                            )}
+                            )} */}
                           </Stack>
                         </Stack>
                       </TableCell>
@@ -864,7 +865,7 @@ const AttendanceTable = ({
             },
           }}
         >
-          {selectedAttendance &&
+          {/* {selectedAttendance &&
             needsJustification(selectedAttendance) &&
             !selectedAttendance.justification && (
               <MenuItem onClick={handleJustify}>
@@ -881,7 +882,7 @@ const AttendanceTable = ({
               </ListItemIcon>
               <ListItemText>Anular justificación</ListItemText>
             </MenuItem>
-          )}
+          )} */}
 
           <MenuItem onClick={handleEdit}>
             <ListItemIcon>
@@ -1003,7 +1004,7 @@ const AttendanceTable = ({
                   {/* Fecha y Hora */}
                   <TableCell>
                     <Stack spacing={0.5}>
-                      <Typography variant="body2" fontWeight={600}>
+                      <Typography variant="body2">
                         {formatDate(attendance.timestamp)}
                       </Typography>
                       <Stack direction="row" alignItems="center" spacing={1}>
@@ -1031,9 +1032,7 @@ const AttendanceTable = ({
                         {getInitials(attendance.userId)}
                       </Avatar> */}
                       <Stack spacing={0.3}>
-                        <Typography variant="body2" fontWeight={600}>
-                          {fullName}
-                        </Typography>
+                        <Typography variant="body2">{fullName}</Typography>
                         <Typography variant="caption" color="text.secondary">
                           DNI: {attendance.userId?.dni || "—"}
                         </Typography>
@@ -1048,10 +1047,10 @@ const AttendanceTable = ({
                       label={formatType(attendance.type)}
                       size="small"
                       sx={{
-                        fontWeight: 600,
-                        fontSize: "0.75rem",
+                        //fontWeight: 600,
+                        fontSize: "0.8rem",
                         bgcolor: typeConfig.bgcolor,
-                        color: typeConfig.color,
+                        //color: typeConfig.color,
                         borderRadius: 1,
                         "& .MuiChip-icon": {
                           color: typeConfig.color,
@@ -1062,7 +1061,23 @@ const AttendanceTable = ({
 
                   {/* Estado */}
                   <TableCell align="center">
-                    <Stack spacing={0.5}>
+                    <Chip
+                      //icon={getStatusIcon(attendance.status)}
+                      label={formatStatus(attendance.status)}
+                      size="small"
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: "0.75rem",
+                        bgcolor: statusConfig.bgcolor,
+                        color: statusConfig.color,
+                        //border: `1px solid ${alpha(statusConfig.color, 0.5)}`,
+                        //borderRadius: 1,
+                        /*"& .MuiChip-icon": {
+                          color: statusConfig.color,
+                        },*/
+                      }}
+                    />
+                    {/* <Stack spacing={0.5}>
                       <Chip
                         //icon={getStatusIcon(attendance.status)}
                         label={formatStatus(attendance.status)}
@@ -1072,24 +1087,24 @@ const AttendanceTable = ({
                           fontSize: "0.75rem",
                           bgcolor: statusConfig.bgcolor,
                           color: statusConfig.color,
-                          borderRadius: 1,
+                          //borderRadius: 1,
                           "& .MuiChip-icon": {
                             color: statusConfig.color,
                           },
                         }}
                       />
-                      {attendance.justification?.approved && (
+                      { {attendance.justification?.approved && (
                         <Typography variant="caption" color="text.secondary">
                           (Justificado)
                         </Typography>
-                      )}
-                    </Stack>
+                      )} }
+                    </Stack> */}
                   </TableCell>
 
                   {/* Acciones */}
                   <TableCell align="center">
                     <Stack direction="row" spacing={0.5} justifyContent="end">
-                      {can("attendances:justify") &&
+                      {/*can("attendances:justify") &&
                         needsJustification(attendance) &&
                         !attendance.justification && (
                           <Tooltip title="Justificar asistencia" arrow>
@@ -1113,8 +1128,8 @@ const AttendanceTable = ({
                               <CheckIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                        )}
-                      {can("attendances:unjustify") &&
+                        )*/}
+                      {/*can("attendances:unjustify") &&
                         attendance.justification && (
                           <Tooltip title="Anular justificación" arrow>
                             <IconButton
@@ -1137,7 +1152,7 @@ const AttendanceTable = ({
                               <CloseIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
-                        )}
+                        )*/}
                       {can("attendances:update") && (
                         <Tooltip title="Editar asistencia" arrow>
                           <IconButton

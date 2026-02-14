@@ -1,11 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useCallback,
-  memo,
-  useMemo,
-  useLayoutEffect,
-} from "react";
+import { useState, useEffect, useCallback, memo, useMemo, useRef } from "react";
 import {
   Box,
   Typography,
@@ -24,13 +17,11 @@ import {
   useTheme,
   useMediaQuery,
   Stack,
-  Skeleton,
   Fade,
   Chip,
   Divider,
   ToggleButtonGroup,
   ToggleButton,
-  //CircularProgress,
   Collapse,
   IconButton,
 } from "@mui/material";
@@ -46,7 +37,6 @@ import {
   FilterList as FilterListIcon,
   Clear as ClearIcon,
   ViewDay as ViewDayIcon,
-  //ViewWeek,
   ViewModule as ViewModuleIcon,
   ExpandLess,
   ExpandMore,
@@ -68,6 +58,7 @@ import { createJustification } from "../services/attendanceService";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import AttendanceExportButtons from "../components/Reports/GeneralReport/AttendanceExportButtons";
+import ScrollToTopButton from "../components/common/ScrolltoTopButton";
 
 // Constantes
 const STATUS_OPTIONS = [
@@ -207,12 +198,15 @@ PageHeader.displayName = "PageHeader";
 const FiltersCard = memo(
   ({
     search,
+    searchValue,
     scheduleId,
     status,
     dateFrom,
     dateTo,
     schedules,
     onSearchChange,
+    onHandleClearSearch,
+    searchInputRef,
     onScheduleChange,
     onStatusChange,
     onDateFromChange,
@@ -270,18 +264,55 @@ const FiltersCard = memo(
                   size="small"
                   label="Buscar"
                   placeholder="Nombres, Apellidos o DNI"
-                  value={search}
+                  value={searchValue}
                   onChange={onSearchChange}
+                  inputRef={searchInputRef}
+                  error={searchValue.length > 0 && searchValue.length < 3}
                   slotProps={{
                     input: {
                       style: { fontSize: "0.9rem" },
                       startAdornment: (
                         <InputAdornment position="start">
-                          <SearchIcon color="action" />
+                          <SearchIcon
+                            color={
+                              searchValue.length >= 3
+                                ? "primary"
+                                : searchValue.length > 0
+                                  ? "action"
+                                  : "action"
+                            }
+                          />
                         </InputAdornment>
+                      ),
+                      endAdornment: searchValue && (
+                        <Fade in={Boolean(searchValue)}>
+                          <InputAdornment position="end">
+                            <IconButton
+                              aria-label="limpiar búsqueda"
+                              onClick={onHandleClearSearch}
+                              edge="end"
+                              size="small"
+                              sx={{
+                                padding: 0.5,
+                                "&:hover": {
+                                  bgcolor: "action.hover",
+                                },
+                              }}
+                            >
+                              <ClearIcon fontSize="small" />
+                            </IconButton>
+                          </InputAdornment>
+                        </Fade>
                       ),
                     },
                   }}
+                  helperText={
+                    searchValue.length > 0 && searchValue.length < 3
+                      ? "Mínimo 3 caracteres para buscar"
+                      : searchValue.length >= 3
+                        ? `Buscando: "${searchValue}"`
+                        : ""
+                  }
                 />
               </Grid>
 
@@ -422,30 +453,33 @@ const FiltersCard = memo(
               borderColor: "divider",
             }}
           >
-            <ToggleButtonGroup
-              color="primary"
-              value={viewMode}
-              exclusive
-              onChange={handleViewModeChange}
-              size="small"
-              sx={{
-                "& .MuiToggleButton-root": {
-                  px: 2,
-                  //py: 1,
-                  textTransform: "none",
-                  fontWeight: 500,
-                },
-              }}
-            >
-              <ToggleButton value="matrix" aria-label="vista diaria">
-                <ViewModuleIcon sx={{ mr: 1, fontSize: 20 }} />
-                Matriz
-              </ToggleButton>
-              <ToggleButton value="table" aria-label="vista semanal">
-                <ViewDayIcon sx={{ mr: 1, fontSize: 20 }} />
-                Tabla
-              </ToggleButton>
-            </ToggleButtonGroup>
+            {
+              <ToggleButtonGroup
+                color="primary"
+                value={viewMode}
+                exclusive
+                onChange={handleViewModeChange}
+                size="small"
+                sx={{
+                  display: { xs: "none", sm: "inline-flex" },
+                  "& .MuiToggleButton-root": {
+                    px: 2,
+                    //py: 1,
+                    textTransform: "none",
+                    fontWeight: 500,
+                  },
+                }}
+              >
+                <ToggleButton value="matrix" aria-label="vista diaria">
+                  <ViewModuleIcon sx={{ mr: 1, fontSize: 20 }} />
+                  Matriz
+                </ToggleButton>
+                <ToggleButton value="table" aria-label="vista semanal">
+                  <ViewDayIcon sx={{ mr: 1, fontSize: 20 }} />
+                  Tabla
+                </ToggleButton>
+              </ToggleButtonGroup>
+            }
             {/* <Typography
               variant="body2"
               color="text.secondary"
@@ -485,8 +519,8 @@ const FiltersCard = memo(
                     dateFrom: format(startOfMonth(currentMonth), "yyyy-MM-dd"),
                     dateTo: format(endOfMonth(currentMonth), "yyyy-MM-dd"),
                   }}
+                  filters={{ search, scheduleId, status }}
                   totalRecords={totalRecords || 0}
-                  //apiEndpoint="/api/attendance/export"
                 />
               ) : (
                 <AttendanceExportButtons
@@ -495,15 +529,8 @@ const FiltersCard = memo(
                   dateRange={{ dateFrom, dateTo }}
                   currentPage={page}
                   totalRecords={totalRecords}
-                  //apiEndpoint="/api/attendance/export"
                 />
               )}
-
-              {/* <GeneralReportExportButtons
-                records={records}
-                date={date}
-                isMobile={isMobile}
-              /> */}
             </Stack>
           </Stack>
         </CardContent>
@@ -582,6 +609,9 @@ export default function GeneralReportPage() {
 
   // Estado para saber si se esta reseteando los filtros y ajustar el debounce
   //const [isResetting, setIsResetting] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState(""); // Valor para filtrar (con delay)
+  const [searchValue, setSearchValue] = useState(""); // Para el TextField
+  const searchInputRef = useRef(null);
 
   //Mostrar u ocultar los statCards
   const [showSummary, setShowSummary] = useState(true);
@@ -608,6 +638,10 @@ export default function GeneralReportPage() {
   // Validación de fechas
   const isDateRangeComplete = dateFrom !== null && dateTo !== null;
   const isRangeValid = isDateRangeComplete && dateFrom <= dateTo;
+
+  // Esta variable es la que se usa para renderizar componentes
+  // Si es móvil, forzamos "table", si no, usamos lo que diga el estado
+  const effectiveViewMode = isMobile ? "table" : viewMode;
 
   // Función para filtrar la matriz localmente
   const filterMatrixData = useCallback((matrixData, filters) => {
@@ -722,19 +756,78 @@ export default function GeneralReportPage() {
     };
   }, []);
 
-  // Fetch de datos
+  // Handler del input - actualiza inmediatamente el valor visual
+  const handleSearchChange = useCallback(
+    (event) => {
+      const value = event.target.value;
+      setSearchValue(value);
+
+      // Para vista TABLE: búsqueda inmediata con validación de 3 caracteres
+      if (viewMode === "table") {
+        if (value.length >= 3 || value.length === 0) {
+          setSearch(value);
+          setDebouncedSearch(value);
+          setPage(0);
+        }
+      }
+      // Para vista MATRIX: actualiza inmediatamente para que no se sienta lento
+      else if (viewMode === "matrix") {
+        setSearch(value);
+        // debouncedSearch se actualizará en el useEffect de abajo
+      }
+    },
+    [viewMode],
+  );
+
+  // Debounce SOLO para vista matriz (filtrado local)
+  useEffect(() => {
+    if (viewMode !== "matrix") return;
+
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300); // 300ms de delay para filtrado local (ajusta según necesites)
+
+    return () => clearTimeout(handler);
+  }, [search, viewMode]);
+
+  // Handler para limpiar la búsqueda
+  const handleClearSearch = useCallback(() => {
+    setSearchValue("");
+    setSearch("");
+    setDebouncedSearch("");
+    setPage(0);
+    searchInputRef.current?.focus();
+  }, []);
+
+  // Listener para la tecla Escape
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && searchValue) {
+        handleClearSearch();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [searchValue, handleClearSearch]);
+  console.log(dateFrom, dateTo);
+  // Modificar el fetch de datos para usar debouncedSearch en matriz
   const fetchData = useCallback(async () => {
+    console.log(dateFrom, dateTo);
     setError(null);
 
     if (viewMode === "table" && isRangeValid) setLoadingTable(true);
 
-    // Revisar cache SOLO para matrix
+    // Revisar cache SOLO para matrix - USAR debouncedSearch
     if (viewMode === "matrix" && matrixCache[monthKey]) {
       const cachedData = matrixCache[monthKey];
 
-      // Aplicar filtros a la data cacheada
+      // Aplicar filtros a la data cacheada con el valor debounced
       const filteredData = filterMatrixData(cachedData, {
-        search,
+        search: debouncedSearch, // ← Cambio aquí
         scheduleId,
         status,
       });
@@ -779,7 +872,10 @@ export default function GeneralReportPage() {
 
       if (viewMode === "matrix") params.append("view", "matrix");
 
-      if (search) params.append("search", search);
+      // Para tabla usa search normal, para matriz usa debouncedSearch
+      const searchParam = viewMode === "table" ? search : debouncedSearch;
+      if (searchParam) params.append("search", searchParam);
+
       if (scheduleId) params.append("scheduleId", scheduleId);
       if (status) params.append("status", status);
 
@@ -791,29 +887,26 @@ export default function GeneralReportPage() {
       const response = await getGeneralReport(params);
 
       if (viewMode === "matrix") {
-        if (viewMode === "matrix") {
-          // Guardar en cache SOLO la data sin filtrar
-          setMatrixCache((prev) => ({
-            ...prev,
-            [monthKey]: response,
-          }));
+        // Guardar en cache SOLO la data sin filtrar
+        setMatrixCache((prev) => ({
+          ...prev,
+          [monthKey]: response,
+        }));
 
-          setDataMatrix(response);
-          setFadeKey((prev) => prev + 1);
-        }
+        setDataMatrix(response);
+        setFadeKey((prev) => prev + 1);
       }
-      //setDataMatrix(response);
 
       if (viewMode === "table") setData(response);
     } catch (err) {
       setError(err.message);
     } finally {
-      //setLoading(false);
       setLoadingStats(false);
       if (viewMode === "table") setLoadingTable(false);
       if (viewMode === "matrix") setLoadingMatrix(false);
     }
   }, [
+    debouncedSearch, // ← Cambio en dependencias
     search,
     currentMonth,
     scheduleId,
@@ -826,6 +919,7 @@ export default function GeneralReportPage() {
     matrixCache,
     monthKey,
     filterMatrixData,
+    isRangeValid,
   ]);
 
   // Fetch de turnos
@@ -838,61 +932,59 @@ export default function GeneralReportPage() {
     }
   }, []);
 
-  /*useEffect(() => {
-    if (viewMode === "matrix") {
-      fetchData();
-    }
-  }, []);*/
-
   // Efectos
   useEffect(() => {
     fetchSchedules();
   }, [fetchSchedules]);
 
-  /*useEffect(() => {
-    const isReset = dateFrom === null && dateTo === null;
-    // BLOQUEO: Si el rango no está completo o es inválido,
-    // no hacemos nada, ignorando el cambio de fetchData por ahora.
-    if (
-      viewMode === "table" &&
-      !isReset &&
-      (!isDateRangeComplete || !isRangeValid)
-    ) {
-      return;
-    }
-    // Si pasó la validación, activamos el loading de stats y el debouncing
-    setLoadingStats(true);
-    const timeout = isResetting ? 0 : 700; // Si resetea, ejecución inmediata (0ms)
-
-    const handler = setTimeout(() => {
-      fetchData();
-      setIsResetting(false); // Apagamos la bandera después de ejecutar
-    }, timeout);
-
-    // Limpieza: si fetchData cambia antes de los 600ms, cancelamos el anterior
-    return () => clearTimeout(handler);
-  }, [fetchData, isDateRangeComplete, isRangeValid, dateFrom, dateTo]);*/
-
-  // SIN debounce → paginación inmediata
-  // TABLE pagination
-  useEffect(() => {
-    if (viewMode !== "table") return;
-
-    if (!dateFrom || !dateTo || !isRangeValid) return;
-
-    setLoadingTable(true);
-    setLoadingStats(true);
-
-    fetchData();
-  }, [page, rowsPerPage, viewMode]);
-
-  // MATRIX
+  // MATRIX - Usar debouncedSearch en lugar de search
   useEffect(() => {
     if (viewMode !== "matrix") return;
 
-    setLoadingMatrix(true); // ← esto es clave
+    setLoadingMatrix(true);
     fetchData();
-  }, [currentMonth, search, scheduleId, status]);
+  }, [currentMonth, debouncedSearch, scheduleId, status]); // ← Cambio aquí
+
+  // Efecto para filtrado local cuando hay cache - USAR debouncedSearch
+  useEffect(() => {
+    if (viewMode !== "matrix") return;
+
+    const cachedData = matrixCache[monthKey];
+    if (!cachedData) return;
+
+    const filteredData = filterMatrixData(cachedData, {
+      search: debouncedSearch, // ← Cambio aquí
+      scheduleId,
+      status,
+    });
+
+    setDataMatrix(filteredData);
+    setFadeKey((prev) => prev + 1);
+  }, [debouncedSearch, scheduleId, status, viewMode, monthKey]); // ← Cambio aquí
+
+  // Limpiar estados al cambiar de vista
+  useEffect(() => {
+    if (viewMode === "matrix") {
+      setDateFrom(null);
+      setDateTo(null);
+      setPage(0);
+      setData({
+        records: [],
+        pagination: {
+          currentPage: 1,
+          totalPages: 0,
+          totalRecords: 0,
+          recordsPerPage: rowsPerPage,
+        },
+        date: "",
+      });
+      setLoadingTable(false);
+    }
+
+    if (viewMode === "table") {
+      setLoadingMatrix(false);
+    }
+  }, [viewMode]);
 
   // CON debounce → filtros table
   useEffect(() => {
@@ -911,94 +1003,37 @@ export default function GeneralReportPage() {
     return () => clearTimeout(handler);
   }, [viewMode, dateFrom, dateTo, search, scheduleId, status]);
 
-  /*useEffect(() => {
+  // SIN debounce → paginación inmediata
+  // TABLE pagination
+  useEffect(() => {
     if (viewMode !== "table") return;
 
-    handleClearFilters();
-
-    // no hacer fetch si rango no válido
-    if (!dateFrom || !dateTo || !isRangeValid) {
-      setLoadingTable(false);
-      return;
-    }
+    if (!dateFrom || !dateTo || !isRangeValid) return;
 
     setLoadingTable(true);
     setLoadingStats(true);
 
     fetchData();
-  }, [viewMode]);*/
-  useEffect(() => {
-    if (viewMode === "matrix") {
-      // limpiar estado exclusivo de Table
-      setDateFrom(null);
-      setDateTo(null);
-      setPage(0);
-
-      setData({
-        records: [],
-        pagination: {
-          currentPage: 1,
-          totalPages: 0,
-          totalRecords: 0,
-          recordsPerPage: rowsPerPage,
-        },
-        date: "",
-      });
-
-      setLoadingTable(false);
-
-      // cargar matrix
-      /* setLoadingMatrix(true);
-      fetchData();*/
-    }
-
-    if (viewMode === "table") {
-      // limpiar estado exclusivo de Matrix si quieres
-      setLoadingMatrix(false);
-
-      // NO hacer fetch automáticamente
-      // esperar que el usuario seleccione fechas
-    }
-  }, [viewMode]);
-  //Solo para cambio del mes en vista matriz
-  //useLayoutEffect para sincronización inmediata
-  /* useLayoutEffect(() => {
-    if (viewMode === "matrix") {
-      const cacheKey = format(currentMonth, "yyyy-MM");
-
-      if (matrixCache[cacheKey]) {
-        setDataMatrix(matrixCache[cacheKey]);
-        setFadeKey((prev) => prev + 1);
-      } else {
-        setLoadingMatrix(true);
-      }
-    }
-  }, [currentMonth, viewMode, matrixCache]);*/
-  useEffect(() => {
-    if (viewMode !== "matrix") return;
-
-    const cachedData = matrixCache[monthKey];
-    if (!cachedData) return;
-
-    const filteredData = filterMatrixData(cachedData, {
-      search,
-      scheduleId,
-      status,
-    });
-
-    setDataMatrix(filteredData);
-    setFadeKey((prev) => prev + 1);
-  }, [search, scheduleId, status, viewMode, monthKey]);
+  }, [page, rowsPerPage, viewMode]);
 
   /*---------- Funciones Auxiliares --------------*/
 
   /*---------- Handlers --------------*/
 
   // Handlers memoizados
-  const handleSearchChange = useCallback((event) => {
+  /*const handleSearchChange = useCallback((event) => {
     setSearch(event.target.value);
+    if (viewMode === "table") setPage(0);
+  }, []);*/
+
+  // Handler para limpiar la búsqueda
+  /*const handleClearSearch = useCallback(() => {
+    //setSearchValue("");
+    setSearch("");
     setPage(0);
-  }, []);
+    // Opcional: devolver el foco al input
+    searchInputRef.current?.focus();
+  }, []);*/
 
   const handleScheduleChange = useCallback((event) => {
     setScheduleId(event.target.value);
@@ -1072,6 +1107,7 @@ export default function GeneralReportPage() {
   const handleClearFilters = useCallback(() => {
     // limpiar filtros
     setSearch("");
+    setSearchValue("");
     setScheduleId("");
     setStatus("");
     setDateFrom(null);
@@ -1123,57 +1159,59 @@ export default function GeneralReportPage() {
       {/* Header */}
       <PageHeader date={data.date} isMobile={isMobile} />
       {/* Resumen - Oculto en mobile */}
-      {!isMobile && (
-        <Box>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              mb: 1,
-              cursor: "pointer",
-              bgcolor: theme.palette.background.paper,
-              px: 2,
-              py: 1,
-              borderRadius: 2,
-              border: "1px solid",
-              borderColor: "divider",
-            }}
-            onClick={() => setShowSummary(!showSummary)}
-          >
-            <Typography variant="h6" sx={{ flexGrow: 1 }}>
-              Resumen Estadístico
-            </Typography>
-            <IconButton size="small">
-              {showSummary ? <ExpandLess /> : <ExpandMore />}
-            </IconButton>
-          </Box>
 
-          <Collapse in={showSummary} timeout={300}>
-            <SummaryCards
-              data={viewMode === "matrix" ? dataMatrix.stats : data.stats}
-              isLoading={loadingStats}
-              error={error}
-            />
-          </Collapse>
+      <Box>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            mb: 1,
+            cursor: "pointer",
+            bgcolor: theme.palette.background.paper,
+            px: 2,
+            py: 1,
+            borderRadius: 2,
+            border: "1px solid",
+            borderColor: "divider",
+          }}
+          onClick={() => setShowSummary(!showSummary)}
+        >
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Resumen Estadístico
+          </Typography>
+          <IconButton size="small">
+            {showSummary ? <ExpandLess /> : <ExpandMore />}
+          </IconButton>
         </Box>
-      )}
+
+        <Collapse in={showSummary} timeout={300}>
+          <SummaryCards
+            data={viewMode === "matrix" ? dataMatrix.stats : data.stats}
+            isLoading={loadingStats}
+            error={error}
+          />
+        </Collapse>
+      </Box>
 
       {/* Filtros */}
       <FiltersCard
         search={search}
+        searchValue={searchValue}
         scheduleId={scheduleId}
         status={status}
         dateFrom={dateFrom}
         dateTo={dateTo}
         schedules={schedules}
         onSearchChange={handleSearchChange}
+        onHandleClearSearch={handleClearSearch}
+        searchInputRef={searchInputRef}
         onScheduleChange={handleScheduleChange}
         onStatusChange={handleStatusChange}
         onDateFromChange={handleDateFromChange}
         onDateToChange={handleDateToChange}
         onClearFilters={handleClearFilters}
         onChangeViewMode={handleChangeViewMode}
-        viewMode={viewMode}
+        viewMode={effectiveViewMode}
         totalRecords={
           viewMode === "matrix"
             ? dataMatrix.stats.totalRecords
@@ -1206,20 +1244,19 @@ export default function GeneralReportPage() {
           overflow: "hidden",
         }}
       >
-        {/* TABLE */}
-        {viewMode === "table" && (
+        {/* Renderizado de Tabla o Matriz segun */}
+        {effectiveViewMode === "table" ? (
           <Box sx={{ position: "relative" }}>
             <LoadingOverlay show={loadingTable} />
             <GeneralReportTable
               attendances={data.records}
               setSelectedRecord={setSelectedRecord}
+              startDate={dateFrom}
+              enddate={dateTo}
               error={error}
             />
           </Box>
-        )}
-
-        {/* MATRIX */}
-        {viewMode === "matrix" && (
+        ) : (
           <TimelineMatrix
             users={dataMatrix.users}
             dates={dataMatrix.dates}
@@ -1280,6 +1317,8 @@ export default function GeneralReportPage() {
         onClose={handleCloseDrawer}
         onJustify={handleJustify}
       />
+      {/* Botón flotante */}
+      <ScrollToTopButton showAfter={550} />
     </Box>
   );
 }

@@ -136,9 +136,12 @@ const StatCard = memo(({ label, subtitle, icon: Icon, color, children }) => {
         borderColor: "divider",
         transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         "&:hover": {
-          borderColor: color + ".main",
-          transform: "translateY(-4px)",
-          boxShadow: `0 8px 16px ${alpha(colorValue, 0.15)}`,
+          borderColor: color === "disabled" ? "divider" : color + ".main",
+          transform: { xs: "none", sm: "translateY(-4px)" },
+          boxShadow: {
+            xs: "none",
+            sm: `0 8px 16px ${alpha(colorValue, 0.15)}`,
+          },
         },
       }}
     >

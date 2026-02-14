@@ -221,14 +221,14 @@ const MatrixCell = memo(
                   title={
                     <Box sx={{ p: 0.5 }}>
                       <Typography variant="caption" fontWeight={600}>
-                        {config?.label || shift.shiftStatus}
+                        {shift.scheduleName}
                       </Typography>
                       <Typography
                         variant="caption"
                         display="block"
                         sx={{ mt: 0.5 }}
                       >
-                        {shift.scheduleName}
+                        {config?.label || shift.shiftStatus}
                       </Typography>
                     </Box>
                   }
