@@ -1,65 +1,65 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { usePermission } from "../utils/permissions";
+import useSnackbarStore from "../store/useSnackbarStore";
 import {
-  Typography,
-  CircularProgress,
   Alert,
-  Button,
   Box,
   Breadcrumbs,
+  Button,
   Card,
+  CircularProgress,
+  Divider,
+  IconButton,
   Link,
   Stack,
-  useTheme,
-  useMediaQuery,
-  Divider,
   Tooltip,
-  IconButton,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
+import { useThemeMode } from "../contexts/ThemeContext";
 import {
-  createAttendance,
-  getPaginatedAttendances,
-  updateAttendance,
-  deleteAttendance,
-  justifyAttendance,
-  removeJustification,
-} from "../services/attendanceService";
-import AttendanceTable from "../components/Attendance/AttendanceTable";
-import AttendanceSearchBar from "../components/Attendance/AttendanceSearchBar";
-import AttendanceExportButtons from "../components/Attendance/AttendanceExportButtons";
+  createJustification,
+  getPaginatedJustifications,
+  updateJustification,
+} from "../services/justificationService";
 import { Link as RouterLink } from "react-router-dom";
+import LoadingOverlay from "../components/common/LoadingOverlay";
+import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import HomeIcon from "@mui/icons-material/Home";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { Add as AddIcon } from "@mui/icons-material";
-import AttendanceDialog from "../components/Attendance/AttendanceDialog";
-import DeleteConfirmDialog from "../components/common/DeleteConfirmDialog";
-import FloatingAddButton from "../components/common/FloatingAddButton";
-import useSnackbarStore from "../store/useSnackbarStore";
-import LoadingOverlay from "../components/common/LoadingOverlay";
-//Filtros
-import AttendanceDateRangeFilter from "../components/Attendance/AttendanceDateRangeFilter";
-import AttendanceStatusFilter from "../components/Attendance/AttendanceStatusFilter";
-import AttendanceTypeFilter from "../components/Attendance/AttendanceTypeFilter";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import ClearIcon from "@mui/icons-material/Clear";
-import { SafeTablePagination } from "../components/common/SafeTablePagination";
-/*import JustifyAttendanceDialog from "../components/Attendance/JustifyAttendanceDialog";
-import { ConfirmDeleteJustificationDialog } from "../components/Attendance/ConfirmDeleteJustificationDialog";*/
-import { useThemeMode } from "../contexts/ThemeContext";
-import { usePermission } from "../utils/permissions";
-//import SearchIcon from "@mui/icons-material/Search";
-//import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import FloatingAddButton from "../components/common/FloatingAddButton";
+import JustificationSearchBar from "../components/Justification/JustificationSearchBar";
+import JustificationDateRangeFilter from "../components/Justification/JustificationDateRangeFilter";
+import JustificationScheduleFilter from "../components/Justification/JustificationScheduleFilter";
+import JustificationStatusFilter from "../components/Justification/JustificationStatusFilter";
+import JustificationTable from "../components/Justification/JustificationTable";
+import { getSchedules } from "../services/scheduleService";
+import JustificationDrawer from "../components/Justification/JustificationDrawer";
+import { getUsers } from "../services/userService";
 
-export default function Attendances() {
+/*function buildFormData(fields, files = []) {
+  const fd = new FormData();
+  Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
+  files.forEach((file) => fd.append("files", file));
+  return fd;
+}*/
+
+const Justifications = () => {
   const { can } = usePermission();
   const { showSuccess, showError } = useSnackbarStore();
-
   const theme = useTheme();
   const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
-  const [attendances, setAttendances] = useState([]);
+  const [justifications, setJustifications] = useState([]);
+  const [schedules, setSchedules] = useState([]);
+  const [users, setUsers] = useState([]); //Exclusivo para crear justififcaciones
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,18 +69,14 @@ export default function Attendances() {
   const [pagination, setPagination] = useState({
     page: 0,
     rowsPerPage: 10,
-    search: "",
+    userName: "",
     startDate: null,
     endDate: null,
     status: "",
-    type: "",
+    scheduleId: "",
   });
 
-  const [dialog, setDialog] = useState({
-    open: false,
-    editAttendance: null,
-    error: "",
-  });
+  const [openDrawer, setOpenDrawer] = useState(false);
 
   const [deleteState, setDeleteState] = useState({
     id: null,
@@ -92,25 +88,38 @@ export default function Attendances() {
     startDate: null,
     endDate: null,
     status: "",
-    type: "",
+    scheduleId: "",
   });
 
   //Estado para mostrar u ocultar filtros mobile
   const [openFilters, setOpenFilters] = useState(false);
 
-  //Estados para justificar registro de asistencia
-  /*const [selectedAttendance, setSelectedAttendance] = useState(null);
-  const [justifyDialogOpen, setJustifyDialogOpen] = useState(false);
-  const [deleteJustificationDialogOpen, setDeleteJustificationDialogOpen] =
-    useState(false);*/
+  // Traer los usuarios existentes
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const data = await getUsers();
+      setUsers(data || []);
+    };
+    fetchUsers();
+  }, []);
+
+  // Traer los horarios existentes
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      const data = await getSchedules();
+      console.log(data);
+      setSchedules(data || []);
+    };
+    fetchSchedules();
+  }, []);
 
   useEffect(() => {
-    const loadAttendances = async () => {
+    const loadJustifications = async () => {
       setLoading(true);
       setError("");
       try {
         const params = {
-          search: pagination.search,
+          userName: pagination.userName,
           page: (pagination.page + 1).toString(),
           limit: pagination.rowsPerPage.toString(),
         };
@@ -125,53 +134,56 @@ export default function Attendances() {
         if (pagination.status) {
           params.status = pagination.status;
         }
-        if (pagination.type) {
-          params.type = pagination.type;
+        if (pagination.scheduleId) {
+          params.scheduleId = pagination.scheduleId;
         }
 
-        const data = await getPaginatedAttendances(params);
-        setAttendances(data.attendances);
-        setTotal(data.total);
+        const data = await getPaginatedJustifications(params);
+        setJustifications(data.justifications);
+        setTotal(data.pagination.total);
       } catch (err) {
-        setError(err.response?.data?.message || "Error al cargar asistencias");
+        console.log(err);
+        setError(
+          err.response?.data?.message || "Error al cargar justificaciones",
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    loadAttendances();
+    loadJustifications();
   }, [
-    pagination.search,
+    pagination.userName,
     pagination.page,
     pagination.rowsPerPage,
     pagination.startDate,
     pagination.endDate,
     pagination.status,
-    pagination.type,
+    pagination.scheduleId,
   ]);
 
   // Debounce para búsqueda
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (searchInput !== pagination.search) {
+      if (searchInput !== pagination.userName) {
         setPagination((prev) => ({
           ...prev,
-          search: searchInput,
+          userName: searchInput,
           page: 0,
         }));
       }
     }, 700);
 
     return () => clearTimeout(handler);
-  }, [searchInput, pagination.search]);
+  }, [searchInput, pagination.userName]);
 
   // Handlers con useCallback
-  const refreshAttendances = useCallback(async () => {
+  const refreshJustifications = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const params = {
-        search: pagination.search,
+        userName: pagination.userName,
         page: (pagination.page + 1).toString(),
         limit: pagination.rowsPerPage.toString(),
       };
@@ -185,26 +197,28 @@ export default function Attendances() {
       if (pagination.status) {
         params.status = pagination.status;
       }
-      if (pagination.type) {
-        params.type = pagination.type;
+      if (pagination.scheduleId) {
+        params.scheduleId = pagination.scheduleId;
       }
 
-      const data = await getPaginatedAttendances(params);
-      setAttendances(data.attendances);
-      setTotal(data.total);
+      const data = await getPaginatedJustifications(params);
+      setJustifications(data.justifications);
+      setTotal(data.pagination.total);
     } catch (err) {
-      setError(err.response?.data?.message || "Error al cargar usuarios");
+      setError(
+        err.response?.data?.message || "Error al cargar justificaciones",
+      );
     } finally {
       setLoading(false);
     }
   }, [
-    pagination.search,
+    pagination.userName,
     pagination.page,
     pagination.rowsPerPage,
     pagination.startDate,
     pagination.endDate,
     pagination.status,
-    pagination.type,
+    pagination.scheduleId,
   ]);
 
   //handlers
@@ -221,8 +235,8 @@ export default function Attendances() {
     setFilters((prev) => ({ ...prev, status }));
   }, []);
 
-  const handleTypeChange = useCallback((type) => {
-    setFilters((prev) => ({ ...prev, type }));
+  const handleScheduleChange = useCallback((scheduleId) => {
+    setFilters((prev) => ({ ...prev, scheduleId }));
   }, []);
 
   const handleApplyFilters = useCallback(() => {
@@ -248,9 +262,10 @@ export default function Attendances() {
       startDate: null,
       endDate: null,
       status: "",
-      type: "",
+      scheduleId: "",
     };
     setFilters(emptyFilters);
+    setSearchInput("");
     setPagination((prev) => ({
       ...prev,
       ...emptyFilters,
@@ -258,30 +273,35 @@ export default function Attendances() {
     }));
   }, []);
 
-  const handleSubmit = useCallback(
+  /*const handleSubmit = useCallback(
     async (data) => {
       setDialog((prev) => ({ ...prev, error: "" }));
 
       try {
-        const isEditing = !!dialog.editAttendance;
+        const isEditing = !!dialog.editJustification;
 
         if (isEditing) {
-          const res = await updateAttendance(dialog.editAttendance._id, data);
+          const res = await updateJustification(
+            dialog.editJustification._id,
+            data,
+          );
 
-          showSuccess(res?.message || "Asistencia actualizada correctamente");
+          showSuccess(
+            res?.message || "Justificación actualizada correctamente",
+          );
         } else {
           const res = await createAttendance(data);
-          showSuccess(res?.message || "Asistencia creada correctamente");
+          showSuccess(res?.message || "Justificación creada correctamente");
         }
 
-        setDialog({ open: false, editAttendance: null, error: "" });
-        await refreshAttendances();
+        setDialog({ open: false, editJustification: null, error: "" });
+        await refreshJustifications();
       } catch (err) {
         const errorMessage =
           err.response?.data?.message ||
           `Error al ${
-            dialog.editAttendance ? "actualizar" : "crear"
-          } asistencia`;
+            dialog.editJustification ? "actualizar" : "crear"
+          } justificación`;
 
         setDialog((prev) => ({ ...prev, error: errorMessage }));
         showError(errorMessage);
@@ -289,48 +309,48 @@ export default function Attendances() {
         throw err;
       }
     },
-    [dialog.editAttendance, showSuccess, showError, refreshAttendances],
-  );
+    [dialog.editJustification, showSuccess, showError, refreshJustifications],
+  );*/
 
-  const handleEdit = useCallback((attendance) => {
+  /*const handleEdit = useCallback((justification) => {
     setDialog({
       open: true,
-      editAttendance: attendance,
+      editJustification: justification,
       error: "",
     });
-  }, []);
+  }, []);*/
 
-  const handleDelete = useCallback((userId) => {
+  const handleDelete = useCallback((recordId) => {
     setDeleteState({
-      id: userId,
+      id: recordId,
       error: "",
     });
   }, []);
 
-  /*const handleJustify = useCallback((attendance) =>{
-    setJustifyDialogOpen(true);
-    setSelectedAttendance(attendance);
-  })*/
+  /*const handleJustify = useCallback((justification) =>{
+      setJustifyDialogOpen(true);
+      setSelectedAttendance(justification);
+    })*/
 
   const confirmDelete = useCallback(async () => {
     setDeleteState((prev) => ({ ...prev, error: "" }));
     try {
       await deleteAttendance(deleteState.id);
-      showSuccess("Asistencia eliminado correctamente");
+      showSuccess("Justificación eliminada correctamente");
       setDeleteState({ id: null, error: "" });
-      await refreshAttendances();
+      await refreshJustifications();
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || "Error al eliminar el rol";
+        err.response?.data?.message || "Error al eliminar justificación";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);
       console.error("Error en confirmDelete:", err);
     }
-  }, [deleteState.id, showSuccess, showError, refreshAttendances]);
+  }, [deleteState.id, showSuccess, showError, refreshJustifications]);
 
   const handleClose = useCallback(() => {
-    setDialog({ open: false, editAttendance: null, error: "" });
+    setDialog({ open: false, editJustification: null, error: "" });
   }, []);
 
   const handleChangePage = useCallback((event, newPage) => {
@@ -350,7 +370,7 @@ export default function Attendances() {
       e.preventDefault();
       setPagination((prev) => ({
         ...prev,
-        search: searchInput,
+        userName: searchInput,
         page: 0,
       }));
     },
@@ -358,7 +378,7 @@ export default function Attendances() {
   );
 
   const handleOpenDialog = useCallback(() => {
-    setDialog({ open: true, editAttendance: null, error: "" });
+    setDialog({ open: true, editJustification: null, error: "" });
   }, []);
 
   const handleCloseDelete = useCallback(() => {
@@ -392,7 +412,7 @@ export default function Attendances() {
           {!isMobile && <Typography variant="body2">Inicio</Typography>}
         </Link>
         <Typography variant="body2" color="text.primary">
-          Asistencias
+          Justificacións
         </Typography>
       </Breadcrumbs>
     ),
@@ -400,18 +420,20 @@ export default function Attendances() {
   );
 
   // Memorizar tabla
-  const userTableMemo = useMemo(
+  const justificationTableMemo = useMemo(
     () => (
-      <AttendanceTable
-        attendances={attendances}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+      <JustificationTable
+        justifications={justifications}
+        schedules={schedules}
+        /*onEdit={handleEdit}
+        onDelete={handleDelete}*/
+        onRefresh={refreshJustifications}
       />
     ),
     [
-      attendances,
-      handleEdit,
-      handleDelete,
+      justifications,
+      /*handleEdit,
+      handleDelete,*/
       //handleOpenJustifyDialog,
       //handleOpenDeleteJustifyDialog,
     ],
@@ -419,10 +441,14 @@ export default function Attendances() {
 
   // Verifica si hay filtros activos
   const hasActiveFilters =
-    filters.startDate || filters.endDate || filters.status || filters.type;
+    pagination.userName ||
+    filters.startDate ||
+    filters.endDate ||
+    filters.status ||
+    filters.scheduleId;
 
   // Estado de carga inicial
-  if (loading && attendances.length === 0) {
+  if (loading && justifications.length === 0) {
     return (
       <Box
         sx={{
@@ -436,7 +462,7 @@ export default function Attendances() {
       >
         <CircularProgress size={48} />
         <Typography variant="body1" color="text.secondary">
-          Cargando asistencias...
+          Cargando...
         </Typography>
       </Box>
     );
@@ -478,13 +504,13 @@ export default function Attendances() {
                   }}
                 >
                   <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    Gestión de Asistencias
+                    Gestión de Justificaciones
                   </Typography>
                 </Box>
                 <Tooltip
                   title={
-                    !attendances || attendances.length === 0
-                      ? "No hay asistencias para filtrar"
+                    !justifications || justifications.length === 0
+                      ? "No hay justificaciones para filtrar"
                       : openFilters
                         ? "Ocultar filtros"
                         : "Mostrar filtros"
@@ -493,7 +519,7 @@ export default function Attendances() {
                   <span>
                     <IconButton
                       onClick={() => setOpenFilters((prev) => !prev)}
-                      disabled={!attendances || attendances.length === 0}
+                      disabled={!justifications || justifications.length === 0}
                       sx={{
                         bgcolor: theme.palette.background.paper,
                         "&:hover": {
@@ -508,9 +534,9 @@ export default function Attendances() {
                     </IconButton>
                   </span>
                 </Tooltip>
-                {can("attendances:export") && (
-                  <AttendanceExportButtons attendances={attendances} />
-                )}
+                {/* {can("justifications:export") && (
+                  <AttendanceExportButtons justifications={justifications} />
+                )} */}
               </Box>
             </Stack>
           ) : (
@@ -521,7 +547,7 @@ export default function Attendances() {
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
                 <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                  Gestión de Asistencias
+                  Gestión de Justificaciones
                 </Typography>
               </Box>
               {breadcrumbItems}
@@ -552,11 +578,11 @@ export default function Attendances() {
                 spacing={1}
                 sx={{ width: "100%" }}
               >
-                {can("attendances:create") && (
+                {can("justifications:create") && (
                   <FloatingAddButton onClick={handleOpenDialog} />
                 )}
               </Stack>
-              <AttendanceSearchBar
+              <JustificationSearchBar
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
                 onSearch={handleSearch}
@@ -565,25 +591,26 @@ export default function Attendances() {
                 <>
                   <Stack spacing={2} sx={{ mt: 2 }}>
                     {/* Filtros de fecha */}
-                    <AttendanceDateRangeFilter
+                    <JustificationDateRangeFilter
                       startDate={filters.startDate}
                       endDate={filters.endDate}
                       onStartDateChange={handleStartDateChange}
                       onEndDateChange={handleEndDateChange}
                     />
 
-                    {/* Filtros de estado y tipo */}
+                    {/* Filtros de estado y turno */}
                     <Stack direction={isMobile ? "column" : "row"} spacing={1}>
                       <Box sx={{ flex: 1 }}>
-                        <AttendanceStatusFilter
-                          status={filters.status}
-                          onStatusChange={handleStatusChange}
+                        <JustificationScheduleFilter
+                          scheduleId={filters.scheduleId}
+                          onScheduleChange={handleScheduleChange}
+                          schedules={schedules}
                         />
                       </Box>
                       <Box sx={{ flex: 1 }}>
-                        <AttendanceTypeFilter
-                          type={filters.type}
-                          onTypeChange={handleTypeChange}
+                        <JustificationStatusFilter
+                          status={filters.status}
+                          onStatusChange={handleStatusChange}
                         />
                       </Box>
                     </Stack>
@@ -626,31 +653,48 @@ export default function Attendances() {
                 spacing={2}
               >
                 <Box sx={{ flex: 1, maxWidth: 400 }}>
-                  <AttendanceSearchBar
+                  <JustificationSearchBar
                     searchInput={searchInput}
                     setSearchInput={setSearchInput}
                     onSearch={handleSearch}
                   />
                 </Box>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  {can("attendances:create") && (
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      onClick={handleOpenDialog}
-                      sx={{ minWidth: 140 }}
-                    >
-                      Nuevo
-                    </Button>
+                  {can("justifications:create") && (
+                    <>
+                      <Tooltip title="Nueva justificación">
+                        <Button
+                          variant="contained"
+                          startIcon={<AddIcon />}
+                          onClick={() => setOpenDrawer(true)}
+                          sx={{ minWidth: 140 }}
+                        >
+                          Nuevo
+                        </Button>
+                      </Tooltip>
+
+                      <JustificationDrawer
+                        open={openDrawer}
+                        onClose={() => setOpenDrawer(false)}
+                        mode="create"
+                        schedules={schedules}
+                        users={users}
+                        onSubmit={async (payload, files) => {
+                          // console.log("payload: ", payload);
+                          await createJustification(payload, files);
+                          refreshJustifications();
+                        }}
+                      />
+                    </>
                   )}
-                  {can("attendances:export") && (
-                    <AttendanceExportButtons attendances={attendances} />
-                  )}
+                  {/* {can("justifications:export") && (
+                    <AttendanceExportButtons justifications={justifications} />
+                  )} */}
                 </Stack>
               </Stack>
               <Stack spacing={2} sx={{ mt: 2 }}>
                 {/* Filtros de fecha */}
-                <AttendanceDateRangeFilter
+                <JustificationDateRangeFilter
                   startDate={filters.startDate}
                   endDate={filters.endDate}
                   onStartDateChange={handleStartDateChange}
@@ -660,15 +704,16 @@ export default function Attendances() {
                 {/* Filtros de estado y tipo */}
                 <Stack direction={isMobile ? "column" : "row"} spacing={1}>
                   <Box sx={{ flex: 1 }}>
-                    <AttendanceStatusFilter
-                      status={filters.status}
-                      onStatusChange={handleStatusChange}
+                    <JustificationScheduleFilter
+                      scheduleId={filters.scheduleId}
+                      onScheduleChange={handleScheduleChange}
+                      schedules={schedules}
                     />
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <AttendanceTypeFilter
-                      type={filters.type}
-                      onTypeChange={handleTypeChange}
+                    <JustificationStatusFilter
+                      status={filters.status}
+                      onStatusChange={handleStatusChange}
                     />
                   </Box>
                 </Stack>
@@ -716,11 +761,11 @@ export default function Attendances() {
         }}
       >
         <Box sx={{ position: "relative" }}>
-          <LoadingOverlay show={loading && attendances.length > 0} />
-          {userTableMemo}
+          <LoadingOverlay show={loading && justifications.length > 0} />
+          {justificationTableMemo}
         </Box>
 
-        {attendances.length > 0 && <Divider />}
+        {justifications.length > 0 && <Divider />}
 
         <SafeTablePagination
           component="div"
@@ -756,39 +801,24 @@ export default function Attendances() {
 
       {/* DIÁLOGOS */}
       {
-        <AttendanceDialog
-          open={dialog.open}
-          onClose={handleClose}
-          editAttendance={dialog.editAttendance}
-          formError={dialog.error}
-          onSubmit={handleSubmit}
-        />
+        // <AttendanceDialog
+        //   open={dialog.open}
+        //   onClose={handleClose}
+        //   editJustification={dialog.editJustification}
+        //   formError={dialog.error}
+        //   onSubmit={handleSubmit}
+        // />
       }
 
-      <DeleteConfirmDialog
+      {/* <DeleteConfirmDialog
         open={!!deleteState.id}
         onClose={handleCloseDelete}
         onConfirm={confirmDelete}
         deleteError={deleteState.error}
         itemName="asistencia"
-      />
-
-      {/* Dialog de justificación */}
-      {/* <JustifyAttendanceDialog
-        open={justifyDialogOpen}
-        onOpenChange={setJustifyDialogOpen}
-        attendance={selectedAttendance}
-        handleJustifyAttendance={handleJustifyAttendance}
-        onSuccess={handleJustifySuccess}
-      /> */}
-
-      {/* Dialog de confirmación de eliminar justificación */}
-      {/* <ConfirmDeleteJustificationDialog
-        open={deleteJustificationDialogOpen}
-        onOpenChange={setDeleteJustificationDialogOpen}
-        attendance={selectedAttendance}
-        onConfirm={handleDeleteJustification}
       /> */}
     </Box>
   );
-}
+};
+
+export default Justifications;

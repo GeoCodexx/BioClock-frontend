@@ -254,7 +254,7 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                       {/* Nombre del Departamento */}
                       <TableCell sx={{ py: 1.5 }}>
                         <Box>
-                          <Typography variant="body2" sx={{ mb: 0.5 }}>
+                          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
                             {department.name || "—"}
                           </Typography>
                           <Stack
@@ -486,7 +486,7 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                     fontSize="small"
                     sx={{ color: theme.palette.primary.main }}
                   /> */}
-                  <Typography variant="body2">
+                  <Typography variant="body2" fontWeight={600}>
                     {department.name || "—"}
                   </Typography>
                 </Box>

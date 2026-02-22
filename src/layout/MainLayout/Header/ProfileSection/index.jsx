@@ -31,7 +31,7 @@ import ProfileDialog from "../../../../components/Profile/ProfileDialog";
 const ProfileSection = () => {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const { logout } = useAuthStore();
+  const logout = useAuthStore((state) => state.logout);
   const theme = useTheme();
   //const navigate = useNavigate();
   const [open, setOpen] = useState(false);

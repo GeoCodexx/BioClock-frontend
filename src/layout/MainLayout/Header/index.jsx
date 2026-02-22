@@ -10,6 +10,7 @@ import {
   alpha,
   Tooltip,
   Fade,
+  Avatar,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import LightModeIcon from "@mui/icons-material/LightMode";
@@ -23,12 +24,12 @@ import Brightness7Icon from "@mui/icons-material/Brightness7";*/
 // import Logo from "@/assets/logo.png";
 
 // Componentes personalizados
-import NotificationSection from "./NotificationSection";
+//import NotificationSection from "./NotificationSection";
 import ProfileSection from "./ProfileSection";
 
 // Componente de botón de tema memoizado
 const ThemeToggleButton = memo(({ toggleTheme, isDarkMode }) => {
-  const theme = useTheme();
+  //const theme = useTheme();
 
   return (
     <Tooltip
@@ -46,14 +47,14 @@ const ThemeToggleButton = memo(({ toggleTheme, isDarkMode }) => {
           bgcolor: (theme) =>
             alpha(
               theme.palette.mode === "dark" ? "#fff" : "#000",
-              theme.palette.mode === "dark" ? 0.1 : 0.05
+              theme.palette.mode === "dark" ? 0.1 : 0.05,
             ),
           transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           "&:hover": {
             bgcolor: (theme) =>
               alpha(
                 theme.palette.mode === "dark" ? "#fff" : "#000",
-                theme.palette.mode === "dark" ? 0.15 : 0.1
+                theme.palette.mode === "dark" ? 0.15 : 0.1,
               ),
             transform: "rotate(270deg) scale(1.05)",
           },
@@ -156,58 +157,84 @@ const MobileView = memo(({ handleDrawerToggle, logoSrc }) => (
 MobileView.displayName = "MobileView";
 
 // Componente de Vista Desktop memoizado
-const DesktopView = memo(({ toggleTheme, isDarkMode, logoSrc }) => {
-  const theme = useTheme();
+const DesktopView = memo(
+  ({ toggleTheme, isDarkMode, logoSrc, handleDrawerToggle }) => {
+    const theme = useTheme();
 
-  return (
-    <>
-      {/* Logo - Izquierda */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-        {logoSrc && <Logo src={logoSrc} alt="Logo SISCAB" size="large" />}
-      </Box>
+    return (
+      <>
+        {/* Logo - Izquierda */}
+        <Box sx={{ display: "flex", width: 228, alignItems: "center", gap: 2 }}>
+          <Box sx={{ flexGrow: 1 }}>
+            {logoSrc && <Logo src={logoSrc} alt="Logo SISCAB" size="large" />}
+          </Box>
+          <Avatar
+            onClick={handleDrawerToggle}
+            sx={{
+              width: 34,
+              height: 34,
+              bgcolor: alpha(theme.palette.primary.main, 0.2),
+              color: theme.palette.primary.main,
+              borderRadius: 2,
+              fontSize: "1.2rem",
+              cursor: "pointer",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                bgcolor: theme.palette.primary.main,
+                color: theme.palette.primary.light,
+              },
+            }}
+          >
+            <MenuIcon />
+          </Avatar>
+        </Box>
 
-      {/* Título completo - Centro */}
-      <Box
-        sx={{
-          flexGrow: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 2,
-          px: 3,
-        }}
-      >
-        <Typography
-          variant="h5"
-          fontWeight="bold"
-          component="h1"
+        {/* Título completo - Centro */}
+        <Box
           sx={{
-            background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-            letterSpacing: "0.5px",
+            flexGrow: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 2,
+            px: 3,
           }}
         >
-          BioClock Pro - Sistema de Control de Asistencia Biométrico
-        </Typography>
-      </Box>
+          <Typography
+            variant="h5"
+            fontWeight="bold"
+            component="h1"
+            sx={{
+              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              letterSpacing: "0.5px",
+            }}
+          >
+            BioClock Pro - Sistema de Control de Asistencia Biométrico
+          </Typography>
+        </Box>
 
-      {/* Botones - Derecha */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1.5,
-        }}
-      >
-        <ThemeToggleButton toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
-        {/* <NotificationSection /> */}
-        <ProfileSection />
-      </Box>
-    </>
-  );
-});
+        {/* Botones - Derecha */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+          }}
+        >
+          <ThemeToggleButton
+            toggleTheme={toggleTheme}
+            isDarkMode={isDarkMode}
+          />
+          {/* <NotificationSection /> */}
+          <ProfileSection />
+        </Box>
+      </>
+    );
+  },
+);
 
 DesktopView.displayName = "DesktopView";
 
@@ -220,7 +247,7 @@ const Header = memo(
     // Memoizar estilos del AppBar
     const appBarStyles = useMemo(
       () => ({
-        zIndex: isMobile ? theme.zIndex.drawer - 1 : theme.zIndex.drawer + 1,
+        //zIndex: isMobile ? theme.zIndex.drawer - 1 : theme.zIndex.drawer + 1,
         bgcolor: theme.palette.background.paper,
         color: theme.palette.text.primary,
         // boxShadow: `0 1px 3px ${alpha(theme.palette.common.black, 0.08)}`,
@@ -228,7 +255,7 @@ const Header = memo(
         borderBottom: `1px solid ${theme.palette.divider}`,
         transition: "all 0.3s ease",
       }),
-      [isMobile, theme]
+      [isMobile, theme],
     );
 
     // Memoizar estilos del Toolbar
@@ -238,7 +265,7 @@ const Header = memo(
         minHeight: isMobile ? 56 : 64,
         px: isMobile ? 1.5 : 3,
       }),
-      [isMobile]
+      [isMobile],
     );
 
     return (
@@ -253,12 +280,13 @@ const Header = memo(
               toggleTheme={toggleTheme}
               isDarkMode={isDarkMode}
               logoSrc={logoSrc}
+              handleDrawerToggle={handleDrawerToggle}
             />
           )}
         </Toolbar>
       </AppBar>
     );
-  }
+  },
 );
 
 Header.displayName = "Header";

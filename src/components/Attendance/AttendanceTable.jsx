@@ -59,7 +59,7 @@ const AttendanceTable = ({
   const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [orderBy, setOrderBy] = useState("timestamp");
+  const [orderBy, setOrderBy] = useState("userId");
   const [order, setOrder] = useState("desc");
   const [openRowId, setOpenRowId] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -288,8 +288,9 @@ const AttendanceTable = ({
       minWidth: 50,
       align: "center",
     },
-    { id: "timestamp", label: "Fecha y Hora", sortable: true, minWidth: 160 },
     { id: "userId", label: "Usuario", sortable: true, minWidth: 200 },
+    { id: "timestamp", label: "Fecha y Hora", sortable: true, minWidth: 160 },
+
     {
       id: "type",
       label: "Tipo",
@@ -1001,21 +1002,6 @@ const AttendanceTable = ({
                     </IconButton>
                   </TableCell>
 
-                  {/* Fecha y Hora */}
-                  <TableCell>
-                    <Stack spacing={0.5}>
-                      <Typography variant="body2">
-                        {formatDate(attendance.timestamp)}
-                      </Typography>
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <AccessTimeIcon fontSize="small" />
-                        <Typography variant="caption" color="primary">
-                          {formatTime(attendance.timestamp)}
-                        </Typography>
-                      </Stack>
-                    </Stack>
-                  </TableCell>
-
                   {/* Usuario */}
                   <TableCell>
                     <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -1032,9 +1018,26 @@ const AttendanceTable = ({
                         {getInitials(attendance.userId)}
                       </Avatar> */}
                       <Stack spacing={0.3}>
-                        <Typography variant="body2">{fullName}</Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {fullName}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary">
                           DNI: {attendance.userId?.dni || "—"}
+                        </Typography>
+                      </Stack>
+                    </Stack>
+                  </TableCell>
+
+                  {/* Fecha y Hora */}
+                  <TableCell>
+                    <Stack spacing={0.5}>
+                      <Typography variant="body2">
+                        {formatDate(attendance.timestamp)}
+                      </Typography>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <AccessTimeIcon fontSize="small" />
+                        <Typography variant="caption" color="primary">
+                          {formatTime(attendance.timestamp)}
                         </Typography>
                       </Stack>
                     </Stack>

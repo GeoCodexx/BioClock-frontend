@@ -20,6 +20,7 @@ import {
 } from "@mui/icons-material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { keyframes } from "@mui/system";
+import useAuthStore from "../store/useAuthStore";
 
 const ping = keyframes`
   0% {
@@ -34,6 +35,18 @@ const ping = keyframes`
 
 export default function NoAccessPage() {
   const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const permissions = useAuthStore((state) => state.permissions);
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleRedirect = () => {
+    if (isAuthenticated && permissions.length === 0) {
+      logout();
+      navigate("/", { replace: true });
+    } else {
+      navigate("/", { replace: true });
+    }
+  };
 
   return (
     <Box
@@ -159,7 +172,7 @@ export default function NoAccessPage() {
               <Button
                 variant="contained"
                 startIcon={<HomeOutlined />}
-                onClick={() => navigate("/", { replace: true })}
+                onClick={handleRedirect}
               >
                 Ir al Inicio
               </Button>

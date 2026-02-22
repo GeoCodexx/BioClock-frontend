@@ -36,7 +36,7 @@ const MainLayout = () => {
       />
       <Sidebar
         isOpen={isDrawerOpen}
-        handleDrawerToggle={handleDrawerToggle}
+        //handleDrawerToggle={handleDrawerToggle}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
       />

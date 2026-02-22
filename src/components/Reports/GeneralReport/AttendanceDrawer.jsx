@@ -192,8 +192,8 @@ const AttendanceDrawer = ({
       PaperProps={{
         sx: {
           width: { xs: "100%", sm: 400 },
-          height: "calc(100% - 64px)",
-          top: 64,
+          /*height: "calc(100% - 64px)",
+          top: 64,*/
           /*backgroundImage: (theme) =>
             theme.palette.mode === "dark"
               ? "linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))"

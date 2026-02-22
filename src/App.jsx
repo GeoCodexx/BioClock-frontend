@@ -17,6 +17,7 @@ import MyAttendances from "./pages/MyAttendances";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import useAuthStore from "./store/useAuthStore";
 import NoAccessPage from "./pages/NoAccessPage";
+import Justifications from "./pages/Justifications";
 
 function AuthRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
@@ -157,6 +158,14 @@ export default function App() {
               element={
                 <PermissionRoute permission="general-report:read">
                   <GeneralReportPage />
+                </PermissionRoute>
+              }
+            />
+            <Route
+              path="justifications"
+              element={
+                <PermissionRoute permission="justifications:read">
+                  <Justifications />
                 </PermissionRoute>
               }
             />

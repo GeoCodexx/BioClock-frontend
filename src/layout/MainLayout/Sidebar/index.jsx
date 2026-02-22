@@ -19,12 +19,18 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import BusinessIcon from "@mui/icons-material/Business";
-import EventNoteIcon from "@mui/icons-material/EventNote";
+//import EventNoteIcon from "@mui/icons-material/EventNote";
 import FingerprintIcon from "@mui/icons-material/Fingerprint";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import DevicesIcon from "@mui/icons-material/Devices";
 import { useState } from "react";
-import { CalendarMonth, ExpandLess, ExpandMore, ReadMore, Schedule } from "@mui/icons-material";
+import {
+  CalendarMonth,
+  ExpandLess,
+  ExpandMore,
+  //ReadMore,
+  Schedule,
+} from "@mui/icons-material";
 import CloseIcon from "@mui/icons-material/Close";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LogoBitel from "../../../assets/images/bitel_logo.png";
@@ -113,16 +119,22 @@ const menuItems = [
         icon: <ChevronRightIcon />,
       },
       {
-        text: "Historial de Registros",
+        text: "Historial de Asistencias",
         path: "/attendances",
         permission: "attendances:read",
+        icon: <ChevronRightIcon />,
+      },
+      {
+        text: "Justificaciones",
+        path: "/justifications",
+        permission: "justifications:read",
         icon: <ChevronRightIcon />,
       },
     ],
   },
 ];
 
-const Sidebar = ({ isOpen, handleDrawerToggle, mobileOpen, setMobileOpen }) => {
+const Sidebar = ({ isOpen, mobileOpen, setMobileOpen }) => {
   const theme = useTheme();
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -130,7 +142,7 @@ const Sidebar = ({ isOpen, handleDrawerToggle, mobileOpen, setMobileOpen }) => {
 
   const [openMenu, setOpenMenu] = useState(() => {
     const current = menuItems.find((item) =>
-      item.children?.some((child) => location.pathname.startsWith(child.path))
+      item.children?.some((child) => location.pathname.startsWith(child.path)),
     );
     return current ? current.text : null;
   });
@@ -191,8 +203,8 @@ const Sidebar = ({ isOpen, handleDrawerToggle, mobileOpen, setMobileOpen }) => {
                   item.children
                     ? () => handleToggle(item.text)
                     : item.path
-                    ? handleMobileItemClick
-                    : undefined
+                      ? handleMobileItemClick
+                      : undefined
                 }
                 selected={!isSubmenu && isActive}
                 sx={{
@@ -242,7 +254,7 @@ const Sidebar = ({ isOpen, handleDrawerToggle, mobileOpen, setMobileOpen }) => {
               <List component="div" disablePadding>
                 {renderMenuItems(
                   item.children.filter((child) => can(child.permission)),
-                  true
+                  true,
                 )}
               </List>
             </Collapse>
@@ -263,37 +275,12 @@ const Sidebar = ({ isOpen, handleDrawerToggle, mobileOpen, setMobileOpen }) => {
           alignItems: "center",
         }}
       >
-        {(isOpen || isMobile) && (
+        {(isOpen && isMobile) && (
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <img src={LogoBitel} alt="logo" width="130px" />
           </Box>
         )}
-        {!isMobile && (
-          <Tooltip title={isOpen ? "Contraer" : "Expandir"} placement="right">
-            <IconButton
-              color="inherit"
-              aria-label="toggle drawer"
-              onClick={handleDrawerToggle}
-              sx={{
-                transition: "transform 400ms cubic-bezier(0, 0, 0.2, 1)",
-                transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                bgcolor:
-                  theme.palette.mode === "dark"
-                    ? "rgba(255,255,255,0.1)"
-                    : "rgba(0,0,0,0.05)",
-                "&:hover": {
-                  bgcolor:
-                    theme.palette.mode === "dark"
-                      ? "rgba(255,255,255,0.15)"
-                      : "rgba(0,0,0,0.1)",
-                },
-              }}
-            >
-              {/* <CloseIcon /> */}
-              <ReadMore />
-            </IconButton>
-          </Tooltip>
-        )}
+        
         {isMobile && (
           <IconButton
             color="inherit"
@@ -343,6 +330,13 @@ const Sidebar = ({ isOpen, handleDrawerToggle, mobileOpen, setMobileOpen }) => {
               boxSizing: "border-box",
               border: "none",
               transition: "width 400ms cubic-bezier(0, 0, 0.2, 1)",
+            },
+          }}
+          PaperProps={{
+            sx: {
+              width: { xs: "100%", sm: 400 },
+              height: "calc(100% - 64px)",
+              top: 64,
             },
           }}
         >

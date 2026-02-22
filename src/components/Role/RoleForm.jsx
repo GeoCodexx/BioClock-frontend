@@ -36,6 +36,7 @@ const RoleForm = ({
     devices: "Dispositivos",
     fingerprints: "Huellas Dactilares",
     schedules: "Horarios",
+    justifications: "Justificaciones",
     "my-attendance": "Mi Asistencia",
     dashboard: "Panel Estadístico",
     permissions: "Permisos",
