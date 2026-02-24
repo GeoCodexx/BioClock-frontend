@@ -44,12 +44,14 @@ import {
   Warning as WarningIcon,
   Error as ErrorIcon,
 } from "@mui/icons-material";
-import DescriptionIcon from "@mui/icons-material/Description";
+//import DescriptionIcon from "@mui/icons-material/Description";
 import PendingIcon from "@mui/icons-material/Pending";
 import PersonIcon from "@mui/icons-material/Person";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import { usePermission } from "../../utils/permissions";
 import ActionCell from "./ActionCell";
+import { format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
 
 const JustificationTable = ({
   justifications = [],
@@ -113,37 +115,15 @@ const JustificationTable = ({
   // Formatear fecha y hora
   const formatDateTime = (dateString) => {
     if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    return format(parseISO(dateString), "dd/MM/yyyy HH:mm:ss", { locale: es });
   };
 
   // Formatear solo fecha
-  const formatDate = (dateString) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
+  const formatDate = (dateInput) => {
+    if (!dateInput) return "—";
 
-  // Formatear solo hora
-  const formatTime = (dateString) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("es-ES", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
+    return format(parseISO(dateInput), "dd/MM/yyyy", { locale: es })
+
   };
 
   // Normalizar tipo

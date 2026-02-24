@@ -41,6 +41,32 @@ const resolveConfig = (files = []) =>
     : { headers: { "Content-Type": "application/json" } };
 
 /**
+ * Descarga un Blob como archivo en el navegador.
+ *
+ * @param {Blob}   blob      - datos del archivo
+ * @param {string} filename  - nombre sugerido para la descarga
+ */
+const downloadBlob = (blob, filename) => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};
+
+/**
+ * Genera un nombre de archivo con fecha para los exports.
+ * Ejemplo: justificaciones_2024-05-01.xlsx
+ */
+const buildExportFilename = (ext) => {
+  const date = new Date().toISOString().split("T")[0];
+  return `justificaciones_${date}.${ext}`;
+};
+
+/**
  * Crear justificación.
  * @param {object} data  - { userId, scheduleId, date, reason }
  * @param {File[]} files - archivos adjuntos (opcional)
@@ -146,4 +172,41 @@ export const getPaginatedJustifications = async ({
     console.log(error);
     handleApiError(error, "Error al obtener justificaciones");
   }
+};
+
+// ─── Exportación ─────────────────────────────────────────────────────────────
+
+/**
+ * Exportar a Excel.
+ * Pasa los mismos filtros que usas en el listado (sin page ni limit).
+ *
+ * @param {object} filters - { status?, userId?, userName?, scheduleId?, startDate?, endDate? }
+ *
+ * @example
+ *   await exportJustificationsExcel({ status: "pending", startDate: "2024-01-01", endDate: "2024-12-31" });
+ */
+export const exportJustificationsExcel = async (filters = {}) => {
+  const response = await api.get("/justifications/export/excel", {
+    params: filters,
+    responseType: "blob", // ← crítico para recibir el buffer como Blob
+  });
+
+  downloadBlob(response.data, buildExportFilename("xlsx"));
+};
+
+/**
+ * Exportar a PDF.
+ *
+ * @param {object} filters - mismos filtros que el listado
+ *
+ * @example
+ *   await exportJustificationsPDF({ status: "approved" });
+ */
+export const exportJustificationsPDF = async (filters = {}) => {
+  const response = await api.get("/justifications/export/pdf", {
+    params: filters,
+    responseType: "blob",
+  });
+
+  downloadBlob(response.data, buildExportFilename("pdf"));
 };

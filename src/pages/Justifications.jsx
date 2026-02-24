@@ -41,6 +41,8 @@ import JustificationTable from "../components/Justification/JustificationTable";
 import { getSchedules } from "../services/scheduleService";
 import JustificationDrawer from "../components/Justification/JustificationDrawer";
 import { getUsers } from "../services/userService";
+import ExportButtons from "../components/Justification/ExportButtons";
+import { format } from "date-fns";
 
 /*function buildFormData(fields, files = []) {
   const fd = new FormData();
@@ -77,11 +79,6 @@ const Justifications = () => {
   });
 
   const [openDrawer, setOpenDrawer] = useState(false);
-
-  const [deleteState, setDeleteState] = useState({
-    id: null,
-    error: "",
-  });
 
   //Estado de filtros
   const [filters, setFilters] = useState({
@@ -126,10 +123,10 @@ const Justifications = () => {
 
         // Agregar filtros solo si tienen valor
         if (pagination.startDate) {
-          params.startDate = pagination.startDate.toISOString();
+          params.startDate = format(pagination.startDate, "yyyy-MM-dd");
         }
         if (pagination.endDate) {
-          params.endDate = pagination.endDate.toISOString();
+          params.endDate = format(pagination.endDate, "yyyy-MM-dd");
         }
         if (pagination.status) {
           params.status = pagination.status;
@@ -273,98 +270,6 @@ const Justifications = () => {
     }));
   }, []);
 
-  /*const handleSubmit = useCallback(
-    async (data) => {
-      setDialog((prev) => ({ ...prev, error: "" }));
-
-      try {
-        const isEditing = !!dialog.editJustification;
-
-        if (isEditing) {
-          const res = await updateJustification(
-            dialog.editJustification._id,
-            data,
-          );
-
-          showSuccess(
-            res?.message || "Justificación actualizada correctamente",
-          );
-        } else {
-          const res = await createAttendance(data);
-          showSuccess(res?.message || "Justificación creada correctamente");
-        }
-
-        setDialog({ open: false, editJustification: null, error: "" });
-        await refreshJustifications();
-      } catch (err) {
-        const errorMessage =
-          err.response?.data?.message ||
-          `Error al ${
-            dialog.editJustification ? "actualizar" : "crear"
-          } justificación`;
-
-        setDialog((prev) => ({ ...prev, error: errorMessage }));
-        showError(errorMessage);
-        console.error("Error en handleSubmit:", err);
-        throw err;
-      }
-    },
-    [dialog.editJustification, showSuccess, showError, refreshJustifications],
-  );*/
-
-  /*const handleEdit = useCallback((justification) => {
-    setDialog({
-      open: true,
-      editJustification: justification,
-      error: "",
-    });
-  }, []);*/
-
-  const handleDelete = useCallback((recordId) => {
-    setDeleteState({
-      id: recordId,
-      error: "",
-    });
-  }, []);
-
-  /*const handleJustify = useCallback((justification) =>{
-      setJustifyDialogOpen(true);
-      setSelectedAttendance(justification);
-    })*/
-
-  const confirmDelete = useCallback(async () => {
-    setDeleteState((prev) => ({ ...prev, error: "" }));
-    try {
-      await deleteAttendance(deleteState.id);
-      showSuccess("Justificación eliminada correctamente");
-      setDeleteState({ id: null, error: "" });
-      await refreshJustifications();
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || "Error al eliminar justificación";
-
-      setDeleteState((prev) => ({ ...prev, error: errorMessage }));
-      showError(errorMessage);
-      console.error("Error en confirmDelete:", err);
-    }
-  }, [deleteState.id, showSuccess, showError, refreshJustifications]);
-
-  const handleClose = useCallback(() => {
-    setDialog({ open: false, editJustification: null, error: "" });
-  }, []);
-
-  const handleChangePage = useCallback((event, newPage) => {
-    setPagination((prev) => ({ ...prev, page: newPage }));
-  }, []);
-
-  const handleChangeRowsPerPage = useCallback((event) => {
-    setPagination((prev) => ({
-      ...prev,
-      rowsPerPage: parseInt(event.target.value, 10),
-      page: 0,
-    }));
-  }, []);
-
   const handleSearch = useCallback(
     (e) => {
       e.preventDefault();
@@ -377,12 +282,16 @@ const Justifications = () => {
     [searchInput],
   );
 
-  const handleOpenDialog = useCallback(() => {
-    setDialog({ open: true, editJustification: null, error: "" });
+  const handleChangePage = useCallback((event, newPage) => {
+    setPagination((prev) => ({ ...prev, page: newPage }));
   }, []);
 
-  const handleCloseDelete = useCallback(() => {
-    setDeleteState({ id: null, error: "" });
+  const handleChangeRowsPerPage = useCallback((event) => {
+    setPagination((prev) => ({
+      ...prev,
+      rowsPerPage: parseInt(event.target.value, 10),
+      page: 0,
+    }));
   }, []);
 
   // Memorizar valores reutilizables
@@ -425,18 +334,24 @@ const Justifications = () => {
       <JustificationTable
         justifications={justifications}
         schedules={schedules}
-        /*onEdit={handleEdit}
-        onDelete={handleDelete}*/
         onRefresh={refreshJustifications}
       />
     ),
-    [
-      justifications,
-      /*handleEdit,
-      handleDelete,*/
-      //handleOpenJustifyDialog,
-      //handleOpenDeleteJustifyDialog,
-    ],
+    [justifications],
+  );
+
+  // Normalizar datos para opcion de exportar
+  const exportFilters = useMemo(
+    () => ({
+      userName: pagination.userName || "",
+      status: filters.status || "",
+      scheduleId: filters.scheduleId || "",
+      startDate: filters.startDate
+        ? format(filters.startDate, "yyyy-MM-dd")
+        : "",
+      endDate: filters.endDate ? format(filters.endDate, "yyyy-MM-dd") : "",
+    }),
+    [pagination.userName, filters],
   );
 
   // Verifica si hay filtros activos
@@ -690,6 +605,7 @@ const Justifications = () => {
                   {/* {can("justifications:export") && (
                     <AttendanceExportButtons justifications={justifications} />
                   )} */}
+                  <ExportButtons filters={exportFilters} />
                 </Stack>
               </Stack>
               <Stack spacing={2} sx={{ mt: 2 }}>
