@@ -33,35 +33,44 @@ import {
   MoreVert as MoreVertIcon,
   AccessTime as AccessTimeIcon,
   Badge as BadgeIcon,
-  Business as BusinessIcon,
+  //Business as BusinessIcon,
   Schedule as ScheduleIcon,
-  Devices as DevicesIcon,
+  /*Devices as DevicesIcon,
   Fingerprint as FingerprintIcon,
   Login as LoginIcon,
-  Logout as LogoutIcon,
+  Logout as LogoutIcon,*/
   CheckCircle as CheckCircleIcon,
-  Info as InfoIcon,
+  /*Info as InfoIcon,
   Warning as WarningIcon,
-  Error as ErrorIcon,
+  Error as ErrorIcon,*/
 } from "@mui/icons-material";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 //import DescriptionIcon from "@mui/icons-material/Description";
-import PendingIcon from "@mui/icons-material/Pending";
+//import PendingIcon from "@mui/icons-material/Pending";
 import PersonIcon from "@mui/icons-material/Person";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import { usePermission } from "../../utils/permissions";
 import ActionCell from "./ActionCell";
-import { format, parseISO } from "date-fns";
+import { format, parse, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
+import JustificationDrawer from "./JustificationDrawer";
+import {
+  updateJustification,
+  updateJustificationStatus,
+} from "../../services/justificationService";
 
 const JustificationTable = ({
   justifications = [],
-  onEdit,
-  onDelete,
+  /*onEdit,
+  onDelete,*/
   onRefresh,
   schedules,
   loading = false,
 }) => {
-  const { can } = usePermission();
+  //const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("userId");
@@ -69,6 +78,10 @@ const JustificationTable = ({
   const [openRowId, setOpenRowId] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedJustification, setSelectedJustification] = useState(null);
+
+  const [drawer, setDrawer] = useState({ open: false, mode: "create" });
+  const open = (mode) => setDrawer({ open: true, mode });
+  const close = () => setDrawer((p) => ({ ...p, open: false }));
 
   // Toggle row collapse
   const handleRowToggle = (justificationId) => {
@@ -84,10 +97,10 @@ const JustificationTable = ({
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setSelectedJustification(null);
+    //setSelectedJustification(null);
   };
 
-  const handleEdit = () => {
+  /*const handleEdit = () => {
     if (selectedJustification && onEdit) {
       onEdit(selectedJustification);
     }
@@ -99,7 +112,7 @@ const JustificationTable = ({
       onDelete(selectedJustification._id);
     }
     handleMenuClose();
-  };
+  };*/
 
   // Formatear nombre completo
   const getFullName = (userId) => {
@@ -112,29 +125,13 @@ const JustificationTable = ({
     return parts.join(" ") || "—";
   };
 
-  // Formatear fecha y hora
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "—";
-    return format(parseISO(dateString), "dd/MM/yyyy HH:mm:ss", { locale: es });
-  };
-
   // Formatear solo fecha
   const formatDate = (dateInput) => {
     if (!dateInput) return "—";
 
-    return format(parseISO(dateInput), "dd/MM/yyyy", { locale: es })
+    const date = parse(dateInput, "yyyy-MM-dd", new Date());
 
-  };
-
-  // Normalizar tipo
-  const formatType = (type) => {
-    const types = {
-      IN: "Entrada",
-      OUT: "Salida",
-      BREAK_START: "Inicio Descanso",
-      BREAK_END: "Fin Descanso",
-    };
-    return types[type] || type || "—";
+    return format(date, "dd/MM/yyyy", { locale: es });
   };
 
   // Normalizar estado
@@ -153,18 +150,6 @@ const JustificationTable = ({
     const name = userId.name?.[0] || "";
     const surname = userId.firstSurname?.[0] || "";
     return (name + surname).toUpperCase();
-  };
-
-  // Obtener icono según tipo
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case "IN":
-        return <LoginIcon fontSize="small" />;
-      case "OUT":
-        return <LogoutIcon fontSize="small" />;
-      default:
-        return <AccessTimeIcon fontSize="small" />;
-    }
   };
 
   // Obtener configuración de color según tipo
@@ -218,13 +203,6 @@ const JustificationTable = ({
 
   // Configuración de columnas para Desktop
   const visibleColumns = [
-    // {
-    //   id: "expand",
-    //   label: "",
-    //   sortable: false,
-    //   minWidth: 50,
-    //   align: "center",
-    // },
     {
       id: "userId",
       label: "Usuario",
@@ -323,6 +301,82 @@ const JustificationTable = ({
     return [...justifications].sort(getComparator(order, orderBy));
   }, [justifications, order, orderBy]);
 
+  const menuItems = [];
+
+  if (selectedJustification?.status === "pending") {
+    menuItems.push(
+      <MenuItem
+        key="edit"
+        onClick={() => {
+          handleMenuClose();
+          open("edit");
+        }}
+      >
+        <ListItemIcon>
+          <EditOutlinedIcon fontSize="small" />
+        </ListItemIcon>
+        <ListItemText>Editar</ListItemText>
+      </MenuItem>,
+      <Divider key="d1" />,
+      <MenuItem
+        key="approve"
+        onClick={() => {
+          handleMenuClose();
+          open("approve");
+        }}
+      >
+        <ListItemIcon>
+          <CheckCircleOutlineIcon fontSize="small" color="success" />
+        </ListItemIcon>
+        <ListItemText>Aprobar</ListItemText>
+      </MenuItem>,
+      <Divider key="d2" />,
+      <MenuItem
+        key="reject"
+        onClick={() => {
+          handleMenuClose();
+          open("reject");
+        }}
+      >
+        <ListItemIcon>
+          <CancelOutlinedIcon fontSize="small" color="error" />
+        </ListItemIcon>
+        <ListItemText>Rechazar</ListItemText>
+      </MenuItem>,
+      <Divider key="d3" />,
+      <MenuItem
+        key="delete"
+        onClick={() => {
+          handleMenuClose();
+          alert("Eliminado");
+        }}
+      >
+        <ListItemIcon>
+          <DeleteIcon fontSize="small" color="error" />
+        </ListItemIcon>
+        <ListItemText>Eliminar</ListItemText>
+      </MenuItem>,
+    );
+  }
+
+  if (selectedJustification?.files?.length > 0) {
+    menuItems.push(
+      <Divider key="d4" />,
+      <MenuItem
+        key="preview"
+        onClick={() => {
+          handleMenuClose();
+          open("preview");
+        }}
+      >
+        <ListItemIcon>
+          <AttachFileIcon fontSize="small" color="primary" />
+        </ListItemIcon>
+        <ListItemText>Ver Archivos</ListItemText>
+      </MenuItem>,
+    );
+  }
+
   // Estado vacío
   if (justifications.length === 0 && !loading) {
     return (
@@ -379,7 +433,7 @@ const JustificationTable = ({
                 }}
               >
                 <TableCell sx={{ width: 48 }} />
-                <TableCell>Asistencia</TableCell>
+                <TableCell>Justificación</TableCell>
                 <TableCell align="right" sx={{ width: 48 }} />
               </TableRow>
             </TableHead>
@@ -387,8 +441,11 @@ const JustificationTable = ({
               {sortedJustifications.map((justification, index) => {
                 const isOpen = openRowId === justification._id;
                 const fullName = getFullName(justification.userId);
-                const typeConfig = getTypeConfig(justification.type);
                 const statusConfig = getStatusConfig(justification.status);
+
+                const canEdit = justification.status === "pending";
+                const canPreview = justification.files?.length > 0;
+                const hasActions = canEdit || canPreview;
 
                 return (
                   <React.Fragment key={justification._id}>
@@ -402,14 +459,13 @@ const JustificationTable = ({
                         "& td": {
                           borderBottom: isOpen ? "none" : undefined,
                         },
-                        cursor: "pointer",
                       }}
-                      onClick={() => handleRowToggle(justification._id)}
                     >
                       {/* Botón Expandir */}
                       <TableCell sx={{ py: 1, pl: 2 }}>
                         <IconButton
                           size="small"
+                          onClick={() => handleRowToggle(justification._id)}
                           sx={{ color: theme.palette.primary.main }}
                         >
                           {isOpen ? (
@@ -420,7 +476,7 @@ const JustificationTable = ({
                         </IconButton>
                       </TableCell>
 
-                      {/* Información de la Asistencia */}
+                      {/* Información */}
                       <TableCell sx={{ py: 1.5 }}>
                         <Stack spacing={1}>
                           {/* Usuario y Avatar */}
@@ -449,65 +505,42 @@ const JustificationTable = ({
                                 variant="caption"
                                 color="text.secondary"
                               >
-                                {formatDateTime(justification.timestamp)}
+                                {formatDate(justification.date)}
                               </Typography>
                             </Stack>
                           </Stack>
 
                           {/* Chips de Tipo y Estado */}
-                          <Stack direction="column" spacing={1}>
-                            <Chip
-                              icon={getTypeIcon(justification.type)}
-                              label={formatType(justification.type)}
-                              size="small"
-                              sx={{
-                                height: 24,
-                                fontSize: "0.8rem",
-                                //fontWeight: 600,
-                                bgcolor: typeConfig.bgcolor,
-                                //color: typeConfig.color,
-                                "& .MuiChip-icon": {
-                                  color: typeConfig.color,
-                                },
-                              }}
-                            />
-                            <Chip
-                              //icon={getStatusIcon(justification.status)}
-                              label={formatStatus(justification.status)}
-                              size="small"
-                              sx={{
-                                height: 24,
-                                fontSize: "0.7rem",
-                                fontWeight: 600,
-                                bgcolor: statusConfig.bgcolor,
-                                color: statusConfig.color,
-                                /*"& .MuiChip-icon": {
+
+                          <Chip
+                            label={formatStatus(justification.status)}
+                            size="small"
+                            sx={{
+                              height: 24,
+                              fontSize: "0.7rem",
+                              fontWeight: 600,
+                              bgcolor: statusConfig.bgcolor,
+                              color: statusConfig.color,
+                              /*"& .MuiChip-icon": {
                                   color: statusConfig.color,  
                                 },*/
-                              }}
-                            />
-                            {/* {justification.justification?.approved && (
-                              <Typography
-                                variant="caption"
-                                color="info"
-                                align="center"
-                              >
-                                (Justificado)
-                              </Typography>
-                            )} */}
-                          </Stack>
+                            }}
+                          />
                         </Stack>
                       </TableCell>
 
                       {/* Menú de Acciones */}
                       <TableCell align="right" sx={{ py: 1, pr: 2 }}>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => handleMenuOpen(e, justification)}
-                          sx={{ color: theme.palette.text.secondary }}
-                        >
-                          <MoreVertIcon />
-                        </IconButton>
+                        {hasActions && (
+                          <IconButton
+                            size="small"
+                            disableRipple
+                            onClick={(e) => handleMenuOpen(e, justification)}
+                            sx={{ color: theme.palette.text.secondary }}
+                          >
+                            <MoreVertIcon />
+                          </IconButton>
+                        )}
                       </TableCell>
                     </TableRow>
 
@@ -527,7 +560,7 @@ const JustificationTable = ({
                         <Collapse in={isOpen} timeout="auto" unmountOnExit>
                           <Box sx={{ py: 2, px: 2 }}>
                             <Stack spacing={2}>
-                              {/* DNI y Email */}
+                              {/* Fecha y Turno */}
                               <Stack spacing={1.5}>
                                 <Stack
                                   direction="row"
@@ -545,57 +578,13 @@ const JustificationTable = ({
                                     color="text.secondary"
                                     fontWeight={600}
                                   >
-                                    DNI:
+                                    FECHA:
                                   </Typography>
                                   <Typography variant="body2">
-                                    {justification.userId?.dni || "—"}
+                                    {formatDate(justification.date) || "—"}
                                   </Typography>
                                 </Stack>
 
-                                <Stack
-                                  direction="row"
-                                  spacing={1}
-                                  alignItems="center"
-                                >
-                                  <DevicesIcon
-                                    sx={{
-                                      fontSize: 16,
-                                      color: theme.palette.text.secondary,
-                                    }}
-                                  />
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    fontWeight={600}
-                                  >
-                                    DISPOSITIVO:
-                                  </Typography>
-                                  <Typography variant="body2">
-                                    {justification.deviceId?.name || "—"}
-                                  </Typography>
-                                </Stack>
-
-                                {justification.deviceId?.location && (
-                                  <Stack
-                                    direction="row"
-                                    spacing={1}
-                                    alignItems="center"
-                                    sx={{ pl: 3 }}
-                                  >
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      📍 {justification.deviceId.location}
-                                    </Typography>
-                                  </Stack>
-                                )}
-                              </Stack>
-
-                              <Divider />
-
-                              {/* Horario y Método */}
-                              <Stack spacing={1.5}>
                                 <Stack
                                   direction="row"
                                   spacing={1}
@@ -619,16 +608,15 @@ const JustificationTable = ({
                                       "Sin horario"}
                                   </Typography>
                                 </Stack>
-
                                 <Stack
                                   direction="row"
                                   spacing={1}
                                   alignItems="center"
                                 >
-                                  <FingerprintIcon
+                                  <EditNoteIcon
                                     sx={{
                                       fontSize: 16,
-                                      color: theme.palette.text.secondary,
+                                      color: theme.palette.main,
                                     }}
                                   />
                                   <Typography
@@ -636,152 +624,60 @@ const JustificationTable = ({
                                     color="text.secondary"
                                     fontWeight={600}
                                   >
-                                    MÉTODO:
+                                    MOTIVO:
                                   </Typography>
-                                  <Chip
-                                    label={
-                                      justification.verificationMethod ===
-                                      "fingerprint"
-                                        ? "Huella Digital"
-                                        : justification.verificationMethod ||
-                                          "—"
-                                    }
-                                    size="small"
+                                  <Typography variant="body2">
+                                    {justification.reason}
+                                  </Typography>
+                                </Stack>
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  alignItems="center"
+                                >
+                                  <PersonIcon
                                     sx={{
-                                      height: 20,
-                                      fontSize: "0.65rem",
+                                      fontSize: 16,
+                                      color: theme.palette.main,
                                     }}
                                   />
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    fontWeight={600}
+                                  >
+                                    REVISADO POR:
+                                  </Typography>
+                                  <Typography variant="body2">
+                                    {`${justification.approvedBy?.name || ""} ${justification.approvedBy?.firstSurname || ""} ${justification.approvedBy?.secondSurname || ""}`}
+                                  </Typography>
                                 </Stack>
-
-                                <Divider />
-
-                                {/* Justificación */}
-                                {justification.justification && (
-                                  <Stack spacing={1.5}>
-                                    <Stack
-                                      direction="row"
-                                      spacing={1}
-                                      alignItems="center"
-                                    >
-                                      <CheckCircleIcon
-                                        sx={{
-                                          fontSize: 16,
-                                          color: theme.palette.main,
-                                        }}
-                                      />
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        fontWeight={600}
-                                      >
-                                        JUSTIFICACIÓN:
-                                      </Typography>
-                                      <Chip
-                                        icon={
-                                          justification.justification
-                                            .approved ? (
-                                            <CheckCircleIcon
-                                              sx={{ fontSize: 16 }}
-                                            />
-                                          ) : (
-                                            <PendingIcon
-                                              sx={{ fontSize: 16 }}
-                                            />
-                                          )
-                                        }
-                                        label={
-                                          justification.justification.approved
-                                            ? "Aprobada"
-                                            : "Pendiente"
-                                        }
-                                        size="small"
-                                        sx={{
-                                          fontSize: "0.7rem",
-                                          height: 24,
-                                          fontWeight: 700,
-                                          bgcolor: justification.justification
-                                            .approved
-                                            ? theme.palette.success.main
-                                            : theme.palette.warning.main,
-                                          color: "white",
-                                          "& .MuiChip-icon": {
-                                            color: "white",
-                                          },
-                                        }}
-                                      />
-                                    </Stack>
-                                    <Stack
-                                      direction="row"
-                                      spacing={1}
-                                      alignItems="center"
-                                    >
-                                      <EditNoteIcon
-                                        sx={{
-                                          fontSize: 16,
-                                          color: theme.palette.main,
-                                        }}
-                                      />
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        fontWeight={600}
-                                      >
-                                        MOTIVO:
-                                      </Typography>
-                                      <Typography variant="body2">
-                                        {justification.justification.reason}
-                                      </Typography>
-                                    </Stack>
-                                    <Stack
-                                      direction="row"
-                                      spacing={1}
-                                      alignItems="center"
-                                    >
-                                      <PersonIcon
-                                        sx={{
-                                          fontSize: 16,
-                                          color: theme.palette.main,
-                                        }}
-                                      />
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        fontWeight={600}
-                                      >
-                                        APROBADO POR:
-                                      </Typography>
-                                      <Typography variant="body2">
-                                        {`${justification.justification.approvedBy.name} ${justification.justification.approvedBy.firstSurname} ${justification.justification.approvedBy.secondSurname}`}
-                                      </Typography>
-                                    </Stack>
-                                    <Stack
-                                      direction="row"
-                                      spacing={1}
-                                      alignItems="center"
-                                    >
-                                      <EventAvailableIcon
-                                        sx={{
-                                          fontSize: 16,
-                                          color: theme.palette.main,
-                                        }}
-                                      />
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        fontWeight={600}
-                                      >
-                                        FECHA DE APROBACIÓN:
-                                      </Typography>
-                                      <Typography variant="body2">
-                                        {formatDateTime(
-                                          justification.justification
-                                            .approvedAt,
-                                        )}
-                                      </Typography>
-                                    </Stack>
-                                  </Stack>
-                                )}
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  alignItems="center"
+                                >
+                                  <EventAvailableIcon
+                                    sx={{
+                                      fontSize: 16,
+                                      color: theme.palette.main,
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    fontWeight={600}
+                                  >
+                                    FECHA DE REVISIÓN:
+                                  </Typography>
+                                  <Typography variant="body2">
+                                    {format(
+                                      parseISO(justification.updatedAt),
+                                      "dd/MM/yyyy",
+                                      { locale: es },
+                                    )}
+                                  </Typography>
+                                </Stack>
                               </Stack>
                             </Stack>
                           </Box>
@@ -794,8 +690,7 @@ const JustificationTable = ({
             </TableBody>
           </Table>
         </TableContainer>
-
-        {/* Menú de Acciones Mobile */}
+        {/* Menu de Acciones Mobile*/}
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
@@ -807,56 +702,48 @@ const JustificationTable = ({
               sx: {
                 mt: 0.5,
                 minWidth: 160,
-                boxShadow: theme.shadows[4],
+                boxShadow: 1,
               },
             },
           }}
         >
-          {/* {selectedJustification &&
-            needsJustification(selectedJustification) &&
-            !selectedJustification.justification && (
-              <MenuItem onClick={handleJustify}>
-                <ListItemIcon>
-                  <CheckIcon fontSize="small" color="secondary" />
-                </ListItemIcon>
-                <ListItemText>Justificar</ListItemText>
-              </MenuItem>
-            )}
-          {selectedJustification && selectedJustification.justification && (
-            <MenuItem onClick={handleDeleteJustification}>
-              <ListItemIcon>
-                <CloseIcon fontSize="small" color="secondary" />
-              </ListItemIcon>
-              <ListItemText>Anular justificación</ListItemText>
-            </MenuItem>
-          )} */}
-
-          <MenuItem onClick={handleEdit}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText>Editar</ListItemText>
-          </MenuItem>
-          <Divider />
-          <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>Eliminar</ListItemText>
-          </MenuItem>
+          {menuItems}
         </Menu>
+        {console.log(selectedJustification)}
+        <JustificationDrawer
+          open={drawer.open}
+          onClose={close}
+          mode={drawer.mode}
+          justification={selectedJustification}
+          schedules={schedules || []}
+          users={[]}
+          onSubmit={async (payload, files) => {
+            if (drawer.mode === "edit") {
+              await updateJustification(
+                selectedJustification._id,
+                payload,
+                files,
+              );
+            } else if (drawer.mode === "approve" || drawer.mode === "reject") {
+              await updateJustificationStatus(
+                selectedJustification._id,
+                payload,
+              );
+            }
+            onRefresh();
+          }}
+        />
       </>
     );
   }
 
-  // =============== VISTA DESKTOP (COLAPSABLE) ===============
+  // =============== VISTA DESKTOP ===============
   return (
     <TableContainer
       component={Paper}
       sx={{
         borderRadius: 2,
-        //boxShadow: theme.shadows[2],
-        overflow: "hidden",
+        //overflow: "hidden",
       }}
     >
       <Table sx={{ minWidth: 900 }}>
@@ -904,7 +791,6 @@ const JustificationTable = ({
         <TableBody>
           {sortedJustifications.map((justification, index) => {
             const fullName = getFullName(justification.userId);
-            const typeConfig = getTypeConfig(justification.type);
             const statusConfig = getStatusConfig(justification.status);
 
             return (
@@ -968,7 +854,6 @@ const JustificationTable = ({
                   {/* Estado */}
                   <TableCell align="center">
                     <Chip
-                      //icon={getStatusIcon(justification.status)}
                       label={formatStatus(justification.status)}
                       size="small"
                       sx={{
@@ -976,11 +861,11 @@ const JustificationTable = ({
                         fontSize: "0.75rem",
                         bgcolor: statusConfig.bgcolor,
                         color: statusConfig.color,
-                        //border: `1px solid ${alpha(statusConfig.color, 0.5)}`,
-                        //borderRadius: 1,
-                        /*"& .MuiChip-icon": {
+                        border: `1px solid ${alpha(statusConfig.color, 0.5)}`,
+                        borderRadius: 1,
+                        "& .MuiChip-icon": {
                           color: statusConfig.color,
-                        },*/
+                        },
                       }}
                     />
                   </TableCell>

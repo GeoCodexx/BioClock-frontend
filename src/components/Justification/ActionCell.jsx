@@ -11,13 +11,6 @@ import {
   updateJustificationStatus,
 } from "../../services/justificationService";
 
-/*function buildFormData(fields, files = []) {
-  const fd = new FormData();
-  Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
-  files.forEach((file) => fd.append("files", file));
-  return fd;
-}*/
-
 export default function ActionCell({ row, onRefresh, schedules }) {
   const [drawer, setDrawer] = useState({ open: false, mode: "create" });
 
@@ -26,7 +19,6 @@ export default function ActionCell({ row, onRefresh, schedules }) {
 
   const hasFiles = row.files?.length > 0;
   const isPending = row.status === "pending";
-
 
   return (
     <>

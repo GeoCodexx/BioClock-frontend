@@ -294,6 +294,18 @@ const Justifications = () => {
     }));
   }, []);
 
+  const handleCloseDrawer = useCallback(() => {
+    setOpenDrawer(false);
+  }, []);
+
+  const handleSubmitDrawer = useCallback(
+    async (payload, files) => {
+      await createJustification(payload, files);
+      refreshJustifications();
+    },
+    [createJustification, refreshJustifications],
+  );
+
   // Memorizar valores reutilizables
   const breadcrumbItems = useMemo(
     () => (
@@ -494,7 +506,7 @@ const Justifications = () => {
                 sx={{ width: "100%" }}
               >
                 {can("justifications:create") && (
-                  <FloatingAddButton onClick={handleOpenDialog} />
+                  <FloatingAddButton onClick={() => setOpenDrawer(true)} />
                 )}
               </Stack>
               <JustificationSearchBar
@@ -576,31 +588,16 @@ const Justifications = () => {
                 </Box>
                 <Stack direction="row" spacing={1} alignItems="center">
                   {can("justifications:create") && (
-                    <>
-                      <Tooltip title="Nueva justificación">
-                        <Button
-                          variant="contained"
-                          startIcon={<AddIcon />}
-                          onClick={() => setOpenDrawer(true)}
-                          sx={{ minWidth: 140 }}
-                        >
-                          Nuevo
-                        </Button>
-                      </Tooltip>
-
-                      <JustificationDrawer
-                        open={openDrawer}
-                        onClose={() => setOpenDrawer(false)}
-                        mode="create"
-                        schedules={schedules}
-                        users={users}
-                        onSubmit={async (payload, files) => {
-                          // console.log("payload: ", payload);
-                          await createJustification(payload, files);
-                          refreshJustifications();
-                        }}
-                      />
-                    </>
+                    <Tooltip title="Nueva justificación">
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setOpenDrawer(true)}
+                        sx={{ minWidth: 140 }}
+                      >
+                        Nuevo
+                      </Button>
+                    </Tooltip>
                   )}
                   {/* {can("justifications:export") && (
                     <AttendanceExportButtons justifications={justifications} />
@@ -733,6 +730,14 @@ const Justifications = () => {
         deleteError={deleteState.error}
         itemName="asistencia"
       /> */}
+      <JustificationDrawer
+        open={openDrawer}
+        onClose={handleCloseDrawer}
+        mode="create"
+        schedules={schedules}
+        users={users}
+        onSubmit={handleSubmitDrawer}
+      />
     </Box>
   );
 };

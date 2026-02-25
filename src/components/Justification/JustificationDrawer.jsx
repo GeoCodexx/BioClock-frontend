@@ -28,6 +28,10 @@ import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { format, parse, parseISO } from "date-fns";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -314,6 +318,7 @@ function FilePreviewGrid({ files }) {
       {files.map((filePath, i) => {
         const filename = filePath.split("/").pop();
         const img = isImage(filename);
+        const fileUrl = `${import.meta.env.VITE_REACT_APP_API_URL}${filePath}`;
 
         return (
           <Box
@@ -328,7 +333,7 @@ function FilePreviewGrid({ files }) {
             {img && (
               <Box
                 component="img"
-                src={filePath}
+                src={fileUrl}
                 alt={filename}
                 sx={{
                   width: "100%",
@@ -364,7 +369,7 @@ function FilePreviewGrid({ files }) {
                 <IconButton
                   size="small"
                   component="a"
-                  href={filePath}
+                  href={fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -411,7 +416,7 @@ export default function JustificationDrawer({
   const [form, setForm] = useState({
     userId: "",
     scheduleId: "",
-    date: "",
+    date: null,
     reason: "",
   });
   const [newFiles, setNewFiles] = useState([]);
@@ -431,12 +436,12 @@ export default function JustificationDrawer({
         scheduleId:
           justification.scheduleId?._id || justification.scheduleId || "",
         date: justification.date
-          ? new Date(justification.date).toISOString().split("T")[0]
-          : "",
+          ? parse(justification.date, "yyyy-MM-dd", new Date())
+          : null,
         reason: justification.reason || "",
       });
     } else if (open && mode === "create") {
-      setForm({ userId: "", scheduleId: "", date: "", reason: "" });
+      setForm({ userId: "", scheduleId: "", date: null, reason: "" });
     }
   }, [open, mode, justification]);
 
@@ -459,7 +464,10 @@ export default function JustificationDrawer({
           ? { status: "approved" }
           : mode === "reject"
             ? { status: "rejected" }
-            : { ...form };
+            : {
+                ...form,
+                date: form.date ? format(form.date, "yyyy-MM-dd") : null,
+              };
 
       await onSubmit?.(payload, newFiles);
       setFeedback({
@@ -627,18 +635,26 @@ export default function JustificationDrawer({
             </TextField>
 
             {/* Date */}
-            <TextField
-              label="Fecha a justificar"
-              name="date"
-              type="date"
-              value={form.date}
-              onChange={handleField}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-              size="small"
-              required
-              disabled={mode === "edit" && justification?.status !== "pending"}
-            />
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Fecha a justificar"
+                name="date"
+                format="dd/MM/yyyy"
+                value={form.date}
+                onChange={handleField}
+                disableFuture
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    fullWidth: true,
+                    required: true,
+                  },
+                }}
+                disabled={
+                  mode === "edit" && justification?.status !== "pending"
+                }
+              />
+            </LocalizationProvider>
 
             {/* Reason */}
             <TextField
@@ -777,7 +793,6 @@ export default function JustificationDrawer({
       )}
     </Box>
   );
-
 
   return (
     <Drawer
