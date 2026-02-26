@@ -48,7 +48,6 @@ import { getSchedules } from "../services/scheduleService";
 import SummaryCards from "../components/Reports/GeneralReport/SummaryCards";
 import "jspdf-autotable";
 import GeneralReportTable from "../components/Reports/GeneralReport/GeneralReportTable";
-/*import GeneralReportExportButtons from "../components/Reports/GeneralReport/GeneralReportExportButtons";*/
 import { SafeSelect } from "../components/common/SafeSelect";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
@@ -72,14 +71,6 @@ const STATUS_OPTIONS = [
   { value: "justified", label: "Justificado" },
 ];
 
-/*const STATUS_LABELS = {
-  on_time: "A tiempo",
-  late: "Tardanza",
-  early_exit: "Salida temprana",
-  imcomplete: "Incompleto",
-  absent: "Ausente",
-  justified: "Justificado",
-};*/
 
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25, 50, 100];
 
@@ -215,11 +206,6 @@ const FiltersCard = memo(
     onChangeViewMode,
     viewMode,
     totalRecords,
-    /*currentRecords,
-    loading,*/
-    //records,
-    //date,
-    //isMobile,
     error,
     page,
     currentMonth,
@@ -480,21 +466,7 @@ const FiltersCard = memo(
                 </ToggleButton>
               </ToggleButtonGroup>
             }
-            {/* <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ display: { xs: "none", sm: "block" } }}
-            >
-              {loading ? (
-                <Skeleton width={200} />
-              ) : (
-                <>
-                  Mostrando <strong>{currentRecords}</strong> de{" "}
-                  <strong>{totalRecords}</strong> registros
-                </>
-              )}
-            </Typography> */}
-            {/* <ExportButtons records={records} date={date} isMobile={isMobile} /> */}
+
             <Stack
               direction={{ xs: "column", sm: "row" }}
               spacing={1}
@@ -540,31 +512,6 @@ const FiltersCard = memo(
 );
 
 FiltersCard.displayName = "FiltersCard";
-
-// Componente de Loading
-/*const LoadingSkeleton = () => (
-  <Card elevation={0} sx={{ borderRadius: 2 }}>
-    <CardContent>
-      <Stack spacing={2}>
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} variant="rectangular" height={60} />
-        ))}
-      </Stack>
-    </CardContent>
-  </Card>
-);*/
-
-/*const TableSkeleton = () => (
-  <Card elevation={0} sx={{ borderRadius: 2 }}>
-    <CardContent>
-      <Stack spacing={2}>
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} variant="rectangular" height={55} />
-        ))}
-      </Stack>
-    </CardContent>
-  </Card>
-);*/
 
 // Componente Principal
 export default function GeneralReportPage() {

@@ -407,6 +407,10 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
               sx: {
                 mt: 0.5,
                 minWidth: 160,
+                border: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "1px solid rgba(255, 255, 255, 0.1)"
+                    : "none",
               },
             },
           }}

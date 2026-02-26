@@ -16,6 +16,7 @@ import {
   Tooltip,
   useTheme,
   useMediaQuery,
+  Autocomplete,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
@@ -32,6 +33,8 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { format, parse, parseISO } from "date-fns";
+import useSnackbarStore from "../../store/useSnackbarStore";
+import { es } from "date-fns/locale";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -409,6 +412,7 @@ export default function JustificationDrawer({
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { showSuccess } = useSnackbarStore();
 
   const meta = MODE_META[mode];
 
@@ -481,10 +485,11 @@ export default function JustificationDrawer({
         message: "Acción realizada correctamente.",
       });
       setTimeout(onClose, 900);
+      showSuccess("Acción realizada correctamente.");
     } catch (err) {
       setFeedback({
         type: "error",
-        message: err?.response?.data?.message || "Ocurrió un error inesperado.",
+        message: err.message || "Ocurrió un error inesperado.",
       });
     } finally {
       setLoading(false);
@@ -603,22 +608,32 @@ export default function JustificationDrawer({
           <Stack spacing={2.5}>
             {/* User — only on create */}
             {mode === "create" && (
-              <TextField
-                select
-                label="Usuario"
-                name="userId"
-                value={form.userId}
-                onChange={(e) => handleChange(e.target.name, e.target.value)}
-                fullWidth
-                size="small"
-                required
-              >
-                {users.map((u) => (
-                  <MenuItem key={u._id} value={u._id}>
-                    {u.name}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <Autocomplete
+                options={users || []}
+                getOptionLabel={(option) =>
+                  `${option.name} ${option.firstSurname ?? ""}`
+                }
+                value={(users || []).find((u) => u._id === form.userId) || null}
+                onChange={(event, newValue) => {
+                  handleChange("userId", newValue?._id || "");
+                }}
+                isOptionEqualToValue={(option, value) =>
+                  option._id === value._id
+                }
+                renderOption={(props, option) => (
+                  <li {...props} key={option._id}>
+                    {`${option.name} ${option.firstSurname} ${option.secondSurname}`}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Usuario"
+                    required
+                    size="small"
+                  />
+                )}
+              />
             )}
 
             {/* Schedule */}
@@ -641,7 +656,10 @@ export default function JustificationDrawer({
             </TextField>
 
             {/* Date */}
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <LocalizationProvider
+              dateAdapter={AdapterDateFns}
+              adapterLocale={es}
+            >
               <DatePicker
                 label="Fecha a justificar"
                 name="date"

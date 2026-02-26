@@ -21,6 +21,7 @@ import {
 } from "@mui/icons-material";
 import { saveAs } from "file-saver";
 import { getFileExport } from "../../../services/reportService";
+import useSnackbarStore from "../../../store/useSnackbarStore";
 
 /**
  * Componente de botones de exportación para asistencias
@@ -48,6 +49,7 @@ export default function AttendanceExportButtons({
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const {showError } = useSnackbarStore();
 
   const isDisabled = totalRecords === 0;
 
@@ -143,7 +145,7 @@ export default function AttendanceExportButtons({
         }
       }
 
-      alert(errorMessage);
+      showError(errorMessage);
     } finally {
       setExporting(false);
     }

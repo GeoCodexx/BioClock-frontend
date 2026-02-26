@@ -618,6 +618,10 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                 mt: 0.5,
                 minWidth: 160,
                 boxShadow: theme.shadows[4],
+                border: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "1px solid rgba(255, 255, 255, 0.1)"
+                    : "none",
               },
             },
           }}

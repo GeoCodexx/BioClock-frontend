@@ -317,6 +317,10 @@ const MobileActionMenu = memo(({ anchorEl, onClose, onEdit, onDelete }) => (
           mt: 0.5,
           minWidth: 160,
           borderRadius: 2,
+          border: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "1px solid rgba(255, 255, 255, 0.1)"
+                    : "none",
         },
       },
     }}
