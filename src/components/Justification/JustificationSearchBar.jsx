@@ -1,7 +1,7 @@
-import { 
-  Box, 
-  TextField, 
-  InputAdornment, 
+import {
+  Box,
+  TextField,
+  InputAdornment,
   IconButton,
   useTheme,
   useMediaQuery,
@@ -12,26 +12,28 @@ export default function JustificationSearchBar({
   searchInput,
   setSearchInput,
   onSearch,
+  handleCloseSearchBar = null,
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleClear = () => {
-    setSearchInput("");
+    if (handleCloseSearchBar) {
+      handleCloseSearchBar();
+      setSearchInput("");
+    } else {
+      setSearchInput("");
+    }
   };
 
   const handleKeyDown = (e) => {
-  if (e.key === "Escape" && searchInput) {
-    setSearchInput("");
-  }
-};
+    if (e.key === "Escape" && searchInput) {
+      setSearchInput("");
+    }
+  };
 
   return (
-    <Box 
-      component="form" 
-      onSubmit={onSearch} 
-      sx={{ width: "100%" }}
-    >
+    <Box component="form" onSubmit={onSearch} sx={{ width: "100%" }}>
       <TextField
         fullWidth
         label="Buscar por usuario"
@@ -47,7 +49,7 @@ export default function JustificationSearchBar({
                 <Search color="action" fontSize="small" />
               </InputAdornment>
             ),
-            endAdornment: searchInput && (
+            endAdornment: isMobile ? (
               <InputAdornment position="end">
                 <IconButton
                   size="small"
@@ -62,6 +64,23 @@ export default function JustificationSearchBar({
                   <Clear fontSize="small" />
                 </IconButton>
               </InputAdornment>
+            ) : (
+              searchInput && (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={handleClear}
+                    edge="end"
+                    sx={{
+                      "&:hover": {
+                        bgcolor: theme.palette.action.hover,
+                      },
+                    }}
+                  >
+                    <Clear fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              )
             ),
           },
         }}

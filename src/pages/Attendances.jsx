@@ -14,6 +14,8 @@ import {
   Divider,
   Tooltip,
   IconButton,
+  Paper,
+  Grid,
 } from "@mui/material";
 import {
   createAttendance,
@@ -619,82 +621,117 @@ export default function Attendances() {
             </Stack>
           ) : (
             <>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                spacing={2}
-              >
-                <Box sx={{ flex: 1, maxWidth: 400 }}>
+              <Grid container alignItems="center" spacing={2}>
+                {/* Buscador */}
+                <Grid size={{ xs: 6 }}>
                   <AttendanceSearchBar
                     searchInput={searchInput}
                     setSearchInput={setSearchInput}
                     onSearch={handleSearch}
                   />
-                </Box>
-                <Stack direction="row" spacing={1} alignItems="center">
+                </Grid>
+                {/* Acciones */}
+                <Grid
+                  size={{ xs: 6 }}
+                  display="flex"
+                  justifyContent="flex-end"
+                  alignItems="center"
+                  gap={1.5}
+                >
                   {can("attendances:create") && (
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      onClick={handleOpenDialog}
-                      sx={{ minWidth: 140 }}
-                    >
-                      Nuevo
-                    </Button>
+                    <Tooltip title="Nueva Asistencia">
+                      <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={handleOpenDialog}
+                        sx={{ minWidth: 140 }}
+                      >
+                        Nuevo
+                      </Button>
+                    </Tooltip>
                   )}
                   {can("attendances:export") && (
                     <AttendanceExportButtons attendances={attendances} />
                   )}
-                </Stack>
-              </Stack>
-              <Stack spacing={2} sx={{ mt: 2 }}>
-                {/* Filtros de fecha */}
-                <AttendanceDateRangeFilter
-                  startDate={filters.startDate}
-                  endDate={filters.endDate}
-                  onStartDateChange={handleStartDateChange}
-                  onEndDateChange={handleEndDateChange}
-                />
+                </Grid>
+              </Grid>
 
-                {/* Filtros de estado y tipo */}
-                <Stack direction={isMobile ? "column" : "row"} spacing={1}>
-                  <Box sx={{ flex: 1 }}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  mt: 3,
+                  p: 2,
+                  borderRadius: 3,
+                  backgroundColor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? theme.palette.background.paper
+                      : "#fafafa",
+                }}
+              >
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={1}
+                  sx={{ mb: 2.5 }}
+                >
+                  <FilterListIcon color="primary" />
+                  <Typography variant="h6">Filtros avanzados</Typography>
+                </Stack>
+
+                <Grid container spacing={2} alignItems="center">
+                  {/* Filtros de fecha */}
+                  <Grid size={{ xs: 4 }}>
+                    <AttendanceDateRangeFilter
+                      startDate={filters.startDate}
+                      endDate={filters.endDate}
+                      onStartDateChange={handleStartDateChange}
+                      onEndDateChange={handleEndDateChange}
+                    />
+                  </Grid>
+
+                  {/* Filtros de estado y tipo */}
+                  <Grid size={{ xs: 2.5 }}>
                     <AttendanceStatusFilter
                       status={filters.status}
                       onStatusChange={handleStatusChange}
                     />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
+                  </Grid>
+                  <Grid size={{ xs: 2.5 }}>
                     <AttendanceTypeFilter
                       type={filters.type}
                       onTypeChange={handleTypeChange}
                     />
-                  </Box>
-                </Stack>
+                  </Grid>
 
-                {/* Botones de filtros */}
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  {hasActiveFilters && (
+                  {/* Botones de filtros */}
+                  <Grid
+                    size={{ xs: 3 }}
+                    display="flex"
+                    justifyContent="flex-end"
+                    alignItems="center"
+                    gap={1}
+                  >
+                    {hasActiveFilters && (
+                      <Button
+                        variant="outlined"
+                        startIcon={<ClearIcon />}
+                        onClick={handleClearFilters}
+                        size="small"
+                      >
+                        Limpiar
+                      </Button>
+                    )}
                     <Button
-                      variant="outlined"
-                      startIcon={<ClearIcon />}
-                      onClick={handleClearFilters}
+                      variant="contained"
+                      startIcon={<FilterListIcon />}
+                      onClick={handleApplyFilters}
                       size="small"
                     >
-                      Limpiar
+                      Aplicar Filtros
                     </Button>
-                  )}
-                  <Button
-                    variant="contained"
-                    startIcon={<FilterListIcon />}
-                    onClick={handleApplyFilters}
-                    size="small"
-                  >
-                    Aplicar Filtros
-                  </Button>
-                </Stack>
-              </Stack>
+                  </Grid>
+                </Grid>
+              </Paper>
             </>
           )}
         </Box>

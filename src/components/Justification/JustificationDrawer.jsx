@@ -423,6 +423,8 @@ export default function JustificationDrawer({
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
 
+  const isValid = form.userId && form.scheduleId && form.date && form.reason;
+
   // Populate form when editing
   useEffect(() => {
     if (!open) {
@@ -446,8 +448,12 @@ export default function JustificationDrawer({
   }, [open, mode, justification]);
 
   // ── Handlers ──
-  const handleField = (e) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleChange = (name, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleAddFiles = (incoming) =>
     setNewFiles((prev) => [...prev, ...incoming]);
@@ -602,7 +608,7 @@ export default function JustificationDrawer({
                 label="Usuario"
                 name="userId"
                 value={form.userId}
-                onChange={handleField}
+                onChange={(e) => handleChange(e.target.name, e.target.value)}
                 fullWidth
                 size="small"
                 required
@@ -621,7 +627,7 @@ export default function JustificationDrawer({
               label="Turno"
               name="scheduleId"
               value={form.scheduleId}
-              onChange={handleField}
+              onChange={(e) => handleChange(e.target.name, e.target.value)}
               fullWidth
               size="small"
               required
@@ -641,7 +647,7 @@ export default function JustificationDrawer({
                 name="date"
                 format="dd/MM/yyyy"
                 value={form.date}
-                onChange={handleField}
+                onChange={(newValue) => handleChange("date", newValue)}
                 disableFuture
                 slotProps={{
                   textField: {
@@ -661,7 +667,7 @@ export default function JustificationDrawer({
               label="Motivo"
               name="reason"
               value={form.reason}
-              onChange={handleField}
+              onChange={(e) => handleChange(e.target.name, e.target.value)}
               fullWidth
               multiline
               minRows={3}
@@ -767,7 +773,7 @@ export default function JustificationDrawer({
                 variant="contained"
                 color={meta.color}
                 onClick={handleSubmit}
-                disabled={loading}
+                disabled={loading || (mode === "create" && !isValid)}
                 startIcon={
                   loading ? (
                     <CircularProgress size={16} color="inherit" />

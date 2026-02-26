@@ -9,8 +9,10 @@ import {
   Card,
   CircularProgress,
   Divider,
+  Grid,
   IconButton,
   Link,
+  Paper,
   Stack,
   Tooltip,
   Typography,
@@ -21,7 +23,6 @@ import { useThemeMode } from "../contexts/ThemeContext";
 import {
   createJustification,
   getPaginatedJustifications,
-  updateJustification,
 } from "../services/justificationService";
 import { Link as RouterLink } from "react-router-dom";
 import LoadingOverlay from "../components/common/LoadingOverlay";
@@ -30,7 +31,6 @@ import HomeIcon from "@mui/icons-material/Home";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { Add as AddIcon } from "@mui/icons-material";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import ClearIcon from "@mui/icons-material/Clear";
 import FloatingAddButton from "../components/common/FloatingAddButton";
 import JustificationSearchBar from "../components/Justification/JustificationSearchBar";
@@ -43,6 +43,9 @@ import JustificationDrawer from "../components/Justification/JustificationDrawer
 import { getUsers } from "../services/userService";
 import ExportButtons from "../components/Justification/ExportButtons";
 import { format } from "date-fns";
+import ActionBar from "../components/Justification/ActionBar";
+import JustificationFilterDrawer from "../components/Justification/FilterDrawer";
+import ActiveFilterChips from "../components/Justification/ActiveFilterChips";
 
 /*function buildFormData(fields, files = []) {
   const fd = new FormData();
@@ -57,7 +60,7 @@ const Justifications = () => {
   const theme = useTheme();
   const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  //const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
   const [justifications, setJustifications] = useState([]);
   const [schedules, setSchedules] = useState([]);
@@ -160,7 +163,7 @@ const Justifications = () => {
   ]);
 
   // Debounce para búsqueda
-  useEffect(() => {
+  /*useEffect(() => {
     const handler = setTimeout(() => {
       if (searchInput !== pagination.userName) {
         setPagination((prev) => ({
@@ -172,7 +175,18 @@ const Justifications = () => {
     }, 700);
 
     return () => clearTimeout(handler);
-  }, [searchInput, pagination.userName]);
+  }, [searchInput, pagination.userName]);*/
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setPagination((prev) => ({
+        ...prev,
+        userName: searchInput,
+        page: 0,
+      }));
+    }, 700);
+
+    return () => clearTimeout(handler);
+  }, [searchInput]);
 
   // Handlers con useCallback
   const refreshJustifications = useCallback(async () => {
@@ -270,6 +284,7 @@ const Justifications = () => {
     }));
   }, []);
 
+  // Manejar la busqueda en modo desktop:
   const handleSearch = useCallback(
     (e) => {
       e.preventDefault();
@@ -281,6 +296,11 @@ const Justifications = () => {
     },
     [searchInput],
   );
+
+  // Manejar la busqueda en modo mobile:
+  const handleSearchBarMobile = (value) => {
+    setSearchInput(value);
+  };
 
   const handleChangePage = useCallback((event, newPage) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
@@ -418,52 +438,13 @@ const Justifications = () => {
               <Box
                 sx={{
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent: "center",
                   alignItems: "center",
-                  gap: 1,
                 }}
               >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    Gestión de Justificaciones
-                  </Typography>
-                </Box>
-                <Tooltip
-                  title={
-                    !justifications || justifications.length === 0
-                      ? "No hay justificaciones para filtrar"
-                      : openFilters
-                        ? "Ocultar filtros"
-                        : "Mostrar filtros"
-                  }
-                >
-                  <span>
-                    <IconButton
-                      onClick={() => setOpenFilters((prev) => !prev)}
-                      disabled={!justifications || justifications.length === 0}
-                      sx={{
-                        bgcolor: theme.palette.background.paper,
-                        "&:hover": {
-                          bgcolor: theme.palette.action.hover,
-                        },
-                        "&:disabled": {
-                          bgcolor: theme.palette.action.disabledBackground,
-                        },
-                      }}
-                    >
-                      {openFilters ? <FilterListOffIcon /> : <FilterListIcon />}
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                {/* {can("justifications:export") && (
-                  <AttendanceExportButtons justifications={justifications} />
-                )} */}
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  Gestión de Justificaciones
+                </Typography>
               </Box>
             </Stack>
           ) : (
@@ -484,155 +465,133 @@ const Justifications = () => {
       </Card>
 
       {/* TOOLBAR CARD - Búsqueda y Acciones */}
-      <Card
-        sx={{
-          borderRadius: isMobile ? 2 : 3,
-          mb: 2,
-          boxShadow: theme.shadows[1],
-        }}
-      >
-        <Box
+
+      {isMobile ? (
+        <span>
+          {can("justifications:create") && (
+            <FloatingAddButton onClick={() => setOpenDrawer(true)} />
+          )}
+        </span>
+      ) : (
+        <Card
           sx={{
-            px: isMobile ? 2 : 3,
-            pt: isMobile ? 0 : 4,
-            pb: isMobile ? 1.5 : 4,
+            borderRadius: isMobile ? 2 : 3,
+            mb: 2,
+            boxShadow: theme.shadows[1],
           }}
         >
-          {isTablet ? (
-            <Stack spacing={2}>
-              <Stack
-                direction={isMobile ? "column" : "row"}
-                spacing={1}
-                sx={{ width: "100%" }}
+          <Box
+            sx={{
+              px: 3,
+              pt: 4,
+              pb: 4,
+            }}
+          >
+            {/* ===================== */}
+            {/* 🔹 NIVEL 1: HEADER */}
+            {/* ===================== */}
+            <Grid container alignItems="center" spacing={2}>
+              {/* Buscador */}
+              <Grid size={{ xs: 6 }}>
+                <JustificationSearchBar
+                  searchInput={searchInput}
+                  setSearchInput={setSearchInput}
+                  onSearch={handleSearch}
+                />
+              </Grid>
+
+              {/* Acciones */}
+              <Grid
+                size={{ xs: 6 }}
+                display="flex"
+                justifyContent="flex-end"
+                alignItems="center"
+                gap={1.5}
               >
                 {can("justifications:create") && (
-                  <FloatingAddButton onClick={() => setOpenDrawer(true)} />
-                )}
-              </Stack>
-              <JustificationSearchBar
-                searchInput={searchInput}
-                setSearchInput={setSearchInput}
-                onSearch={handleSearch}
-              />
-              {openFilters && (
-                <>
-                  <Stack spacing={2} sx={{ mt: 2 }}>
-                    {/* Filtros de fecha */}
-                    <JustificationDateRangeFilter
-                      startDate={filters.startDate}
-                      endDate={filters.endDate}
-                      onStartDateChange={handleStartDateChange}
-                      onEndDateChange={handleEndDateChange}
-                    />
-
-                    {/* Filtros de estado y turno */}
-                    <Stack direction={isMobile ? "column" : "row"} spacing={1}>
-                      <Box sx={{ flex: 1 }}>
-                        <JustificationScheduleFilter
-                          scheduleId={filters.scheduleId}
-                          onScheduleChange={handleScheduleChange}
-                          schedules={schedules}
-                        />
-                      </Box>
-                      <Box sx={{ flex: 1 }}>
-                        <JustificationStatusFilter
-                          status={filters.status}
-                          onStatusChange={handleStatusChange}
-                        />
-                      </Box>
-                    </Stack>
-
-                    {/* Botones de filtros */}
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      justifyContent="flex-end"
+                  <Tooltip title="Nueva justificación">
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={() => setOpenDrawer(true)}
+                      sx={{ minWidth: 150 }}
                     >
-                      {hasActiveFilters && (
-                        <Button
-                          variant="outlined"
-                          startIcon={<ClearIcon />}
-                          onClick={handleClearFilters}
-                          size="small"
-                        >
-                          Limpiar
-                        </Button>
-                      )}
-                      <Button
-                        variant="contained"
-                        startIcon={<FilterListIcon />}
-                        onClick={handleApplyFilters}
-                        size="small"
-                      >
-                        Aplicar Filtros
-                      </Button>
-                    </Stack>
-                  </Stack>
-                </>
-              )}
-            </Stack>
-          ) : (
-            <>
+                      Nuevo
+                    </Button>
+                  </Tooltip>
+                )}
+
+                {can("justifications:export") && (
+                  <ExportButtons
+                    filters={exportFilters}
+                    isDisabled={!justifications || justifications.length === 0}
+                    variant="desktop"
+                  />
+                )}
+              </Grid>
+            </Grid>
+
+            {/* ===================== */}
+            {/* 🔹 NIVEL 2: FILTROS */}
+            {/* ===================== */}
+            <Paper
+              variant="outlined"
+              sx={{
+                mt: 3,
+                p: 2,
+                borderRadius: 3,
+                backgroundColor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? theme.palette.background.paper
+                    : "#fafafa",
+              }}
+            >
               <Stack
                 direction="row"
-                justifyContent="space-between"
                 alignItems="center"
-                spacing={2}
+                spacing={1}
+                sx={{ mb: 2.5 }}
               >
-                <Box sx={{ flex: 1, maxWidth: 400 }}>
-                  <JustificationSearchBar
-                    searchInput={searchInput}
-                    setSearchInput={setSearchInput}
-                    onSearch={handleSearch}
-                  />
-                </Box>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  {can("justifications:create") && (
-                    <Tooltip title="Nueva justificación">
-                      <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setOpenDrawer(true)}
-                        sx={{ minWidth: 140 }}
-                      >
-                        Nuevo
-                      </Button>
-                    </Tooltip>
-                  )}
-                  {/* {can("justifications:export") && (
-                    <AttendanceExportButtons justifications={justifications} />
-                  )} */}
-                  <ExportButtons filters={exportFilters} />
-                </Stack>
+                <FilterListIcon color="primary" />
+                <Typography variant="h6">Filtros avanzados</Typography>
               </Stack>
-              <Stack spacing={2} sx={{ mt: 2 }}>
-                {/* Filtros de fecha */}
-                <JustificationDateRangeFilter
-                  startDate={filters.startDate}
-                  endDate={filters.endDate}
-                  onStartDateChange={handleStartDateChange}
-                  onEndDateChange={handleEndDateChange}
-                />
 
-                {/* Filtros de estado y tipo */}
-                <Stack direction={isMobile ? "column" : "row"} spacing={1}>
-                  <Box sx={{ flex: 1 }}>
-                    <JustificationScheduleFilter
-                      scheduleId={filters.scheduleId}
-                      onScheduleChange={handleScheduleChange}
-                      schedules={schedules}
-                    />
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <JustificationStatusFilter
-                      status={filters.status}
-                      onStatusChange={handleStatusChange}
-                    />
-                  </Box>
-                </Stack>
+              <Grid container spacing={2} alignItems="center">
+                {/* Fecha inicio */}
+                <Grid size={{ xs: 4 }}>
+                  <JustificationDateRangeFilter
+                    startDate={filters.startDate}
+                    endDate={filters.endDate}
+                    onStartDateChange={handleStartDateChange}
+                    onEndDateChange={handleEndDateChange}
+                  />
+                </Grid>
 
-                {/* Botones de filtros */}
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                {/* Horario */}
+                <Grid size={{ xs: 2.5 }}>
+                  <JustificationScheduleFilter
+                    scheduleId={filters.scheduleId}
+                    onScheduleChange={handleScheduleChange}
+                    schedules={schedules}
+                  />
+                </Grid>
+
+                {/* Estado */}
+                <Grid size={{ xs: 2.5 }}>
+                  <JustificationStatusFilter
+                    status={filters.status}
+                    onStatusChange={handleStatusChange}
+                  />
+                </Grid>
+
+                {/* Botones */}
+                <Grid
+                  size={{ xs: 3 }}
+                  display="flex"
+                  justifyContent="flex-end"
+                  alignItems="center"
+                  gap={1}
+                >
                   {hasActiveFilters && (
                     <Button
                       variant="outlined"
@@ -643,6 +602,7 @@ const Justifications = () => {
                       Limpiar
                     </Button>
                   )}
+
                   <Button
                     variant="contained"
                     startIcon={<FilterListIcon />}
@@ -651,18 +611,106 @@ const Justifications = () => {
                   >
                     Aplicar Filtros
                   </Button>
-                </Stack>
-              </Stack>
-            </>
-          )}
-        </Box>
-      </Card>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Box>{" "}
+        </Card>
+      )}
 
       {/* Mensaje de error global */}
       {error && (
         <Alert severity="error" sx={{ mb: 2, borderRadius: isMobile ? 2 : 3 }}>
           {error}
         </Alert>
+      )}
+
+      {/* ACTIONBAR MODO MOBILE */}
+      {isMobile && (
+        <ActionBar
+          searchInput={searchInput}
+          setSearchInput={setSearchInput}
+          onSearch={handleSearch}
+          onFilterClick={() => setOpenFilters(true)}
+          filters={exportFilters}
+          isDisabled={!justifications || justifications.length === 0}
+          numberOfActiveFilters={
+            [
+              //pagination.userName,
+              pagination.startDate,
+              pagination.endDate,
+              pagination.status,
+              pagination.scheduleId,
+            ].filter(Boolean).length
+          }
+        />
+      )}
+
+      {isMobile && (
+        <JustificationFilterDrawer
+          open={openFilters}
+          onClose={() => setOpenFilters(false)}
+          onApply={handleApplyFilters}
+        >
+          <JustificationDateRangeFilter
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            onStartDateChange={handleStartDateChange}
+            onEndDateChange={handleEndDateChange}
+          />
+
+          <JustificationScheduleFilter
+            scheduleId={filters.scheduleId}
+            onScheduleChange={handleScheduleChange}
+            schedules={schedules}
+          />
+
+          <JustificationStatusFilter
+            status={filters.status}
+            onStatusChange={handleStatusChange}
+          />
+
+          {hasActiveFilters && (
+            <Button
+              variant="outlined"
+              startIcon={<ClearIcon />}
+              onClick={handleClearFilters}
+            >
+              Limpiar filtros
+            </Button>
+          )}
+        </JustificationFilterDrawer>
+      )}
+
+      {/* FILTROS ACTIVOS MODO MOBIL*/}
+      {isMobile && hasActiveFilters && (
+        <ActiveFilterChips
+          filters={{
+            userName: pagination.userName,
+            startDate: filters.startDate,
+            endDate: filters.endDate,
+            status: filters.status,
+            scheduleId: filters.scheduleId,
+          }}
+          onRemove={(key) => {
+            if (key === "userName") {
+              setSearchInput("");
+              setPagination((prev) => ({ ...prev, userName: "", page: 0 }));
+              return;
+            }
+
+            setFilters((prev) => ({
+              ...prev,
+              [key]: key.includes("Date") ? null : "",
+            }));
+
+            setPagination((prev) => ({
+              ...prev,
+              [key]: key.includes("Date") ? null : "",
+              page: 0,
+            }));
+          }}
+        />
       )}
 
       {/* TABLE CARD */}
@@ -711,25 +759,6 @@ const Justifications = () => {
           }}
         />
       </Card>
-
-      {/* DIÁLOGOS */}
-      {
-        // <AttendanceDialog
-        //   open={dialog.open}
-        //   onClose={handleClose}
-        //   editJustification={dialog.editJustification}
-        //   formError={dialog.error}
-        //   onSubmit={handleSubmit}
-        // />
-      }
-
-      {/* <DeleteConfirmDialog
-        open={!!deleteState.id}
-        onClose={handleCloseDelete}
-        onConfirm={confirmDelete}
-        deleteError={deleteState.error}
-        itemName="asistencia"
-      /> */}
       <JustificationDrawer
         open={openDrawer}
         onClose={handleCloseDrawer}
