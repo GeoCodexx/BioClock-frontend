@@ -42,7 +42,7 @@ import { getSchedules } from "../services/scheduleService";
 import JustificationDrawer from "../components/Justification/JustificationDrawer";
 import { getUsers } from "../services/userService";
 import ExportButtons from "../components/Justification/ExportButtons";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import ActionBar from "../components/Justification/ActionBar";
 import JustificationFilterDrawer from "../components/Justification/FilterDrawer";
 import ActiveFilterChips from "../components/Justification/ActiveFilterChips";
@@ -367,6 +367,7 @@ const Justifications = () => {
         justifications={justifications}
         schedules={schedules}
         onRefresh={refreshJustifications}
+        users={users}
       />
     ),
     [justifications],
@@ -385,6 +386,79 @@ const Justifications = () => {
     }),
     [pagination.userName, filters],
   );
+
+  // Helper para transformar clave y valor para chips activos en tabla mobile
+  const getReadableFilters = () => {
+    const readable = {};
+
+    // 🔹 Fechas combinadas
+    if (filters.startDate && filters.endDate) {
+      readable["Fechas"] =
+        `${format(filters.startDate, "dd/MM/yyyy")} — ${format(
+          filters.endDate,
+          "dd/MM/yyyy",
+        )}`;
+    }
+
+    // 🔹 Estado
+    if (filters.status) {
+      readable["Estado"] = {
+        approved: "Aprobado",
+        pending: "Pendiente",
+        rejected: "Rechazado",
+      }[filters.status];
+    }
+
+    // 🔹 Horario
+    if (filters.scheduleId) {
+      const scheduleName = schedules.find(
+        (s) => s._id === filters.scheduleId,
+      )?.name;
+
+      if (scheduleName) {
+        readable["Horario"] = scheduleName;
+      }
+    }
+
+    return readable;
+  };
+
+  const handleRemoveFilter = (label) => {
+    if (label === "Fechas") {
+      setFilters((prev) => ({
+        ...prev,
+        startDate: null,
+        endDate: null,
+      }));
+
+      setPagination((prev) => ({
+        ...prev,
+        startDate: null,
+        endDate: null,
+        page: 0,
+      }));
+      return;
+    }
+
+    const reverseMap = {
+      Estado: "status",
+      Horario: "scheduleId",
+    };
+
+    const key = reverseMap[label];
+
+    if (key) {
+      setFilters((prev) => ({
+        ...prev,
+        [key]: "",
+      }));
+      setPagination((prev) => ({
+        ...prev,
+        [key]: "",
+        page: 0,
+      }));
+    }
+  };
 
   // Verifica si hay filtros activos
   const hasActiveFilters =
@@ -685,31 +759,8 @@ const Justifications = () => {
       {/* FILTROS ACTIVOS MODO MOBIL*/}
       {isMobile && hasActiveFilters && (
         <ActiveFilterChips
-          filters={{
-            userName: pagination.userName,
-            startDate: filters.startDate,
-            endDate: filters.endDate,
-            status: filters.status,
-            scheduleId: filters.scheduleId,
-          }}
-          onRemove={(key) => {
-            if (key === "userName") {
-              setSearchInput("");
-              setPagination((prev) => ({ ...prev, userName: "", page: 0 }));
-              return;
-            }
-
-            setFilters((prev) => ({
-              ...prev,
-              [key]: key.includes("Date") ? null : "",
-            }));
-
-            setPagination((prev) => ({
-              ...prev,
-              [key]: key.includes("Date") ? null : "",
-              page: 0,
-            }));
-          }}
+          filters={getReadableFilters()}
+          onRemove={handleRemoveFilter}
         />
       )}
 

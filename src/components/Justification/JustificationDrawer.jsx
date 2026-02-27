@@ -387,6 +387,14 @@ function FilePreviewGrid({ files }) {
   );
 }
 
+//Helper
+const sanitizeReason = (text) => {
+  return text
+    .replace(/\r?\n|\r/g, " ") // quitar saltos de línea
+    .replace(/\s+/g, " ") // quitar espacios múltiples
+    .trim(); // quitar espacios al inicio y final
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 /**
@@ -477,6 +485,7 @@ export default function JustificationDrawer({
             : {
                 ...form,
                 date: form.date ? format(form.date, "yyyy-MM-dd") : null,
+                reason: sanitizeReason(form.reason),
               };
 
       await onSubmit?.(payload, newFiles);
@@ -613,18 +622,13 @@ export default function JustificationDrawer({
                 getOptionLabel={(option) =>
                   `${option.name} ${option.firstSurname ?? ""}`
                 }
-                value={(users || []).find((u) => u._id === form.userId) || null}
+                value={users.find((u) => u._id === form.userId) ?? null}
                 onChange={(event, newValue) => {
                   handleChange("userId", newValue?._id || "");
                 }}
                 isOptionEqualToValue={(option, value) =>
                   option._id === value._id
                 }
-                renderOption={(props, option) => (
-                  <li {...props} key={option._id}>
-                    {`${option.name} ${option.firstSurname} ${option.secondSurname}`}
-                  </li>
-                )}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -633,6 +637,18 @@ export default function JustificationDrawer({
                     size="small"
                   />
                 )}
+              />
+            )}
+
+            {mode === "edit" && (
+              <TextField
+                label="Usuario"
+                size="small"
+                value={`${justification?.userId?.name ?? ""} ${
+                  justification?.userId?.firstSurname ?? ""
+                } ${justification?.userId?.secondSurname ?? ""}`}
+                disabled
+                fullWidth
               />
             )}
 
@@ -817,6 +833,9 @@ export default function JustificationDrawer({
       )}
     </Box>
   );
+
+  console.log("form.userId:", form.userId);
+  console.log("users:", users);
 
   return (
     <Drawer

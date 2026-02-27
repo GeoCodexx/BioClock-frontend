@@ -22,6 +22,8 @@ export default function ActiveFilterChips({
       {active.map(([key, value]) => (
         <Chip
           key={key}
+          variant="outlined"
+          color="primary"
           label={`${key}: ${value}`}
           onDelete={() => onRemove(key)}
           size="small"

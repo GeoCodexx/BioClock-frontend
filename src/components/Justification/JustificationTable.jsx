@@ -232,6 +232,7 @@ const JustificationTable = ({
   justifications = [],
   onRefresh,
   schedules,
+  users,
   loading = false,
 }) => {
   const theme = useTheme();
@@ -506,7 +507,13 @@ const JustificationTable = ({
                               </Stack>
                             </Stack>
                           </Stack>
-                          <Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                            }}
+                          >
                             <StatusChip status={j.status} />
                           </Box>
                         </Stack>
