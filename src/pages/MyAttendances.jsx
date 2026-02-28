@@ -1,13 +1,6 @@
 import React, { useState, useMemo, useCallback, memo, useEffect } from "react";
 
-import {
-  format,
-  startOfWeek,
-  addDays,
-  //isToday,
-  parseISO,
-  //isSameDay,
-} from "date-fns";
+import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   CheckCircle,
@@ -17,34 +10,23 @@ import {
   AccessTime,
   Login,
   Logout,
-  LocationOn,
   CalendarMonth,
   Schedule,
 } from "@mui/icons-material";
-import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import {
   Box,
   Paper,
   Grid,
   Typography,
-  /*Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,*/
   Stack,
   Chip,
   useTheme,
-  //Divider,
   Card,
   useMediaQuery,
   Breadcrumbs,
-  //Tooltip,
   Avatar,
   alpha,
-  /*Fade,
-  Skeleton,*/
   CardContent,
   Link,
   CircularProgress,
@@ -287,15 +269,6 @@ const MyAttendances = () => {
   // Obtener el día de hoy
   const today = useMemo(() => new Date(), []);
 
-  // Mapear asistencias por fecha
-  /*const attendanceByDate = useMemo(() => {
-    const map = {};
-    mockData.forEach((record) => {
-      if (!map[record.date]) map[record.date] = [];
-      map[record.date].push(record);
-    });
-    return map;
-  }, []);*/
 
   // Configuración de colores/etiquetas por estado
   const statusConfig = useMemo(
@@ -636,17 +609,13 @@ const MyAttendances = () => {
       <PageHeader date={""} isMobile={isMobile} />
 
       {/* Mensaje de error global */}
-        {error && (
-          <Alert
-            severity="error"
-            sx={{ mb: 2, borderRadius: isMobile ? 2 : 3 }}
-          >
-            {error}
-          </Alert>
-        )}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2, borderRadius: isMobile ? 2 : 3 }}>
+          {error}
+        </Alert>
+      )}
 
       <Grid container spacing={{ xs: 2, sm: 3 }}>
-        
         {/* Hoy */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Paper

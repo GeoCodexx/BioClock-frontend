@@ -44,9 +44,9 @@ import interactionPlugin from "@fullcalendar/interaction";
 import esLocale from "@fullcalendar/core/locales/es";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { createJustification } from "../../services/attendanceService";
-import useAuthStore from "../../store/useAuthStore";
+//import useAuthStore from "../../store/useAuthStore";
 import useSnackbarStore from "../../store/useSnackbarStore";
+import { createJustification } from "../../services/justificationService";
 
 const AttendanceMonthCalendar = ({ data, fetchData }) => {
   const theme = useTheme();
@@ -406,32 +406,16 @@ const AttendanceEventDialog = ({
     setIsSubmitting(true);
 
     try {
-      // Aquí iría la lógica para enviar la justificación al backend
-      const formData = new FormData();
-      formData.append("userId", dayData.userId);
-      formData.append("reason", justification);
-      formData.append("date", dayData.dateStr);
-      formData.append("scheduleId", dayData.scheduleId);
-      //formData.append("shiftStatus", dayData.shiftStatus);
+      const payload = {
+        userId: dayData.userId,
+        reason: justification,
+        date: dayData.dateStr,
+        scheduleId: dayData.scheduleId,
+      };
 
-      if (selectedFiles.length) {
-        selectedFiles.forEach((file, index) => {
-          formData.append(`documents`, file);
-        });
-      }
-
-      const res = await createJustification(formData);
+      const res = await createJustification(payload, selectedFiles);
 
       showSuccess(res?.data?.message || "Justificación enviada correctamente");
-
-      // Simular llamada al API
-      //await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      /*console.log("Justificación enviada:", {
-        justification,
-        files: selectedFiles,
-        dayData,
-      });*/
 
       // Resetear el formulario
       setJustification("");

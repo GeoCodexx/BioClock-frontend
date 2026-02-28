@@ -11,7 +11,6 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
-  Slide,
   Stack,
   Fade,
   CircularProgress,
@@ -22,10 +21,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import { forwardRef, useState, useEffect } from "react";
 import PermissionForm from "./PermissionForm";
 import ConfirmDialog from "../common/ConfirmDialog";
-
-const Transition = forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
 
 const PermissionDialog = ({
   open,
@@ -109,9 +104,6 @@ const PermissionDialog = ({
         maxWidth="sm"
         fullWidth
         fullScreen={isMobile}
-        slots={{
-          transition: Transition,
-        }}
         slotProps={{
           paper: {
             sx: {

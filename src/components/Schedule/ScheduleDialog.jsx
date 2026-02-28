@@ -11,7 +11,6 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
-  Slide,
   Stack,
   Fade,
   CircularProgress,
@@ -22,11 +21,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import { forwardRef, useState, useEffect } from "react";
 import ScheduleForm from "./ScheduleForm";
 import ConfirmDialog from "../common/ConfirmDialog";
-
-
-const Transition = forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
 
 const ScheduleDialog = ({
   open,
@@ -110,9 +104,6 @@ const ScheduleDialog = ({
         maxWidth="sm"
         fullWidth
         fullScreen={isMobile}
-        slots={{
-          transition: Transition,
-        }}
         slotProps={{
           paper: {
             sx: {

@@ -20,6 +20,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import useSnackbarStore from "../../store/useSnackbarStore";
 
 export default function ScheduleExportButtons({ schedules }) {
   const theme = useTheme();
@@ -27,6 +28,7 @@ export default function ScheduleExportButtons({ schedules }) {
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const { showError } = useSnackbarStore();
 
   // Mapa de traducción de días
   const dayTranslations = {
@@ -183,11 +185,10 @@ export default function ScheduleExportButtons({ schedules }) {
       handleClose();
     } catch (error) {
       console.error("Error al exportar Excel:", error);
-      alert("Error al exportar a Excel. Por favor, intente nuevamente.");
+      showError("Error al exportar a Excel. Por favor, intente nuevamente.");
     }
   };
 
-  // Exportar a PDF
   // const handleExportPDF = () => {
   //   try {
   //     const doc = new jsPDF();
@@ -361,7 +362,7 @@ export default function ScheduleExportButtons({ schedules }) {
   //     handleClose();
   //   } catch (error) {
   //     console.error("Error al exportar PDF:", error);
-  //     alert("Error al exportar a PDF. Por favor, intente nuevamente.");
+  //     showError("Error al exportar a PDF. Por favor, intente nuevamente.");
   //   }
   // };
   // Exportar a PDF
@@ -540,7 +541,7 @@ export default function ScheduleExportButtons({ schedules }) {
       handleClose();
     } catch (error) {
       console.error("Error al exportar PDF:", error);
-      alert("Error al exportar a PDF. Por favor, intente nuevamente.");
+      showError("Error al exportar a PDF. Por favor, intente nuevamente.");
     }
   };
 

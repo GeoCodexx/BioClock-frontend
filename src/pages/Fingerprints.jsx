@@ -105,7 +105,7 @@ export default function Fingerprints() {
     fetchFingerprints()
       .catch((err) => {
         setError(
-          err.response?.data?.message || "Error al cargar huellas dactilares",
+          err?.message || "Error al cargar huellas dactilares",
         );
       })
       .finally(() => {
@@ -136,7 +136,7 @@ export default function Fingerprints() {
       await fetchFingerprints();
     } catch (err) {
       setError(
-        err.response?.data?.message || "Error al cargar huellas dactilares",
+        err?.message || "Error al cargar huellas dactilares",
       );
     } finally {
       setLoading(false);

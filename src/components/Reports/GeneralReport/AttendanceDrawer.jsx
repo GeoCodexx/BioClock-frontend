@@ -6,7 +6,6 @@ import {
   Box,
   Typography,
   IconButton,
-  Divider,
   Chip,
   Button,
   TextField,
@@ -17,6 +16,10 @@ import {
   Paper,
   Grid,
   CircularProgress,
+  alpha,
+  useTheme,
+  Divider,
+  Tooltip,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -32,9 +35,129 @@ import {
   Description as DescriptionIcon,
   EventNote as EventNoteIcon,
   Devices as DevicesIcon,
+  AttachFile,
+  Assignment,
 } from "@mui/icons-material";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
+import useSnackbarStore from "../../../store/useSnackbarStore";
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const getFileIcon = (filename = "") => {
+  const ext = filename.split(".").pop()?.toLowerCase();
+  if (["png", "jpg", "jpeg", "webp", "gif"].includes(ext))
+    return <ImageOutlinedIcon fontSize="small" />;
+  if (ext === "pdf") return <PictureAsPdfOutlinedIcon fontSize="small" />;
+  return <InsertDriveFileOutlinedIcon fontSize="small" />;
+};
+
+const isImage = (filename = "") =>
+  ["png", "jpg", "jpeg", "webp", "gif"].includes(
+    filename.split(".").pop()?.toLowerCase(),
+  );
+
+const formatBytes = (bytes) => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+/**
+ * File Preview Grid
+ */
+function FilePreviewGrid({ files }) {
+  const theme = useTheme();
+
+  if (!files || files.length === 0) {
+    return (
+      <Box
+        sx={{
+          textAlign: "center",
+          py: 6,
+          color: "text.disabled",
+        }}
+      >
+        <InsertDriveFileOutlinedIcon sx={{ fontSize: 48, mb: 1 }} />
+        <Typography variant="body2">Sin archivos adjuntos</Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Stack spacing={1.5}>
+      {files.map((filePath, i) => {
+        const filename = filePath.split("/").pop();
+        const img = isImage(filename);
+        const fileUrl = `${import.meta.env.VITE_REACT_APP_API_URL}${filePath}`;
+
+        return (
+          <Box
+            key={i}
+            sx={{
+              borderRadius: 2,
+              overflow: "hidden",
+              border: `1px solid ${theme.palette.divider}`,
+              bgcolor: alpha(theme.palette.background.default, 0.5),
+            }}
+          >
+            {img && (
+              <Box
+                component="img"
+                src={fileUrl}
+                alt={filename}
+                sx={{
+                  width: "100%",
+                  maxHeight: 260,
+                  objectFit: "contain",
+                  bgcolor: alpha(theme.palette.common.black, 0.04),
+                  display: "block",
+                }}
+                onError={(e) => (e.target.style.display = "none")}
+              />
+            )}
+            <Box
+              sx={{
+                px: 1.5,
+                py: 1,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <Box sx={{ color: "primary.main", display: "flex" }}>
+                {getFileIcon(filename)}
+              </Box>
+              <Typography
+                variant="body2"
+                noWrap
+                sx={{ flex: 1 }}
+                fontWeight={500}
+              >
+                {filename}
+              </Typography>
+              <Tooltip title="Abrir en nueva pestaña">
+                <IconButton
+                  size="small"
+                  component="a"
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <DownloadOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
+        );
+      })}
+    </Stack>
+  );
+}
 
 /**
  * AttendanceDrawer - Componente reutilizable para mostrar detalles de asistencia
@@ -51,10 +174,15 @@ const AttendanceDrawer = ({
   onJustify,
   source = "table",
 }) => {
+  const theme = useTheme();
   const [showJustificationForm, setShowJustificationForm] = useState(false);
   const [justificationReason, setJustificationReason] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  const { showSuccess } = useSnackbarStore();
+
   // Este ref apuntará al final del formulario
   const endOfFormRef = useRef(null);
 
@@ -86,6 +214,15 @@ const AttendanceDrawer = ({
     setError(null);
   };
 
+  const handleFileChange = (event) => {
+    const files = Array.from(event.target.files);
+    setSelectedFiles((prev) => [...prev, ...files]);
+  };
+
+  const handleRemoveFile = (index) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // Enviar justificación
   const handleSubmitJustification = async () => {
     if (!justificationReason.trim()) {
@@ -97,19 +234,22 @@ const AttendanceDrawer = ({
     setError(null);
 
     try {
-      await onJustify({
+      const payload = {
         userId: record.user._id,
         scheduleId: record.schedule._id,
         date: record.date,
         reason: justificationReason.trim(),
-      });
+      };
+
+      await onJustify(payload, selectedFiles);
 
       // Resetear y cerrar
       setJustificationReason("");
+      setSelectedFiles([]);
       setShowJustificationForm(false);
       handleClose();
     } catch (err) {
-      setError(err.message || "Error al enviar la justificación");
+      setError(err?.message || "Error al enviar la justificación");
     } finally {
       setIsSubmitting(false);
     }
@@ -119,6 +259,7 @@ const AttendanceDrawer = ({
   const handleCancelJustification = () => {
     setShowJustificationForm(false);
     setJustificationReason("");
+    setSelectedFiles([]);
     setError(null);
   };
 
@@ -191,7 +332,7 @@ const AttendanceDrawer = ({
       onClose={handleClose}
       PaperProps={{
         sx: {
-          width: { xs: "100%", sm: 400 },
+          width: { xs: "100%", sm: 500 },
           /*height: "calc(100% - 64px)",
           top: 64,*/
           /*backgroundImage: (theme) =>
@@ -528,7 +669,7 @@ const AttendanceDrawer = ({
           )}
 
           {/* Justificación Existente */}
-          {record.justification?.approved && (
+          {/* {record.justification?.approved && (
             <Alert severity="info" icon={<CheckCircleIcon />} sx={{ mb: 3 }}>
               <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                 Justificación Aprobada
@@ -537,23 +678,99 @@ const AttendanceDrawer = ({
                 {record.justification.reason}
               </Typography>
             </Alert>
+          )} */}
+
+          {/* Estado de Justificación si existe*/}
+          {record.justification?.reason && (
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                //bgcolor: alpha(theme.palette.purple?.[500] || "#9c27b0", 0.08),
+                bgcolor:
+                  record.justification.status === "approved"
+                    ? alpha(theme.palette.primary.main, 0.08)
+                    : record.justification.status === "pending"
+                      ? alpha(theme.palette.warning.main, 0.08)
+                      : alpha(theme.palette.error.main, 0.08),
+                /*border: `1px solid ${alpha(theme.palette.purple?.[500] || "#9c27b0", 0.2)}`,*/
+                border: `1px solid ${
+                  record.justification.status === "approved"
+                    ? alpha(theme.palette.primary.main, 0.2)
+                    : record.justification.status === "pending"
+                      ? alpha(theme.palette.warning.main, 0.2)
+                      : alpha(theme.palette.error.main, 0.2)
+                }`,
+              }}
+            >
+              <Stack spacing={1.5}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Assignment
+                    sx={{
+                      color:
+                        record.justification.status === "approved"
+                          ? theme.palette.primary.main
+                          : record.justification.status === "pending"
+                            ? theme.palette.warning.main
+                            : theme.palette.error.main,
+                      fontSize: 22,
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    fontWeight={700}
+                    // sx={{ color: "#9c27b0" }}
+                    sx={{
+                      color:
+                        record.justification.status === "approved"
+                          ? theme.palette.primary.main
+                          : record.justification.status === "pending"
+                            ? theme.palette.warning.main
+                            : theme.palette.error.main,
+                    }}
+                  >
+                    Justificación{" "}
+                    {record.justification.status === "approved"
+                      ? "Aprobada"
+                      : record.justification.status === "pending"
+                        ? "Pendiente"
+                        : "Rechazada"}
+                  </Typography>
+                </Stack>
+                <Typography variant="body2">
+                  {record.justification.reason}
+                </Typography>
+                <Divider sx={{ my: 2 }} />
+                {record.justification?.files?.length > 0 && (
+                  <Typography variant="caption" color="text.secondary">
+                    {record.justification.files.length} archivo(s) adjunto(s):
+                  </Typography>
+                )}
+
+                {<FilePreviewGrid files={record.justification?.files || []} />}
+              </Stack>
+            </Paper>
           )}
+
           {/* Formulario de Justificación */}
-          {canJustify && !record.justification?.approved && (
+          {canJustify && !record.justification?.reason && (
             <Box>
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                size="large"
-                startIcon={<DescriptionIcon />}
-                onClick={handleJustifyClick}
-                sx={{ mb: 2 }}
-              >
-                {showJustificationForm
-                  ? "Ocultar Formulario"
-                  : "Justificar Asistencia"}
-              </Button>
+              {record.justification?.reason || (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  size="large"
+                  startIcon={<DescriptionIcon />}
+                  onClick={handleJustifyClick}
+                  sx={{ mb: 2 }}
+                >
+                  {showJustificationForm
+                    ? "Ocultar Formulario"
+                    : "Justificar Asistencia"}
+                </Button>
+              )}
 
               <Collapse in={showJustificationForm} onEntered={scrollToBottom}>
                 <Paper elevation={2} sx={{ p: 3, bgcolor: "background.card" }}>
@@ -596,6 +813,73 @@ const AttendanceDrawer = ({
                     helperText={`${justificationReason.length}/500 caracteres`}
                     inputProps={{ maxLength: 500 }}
                   />
+
+                  {/* Área de carga de archivos */}
+                  <Box>
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      startIcon={<AttachFile />}
+                      disabled={isSubmitting}
+                      size="small"
+                      sx={{ mb: 2 }}
+                    >
+                      Adjuntar documentos
+                      <input
+                        type="file"
+                        hidden
+                        multiple
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        onChange={handleFileChange}
+                      />
+                    </Button>
+
+                    {selectedFiles.length > 0 && (
+                      <Stack spacing={1} sx={{ marginTop: 1, marginBottom: 2 }}>
+                        {selectedFiles.map((file, index) => (
+                          <Paper
+                            key={index}
+                            elevation={0}
+                            sx={{
+                              p: 1,
+                              bgcolor: alpha(theme.palette.grey[500], 0.1),
+                              borderRadius: 1,
+                            }}
+                          >
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              justifyContent="space-between"
+                            >
+                              <Stack
+                                direction="row"
+                                alignItems="center"
+                                spacing={1}
+                              >
+                                <AttachFile sx={{ fontSize: 18 }} />
+                                <Typography variant="body2">
+                                  {file.name}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {formatBytes(file.size)}
+                                </Typography>
+                              </Stack>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleRemoveFile(index)}
+                                disabled={isSubmitting}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                            </Stack>
+                          </Paper>
+                        ))}
+                      </Stack>
+                    )}
+                  </Box>
 
                   <Stack direction="row" spacing={2}>
                     <Button

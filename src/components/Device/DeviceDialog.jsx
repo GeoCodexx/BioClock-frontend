@@ -11,7 +11,6 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
-  Slide,
   Stack,
   Fade,
   CircularProgress,
@@ -23,10 +22,6 @@ import { forwardRef, useState, useEffect } from "react";
 import DeviceForm from "./DeviceForm";
 import ConfirmDialog from "../common/ConfirmDialog";
 
-
-const Transition = forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
 
 const DeviceDialog = ({
   open,
@@ -110,9 +105,6 @@ const DeviceDialog = ({
         maxWidth="sm"
         fullWidth
         fullScreen={isMobile}
-        slots={{
-          transition: Transition,
-        }}
         slotProps={{
           paper: {
             sx: {

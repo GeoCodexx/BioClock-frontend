@@ -82,7 +82,7 @@ export default function Schedules() {
         setSchedules(data.schedules);
         setTotal(data.total);
       } catch (err) {
-        setError(err.response?.data?.message || "Error al cargar horarios");
+        setError(err?.message || "Error al cargar horarios");
       } finally {
         setLoading(false);
       }
@@ -119,7 +119,7 @@ export default function Schedules() {
       setSchedules(data.schedules);
       setTotal(data.total);
     } catch (err) {
-      setError(err.response?.data?.message || "Error al cargar horarios");
+      setError(err?.message || "Error al cargar horarios");
     } finally {
       setLoading(false);
     }
@@ -144,7 +144,7 @@ export default function Schedules() {
         await refreshSchedules();
       } catch (err) {
         const errorMessage =
-          err.response?.data?.message ||
+          err?.message ||
           `Error al ${dialog.editSchedule ? "actualizar" : "crear"} el horario`;
 
         setDialog((prev) => ({ ...prev, error: errorMessage }));
@@ -180,7 +180,7 @@ export default function Schedules() {
       await refreshSchedules();
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || "Error al eliminar el horario";
+        err?.message || "Error al eliminar el horario";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);

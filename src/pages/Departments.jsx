@@ -83,7 +83,7 @@ export default function Departments() {
         setTotal(data.total);
       } catch (err) {
         setError(
-          err.response?.data?.message || "Error al cargar departamentos"
+          err?.message || "Error al cargar departamentos"
         );
       } finally {
         setLoading(false);
@@ -121,7 +121,7 @@ export default function Departments() {
       setDepartments(data.departments);
       setTotal(data.total);
     } catch (err) {
-      setError(err.response?.data?.message || "Error al cargar departamentos");
+      setError(err?.message|| "Error al cargar departamentos");
     } finally {
       setLoading(false);
     }
@@ -146,7 +146,7 @@ export default function Departments() {
         await refreshDepartments();
       } catch (err) {
         const errorMessage =
-          err.response?.data?.message ||
+          err?.message ||
           `Error al ${
             dialog.editDepartment ? "actualizar" : "crear"
           } el departamento`;
@@ -184,7 +184,7 @@ export default function Departments() {
       await refreshDepartments();
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || "Error al eliminar el departamento";
+        err?.message || "Error al eliminar el departamento";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);

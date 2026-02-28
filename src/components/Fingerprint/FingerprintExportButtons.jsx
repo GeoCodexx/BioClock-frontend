@@ -20,6 +20,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import useSnackbarStore from "../../store/useSnackbarStore";
 
 // ============ UTILIDADES ============
 const formatters = {
@@ -82,11 +83,12 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const { showError } = useSnackbarStore();
 
   // Validación y transformación de datos
   const isDisabled = useMemo(
     () => !fingerprints || fingerprints.length === 0,
-    [fingerprints]
+    [fingerprints],
   );
 
   const formattedData = useMemo(
@@ -102,7 +104,7 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
         estado: formatters.status(fp.status),
         estadoRaw: fp.status,
       })),
-    [fingerprints]
+    [fingerprints],
   );
 
   const handleClick = (e) => setAnchorEl(e.currentTarget);
@@ -213,7 +215,7 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
       handleClose();
     } catch (error) {
       console.error("Error al exportar Excel:", error);
-      alert("Error al exportar a Excel. Por favor, intente nuevamente.");
+      showError("Error al exportar a Excel. Por favor, intente nuevamente.");
     }
   };
 
@@ -316,7 +318,7 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
               data.cell.y,
               data.cell.width,
               data.cell.height,
-              "F"
+              "F",
             );
             doc.setTextColor(13, 71, 161);
             doc.setFont("courier", "bold");
@@ -324,7 +326,7 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
               data.cell.raw,
               data.cell.x + data.cell.width / 2,
               data.cell.y + data.cell.height / 2,
-              { align: "center", baseline: "middle" }
+              { align: "center", baseline: "middle" },
             );
           }
 
@@ -353,7 +355,7 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
               data.cell.y,
               data.cell.width,
               data.cell.height,
-              "F"
+              "F",
             );
             doc.setTextColor(...textColor);
             doc.setFont(undefined, "bold");
@@ -361,7 +363,7 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
               data.cell.raw,
               data.cell.x + data.cell.width / 2,
               data.cell.y + data.cell.height / 2,
-              { align: "center", baseline: "middle" }
+              { align: "center", baseline: "middle" },
             );
           }
         },
@@ -385,7 +387,7 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
           `Página ${i} de ${pageCount}`,
           pageWidth / 2,
           doc.internal.pageSize.getHeight() - 10,
-          { align: "center" }
+          { align: "center" },
         );
       }
 
@@ -393,7 +395,7 @@ export default function FingerprintExportButtons({ fingerprints = [] }) {
       handleClose();
     } catch (error) {
       console.error("Error al exportar PDF:", error);
-      alert("Error al exportar a PDF. Por favor, intente nuevamente.");
+      showError("Error al exportar a PDF. Por favor, intente nuevamente.");
     }
   };
 

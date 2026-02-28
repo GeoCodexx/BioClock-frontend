@@ -11,7 +11,6 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
-  Slide,
   Stack,
   Fade,
   CircularProgress,
@@ -22,10 +21,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import { forwardRef, useState, useEffect } from "react";
 import UserForm from "./UserForm";
 import ConfirmDialog from "../common/ConfirmDialog";
-
-const Transition = forwardRef(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
-});
 
 const UserDialog = ({ open, onClose, editUser, formError, onSubmit }) => {
   const theme = useTheme();
@@ -103,9 +98,6 @@ const UserDialog = ({ open, onClose, editUser, formError, onSubmit }) => {
         maxWidth="sm"
         fullWidth
         fullScreen={isMobile}
-        slots={{
-          transition: Transition,
-        }}
         slotProps={{
           paper: {
             sx: {

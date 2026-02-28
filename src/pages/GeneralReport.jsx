@@ -53,11 +53,12 @@ import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
 import AttendanceDrawer from "../components/Reports/GeneralReport/AttendanceDrawer";
 import TimelineMatrix from "../components/Reports/GeneralReport/TimeLineMatrix";
-import { createJustification } from "../services/attendanceService";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import AttendanceExportButtons from "../components/Reports/GeneralReport/AttendanceExportButtons";
 import ScrollToTopButton from "../components/common/ScrolltoTopButton";
+import { createJustification } from "../services/justificationService";
+
 
 // Constantes
 const STATUS_OPTIONS = [
@@ -1020,20 +1021,20 @@ export default function GeneralReportPage() {
   }, []);
 
   // Manejar justificación
-  const handleJustify = useCallback(async (data) => {
+  const handleJustify = useCallback(async (payload, files) => {
     try {
       const formattedData = {
-        userId: data.userId,
-        scheduleId: data.scheduleId,
-        date: format(parseISO(data.date), "yyyy-MM-dd"),
-        reason: data.reason,
+        userId: payload.userId,
+        scheduleId: payload.scheduleId,
+        date: format(parseISO(payload.date), "yyyy-MM-dd"),
+        reason: payload.reason,
       };
 
-      const response = await createJustification(formattedData);
+      const response = await createJustification(formattedData, files);
 
-      if (response.data?.success) {
+      if (response?.success) {
         showSuccess(
-          response?.data?.message || "Justificación creada correctamente",
+          response?.message || "Justificación creada correctamente",
         );
 
         fetchData();

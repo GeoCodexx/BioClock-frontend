@@ -21,6 +21,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import useSnackbarStore from "../../store/useSnackbarStore";
 
 export default function RoleExportButtons({ roles }) {
   const theme = useTheme();
@@ -28,6 +29,7 @@ export default function RoleExportButtons({ roles }) {
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const { showError } = useSnackbarStore();
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -70,7 +72,7 @@ export default function RoleExportButtons({ roles }) {
       // Agregar datos
       roles.forEach((role) => {
         const permissionsList = formatPermissionsForText(role.permissions);
-        
+
         worksheet.addRow({
           name: role.name || "—",
           description: role.description || "Sin descripción",
@@ -157,19 +159,22 @@ export default function RoleExportButtons({ roles }) {
       worksheet.getCell(`A${lastRow}`).value = "Total de roles:";
       worksheet.getCell(`A${lastRow}`).font = { bold: true };
       worksheet.getCell(`B${lastRow}`).value = roles.length;
-      worksheet.getCell(`B${lastRow}`).font = { bold: true, color: { argb: "FF1976D2" } };
+      worksheet.getCell(`B${lastRow}`).font = {
+        bold: true,
+        color: { argb: "FF1976D2" },
+      };
 
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      
+
       const fileName = `roles_${new Date().toISOString().split("T")[0]}.xlsx`;
       saveAs(blob, fileName);
       handleClose();
     } catch (error) {
       console.error("Error al exportar Excel:", error);
-      alert("Error al exportar a Excel. Por favor, intente nuevamente.");
+      showError("Error al exportar a Excel. Por favor, intente nuevamente.");
     }
   };
 
@@ -203,15 +208,16 @@ export default function RoleExportButtons({ roles }) {
           minute: "2-digit",
         })}`,
         14,
-        32
+        32,
       );
       doc.text(`Total de roles: ${roles.length}`, 14, 37);
 
       // Preparar datos de la tabla
       const tableData = roles.map((role) => {
-        const permissionsList = role.permissions && role.permissions.length > 0
-          ? role.permissions.map((p) => `• ${p.name}`).join("\n")
-          : "Sin permisos";
+        const permissionsList =
+          role.permissions && role.permissions.length > 0
+            ? role.permissions.map((p) => `• ${p.name}`).join("\n")
+            : "Sin permisos";
 
         return [
           role.name || "—",
@@ -260,7 +266,7 @@ export default function RoleExportButtons({ roles }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(46, 125, 50);
               doc.setFontSize(8);
@@ -269,7 +275,7 @@ export default function RoleExportButtons({ roles }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             } else if (status === "Inactivo") {
               doc.setFillColor(255, 235, 238);
@@ -278,7 +284,7 @@ export default function RoleExportButtons({ roles }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(211, 47, 47);
               doc.setFontSize(8);
@@ -287,7 +293,7 @@ export default function RoleExportButtons({ roles }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             }
           }
@@ -302,18 +308,23 @@ export default function RoleExportButtons({ roles }) {
         doc.setFontSize(8);
         doc.setTextColor(150);
         doc.setFont(undefined, "normal");
-        
+
         // Línea superior del footer
         doc.setDrawColor(200, 200, 200);
         doc.setLineWidth(0.1);
-        doc.line(14, doc.internal.pageSize.getHeight() - 15, pageWidth - 14, doc.internal.pageSize.getHeight() - 15);
-        
+        doc.line(
+          14,
+          doc.internal.pageSize.getHeight() - 15,
+          pageWidth - 14,
+          doc.internal.pageSize.getHeight() - 15,
+        );
+
         // Número de página
         doc.text(
           `Página ${i} de ${pageCount}`,
           pageWidth / 2,
           doc.internal.pageSize.getHeight() - 10,
-          { align: "center" }
+          { align: "center" },
         );
       }
 
@@ -322,7 +333,7 @@ export default function RoleExportButtons({ roles }) {
       handleClose();
     } catch (error) {
       console.error("Error al exportar PDF:", error);
-      alert("Error al exportar a PDF. Por favor, intente nuevamente.");
+      showError("Error al exportar a PDF. Por favor, intente nuevamente.");
     }
   };
 
@@ -371,13 +382,19 @@ export default function RoleExportButtons({ roles }) {
         >
           <MenuItem onClick={handleExportExcel}>
             <ListItemIcon>
-              <DescriptionIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
+              <DescriptionIcon
+                fontSize="small"
+                sx={{ color: theme.palette.success.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a Excel</ListItemText>
           </MenuItem>
           <MenuItem onClick={handleExportPDF}>
             <ListItemIcon>
-              <PictureAsPdfIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
+              <PictureAsPdfIcon
+                fontSize="small"
+                sx={{ color: theme.palette.error.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a PDF</ListItemText>
           </MenuItem>
@@ -397,7 +414,9 @@ export default function RoleExportButtons({ roles }) {
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
                 color: theme.palette.success.main,
                 border: `1px solid ${theme.palette.success.light}`,
                 "&:hover": {
@@ -420,7 +439,9 @@ export default function RoleExportButtons({ roles }) {
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
                 color: theme.palette.error.main,
                 border: `1px solid ${theme.palette.error.light}`,
                 "&:hover": {
@@ -443,7 +464,14 @@ export default function RoleExportButtons({ roles }) {
   // =============== VERSIÓN DESKTOP ===============
   return (
     <Stack direction="row" spacing={1.5}>
-      <Tooltip title={isDisabled ? "No hay roles para exportar" : "Descargar lista en formato Excel"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay roles para exportar"
+            : "Descargar lista en formato Excel"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -457,7 +485,9 @@ export default function RoleExportButtons({ roles }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
               },
             }}
           >
@@ -465,7 +495,14 @@ export default function RoleExportButtons({ roles }) {
           </Button>
         </span>
       </Tooltip>
-      <Tooltip title={isDisabled ? "No hay roles para exportar" : "Descargar lista en formato PDF"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay roles para exportar"
+            : "Descargar lista en formato PDF"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -479,7 +516,9 @@ export default function RoleExportButtons({ roles }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
               },
             }}
           >

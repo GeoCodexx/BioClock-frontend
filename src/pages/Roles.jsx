@@ -82,7 +82,7 @@ export default function Roles() {
         setRoles(data.roles);
         setTotal(data.total);
       } catch (err) {
-        setError(err.response?.data?.message || "Error al cargar rols");
+        setError(err?.message || "Error al cargar rols");
       } finally {
         setLoading(false);
       }
@@ -119,7 +119,7 @@ export default function Roles() {
       setRoles(data.roles);
       setTotal(data.total);
     } catch (err) {
-      setError(err.response?.data?.message || "Error al cargar rols");
+      setError(err?.message || "Error al cargar rols");
     } finally {
       setLoading(false);
     }
@@ -144,7 +144,7 @@ export default function Roles() {
         await refreshRoles();
       } catch (err) {
         const errorMessage =
-          err.response?.data?.message ||
+          err?.message ||
           `Error al ${dialog.editRole ? "actualizar" : "crear"} el rol`;
 
         setDialog((prev) => ({ ...prev, error: errorMessage }));
@@ -180,7 +180,7 @@ export default function Roles() {
       await refreshRoles();
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || "Error al eliminar el rol";
+        err?.message || "Error al eliminar el rol";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);

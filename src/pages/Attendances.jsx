@@ -22,8 +22,6 @@ import {
   getPaginatedAttendances,
   updateAttendance,
   deleteAttendance,
-  justifyAttendance,
-  removeJustification,
 } from "../services/attendanceService";
 import AttendanceTable from "../components/Attendance/AttendanceTable";
 import AttendanceSearchBar from "../components/Attendance/AttendanceSearchBar";
@@ -45,12 +43,8 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterListOffIcon from "@mui/icons-material/FilterListOff";
 import ClearIcon from "@mui/icons-material/Clear";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
-/*import JustifyAttendanceDialog from "../components/Attendance/JustifyAttendanceDialog";
-import { ConfirmDeleteJustificationDialog } from "../components/Attendance/ConfirmDeleteJustificationDialog";*/
 import { useThemeMode } from "../contexts/ThemeContext";
 import { usePermission } from "../utils/permissions";
-//import SearchIcon from "@mui/icons-material/Search";
-//import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 export default function Attendances() {
   const { can } = usePermission();
@@ -100,12 +94,6 @@ export default function Attendances() {
   //Estado para mostrar u ocultar filtros mobile
   const [openFilters, setOpenFilters] = useState(false);
 
-  //Estados para justificar registro de asistencia
-  /*const [selectedAttendance, setSelectedAttendance] = useState(null);
-  const [justifyDialogOpen, setJustifyDialogOpen] = useState(false);
-  const [deleteJustificationDialogOpen, setDeleteJustificationDialogOpen] =
-    useState(false);*/
-
   useEffect(() => {
     const loadAttendances = async () => {
       setLoading(true);
@@ -135,7 +123,7 @@ export default function Attendances() {
         setAttendances(data.attendances);
         setTotal(data.total);
       } catch (err) {
-        setError(err.response?.data?.message || "Error al cargar asistencias");
+        setError(err?.message || "Error al cargar asistencias");
       } finally {
         setLoading(false);
       }
@@ -195,7 +183,7 @@ export default function Attendances() {
       setAttendances(data.attendances);
       setTotal(data.total);
     } catch (err) {
-      setError(err.response?.data?.message || "Error al cargar usuarios");
+      setError(err?.message || "Error al cargar usuarios");
     } finally {
       setLoading(false);
     }
@@ -323,7 +311,7 @@ export default function Attendances() {
       await refreshAttendances();
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || "Error al eliminar el rol";
+        err?.message|| "Error al eliminar el rol";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);

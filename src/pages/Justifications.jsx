@@ -144,7 +144,7 @@ const Justifications = () => {
       } catch (err) {
         console.log(err);
         setError(
-          err.response?.data?.message || "Error al cargar justificaciones",
+          err?.message || "Error al cargar justificaciones",
         );
       } finally {
         setLoading(false);
@@ -217,7 +217,7 @@ const Justifications = () => {
       setTotal(data.pagination.total);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Error al cargar justificaciones",
+        err?.message || "Error al cargar justificaciones",
       );
     } finally {
       setLoading(false);

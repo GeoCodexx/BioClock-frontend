@@ -20,6 +20,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import useSnackbarStore from "../../store/useSnackbarStore";
 
 export default function DepartmentExportButtons({ departments }) {
   const theme = useTheme();
@@ -27,6 +28,7 @@ export default function DepartmentExportButtons({ departments }) {
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const { showError } = useSnackbarStore();
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -148,7 +150,7 @@ export default function DepartmentExportButtons({ departments }) {
       handleClose();
     } catch (error) {
       console.error("Error al exportar Excel:", error);
-      alert("Error al exportar a Excel. Por favor, intente nuevamente.");
+      showError("Error al exportar a Excel. Por favor, intente nuevamente.");
     }
   };
 
@@ -183,7 +185,7 @@ export default function DepartmentExportButtons({ departments }) {
           minute: "2-digit",
         })}`,
         14,
-        32
+        32,
       );
       doc.text(`Total de departamentos: ${departments.length}`, margins, 37);
 
@@ -234,7 +236,7 @@ export default function DepartmentExportButtons({ departments }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(46, 125, 50);
               doc.setFontSize(9);
@@ -243,7 +245,7 @@ export default function DepartmentExportButtons({ departments }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             } else if (status === "Inactivo") {
               doc.setFillColor(255, 235, 238);
@@ -252,7 +254,7 @@ export default function DepartmentExportButtons({ departments }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(211, 47, 47);
               doc.setFontSize(9);
@@ -261,7 +263,7 @@ export default function DepartmentExportButtons({ departments }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             }
           }
@@ -284,7 +286,7 @@ export default function DepartmentExportButtons({ departments }) {
           14,
           doc.internal.pageSize.getHeight() - 15,
           pageWidth - 14,
-          doc.internal.pageSize.getHeight() - 15
+          doc.internal.pageSize.getHeight() - 15,
         );
 
         // Número de página
@@ -292,7 +294,7 @@ export default function DepartmentExportButtons({ departments }) {
           `Página ${i} de ${pageCount}`,
           pageWidth / 2,
           doc.internal.pageSize.getHeight() - 10,
-          { align: "center" }
+          { align: "center" },
         );
       }
 
@@ -303,7 +305,7 @@ export default function DepartmentExportButtons({ departments }) {
       handleClose();
     } catch (error) {
       console.error("Error al exportar PDF:", error);
-      alert("Error al exportar a PDF. Por favor, intente nuevamente.");
+      showError("Error al exportar a PDF. Por favor, intente nuevamente.");
     }
   };
 

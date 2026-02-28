@@ -82,7 +82,7 @@ export default function Users() {
         setUsers(data.users);
         setTotal(data.total);
       } catch (err) {
-        setError(err.response?.data?.message || "Error al cargar usuarios");
+        setError(err?.message || "Error al cargar usuarios");
       } finally {
         setLoading(false);
       }
@@ -119,7 +119,7 @@ export default function Users() {
       setUsers(data.users);
       setTotal(data.total);
     } catch (err) {
-      setError(err.response?.data?.message || "Error al cargar usuarios");
+      setError(err?.message || "Error al cargar usuarios");
     } finally {
       setLoading(false);
     }
@@ -144,7 +144,7 @@ export default function Users() {
         await refreshUsers();
       } catch (err) {
         const errorMessage =
-          err.response?.data?.message ||
+          err?.message ||
           `Error al ${dialog.editUser ? "actualizar" : "crear"} usuario`;
 
         setDialog((prev) => ({ ...prev, error: errorMessage }));
@@ -180,7 +180,7 @@ export default function Users() {
       await refreshUsers();
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || "Error al eliminar el rol";
+        err?.message || "Error al eliminar el rol";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);

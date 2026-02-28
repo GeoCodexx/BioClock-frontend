@@ -20,6 +20,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import useSnackbarStore from "../../store/useSnackbarStore";
 
 export default function AttendanceExportButtons({ attendances }) {
   const theme = useTheme();
@@ -27,6 +28,7 @@ export default function AttendanceExportButtons({ attendances }) {
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const { showError } = useSnackbarStore();
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -259,7 +261,10 @@ export default function AttendanceExportButtons({ attendances }) {
       worksheet.getCell(`A${lastRow}`).value = "Total de asistencias:";
       worksheet.getCell(`A${lastRow}`).font = { bold: true };
       worksheet.getCell(`B${lastRow}`).value = attendances.length;
-      worksheet.getCell(`B${lastRow}`).font = { bold: true, color: { argb: "FF1976D2" } };
+      worksheet.getCell(`B${lastRow}`).font = {
+        bold: true,
+        color: { argb: "FF1976D2" },
+      };
 
       // Estadísticas por tipo
       const entriesCount = attendances.filter((a) => a.type === "IN").length;
@@ -268,26 +273,36 @@ export default function AttendanceExportButtons({ attendances }) {
       worksheet.getCell(`A${lastRow + 1}`).value = "Total entradas:";
       worksheet.getCell(`A${lastRow + 1}`).font = { bold: true };
       worksheet.getCell(`B${lastRow + 1}`).value = entriesCount;
-      worksheet.getCell(`B${lastRow + 1}`).font = { color: { argb: "FF1976D2" } };
+      worksheet.getCell(`B${lastRow + 1}`).font = {
+        color: { argb: "FF1976D2" },
+      };
 
       worksheet.getCell(`A${lastRow + 2}`).value = "Total salidas:";
       worksheet.getCell(`A${lastRow + 2}`).font = { bold: true };
       worksheet.getCell(`B${lastRow + 2}`).value = exitsCount;
-      worksheet.getCell(`B${lastRow + 2}`).font = { color: { argb: "FFF57C00" } };
+      worksheet.getCell(`B${lastRow + 2}`).font = {
+        color: { argb: "FFF57C00" },
+      };
 
       // Estadísticas por estado
-      const onTimeCount = attendances.filter((a) => a.status === "on_time").length;
+      const onTimeCount = attendances.filter(
+        (a) => a.status === "on_time",
+      ).length;
       const lateCount = attendances.filter((a) => a.status === "late").length;
 
       worksheet.getCell(`A${lastRow + 4}`).value = "A tiempo:";
       worksheet.getCell(`A${lastRow + 4}`).font = { bold: true };
       worksheet.getCell(`B${lastRow + 4}`).value = onTimeCount;
-      worksheet.getCell(`B${lastRow + 4}`).font = { color: { argb: "FF2E7D32" } };
+      worksheet.getCell(`B${lastRow + 4}`).font = {
+        color: { argb: "FF2E7D32" },
+      };
 
       worksheet.getCell(`A${lastRow + 5}`).value = "Tardanzas:";
       worksheet.getCell(`A${lastRow + 5}`).font = { bold: true };
       worksheet.getCell(`B${lastRow + 5}`).value = lateCount;
-      worksheet.getCell(`B${lastRow + 5}`).font = { color: { argb: "FFD32F2F" } };
+      worksheet.getCell(`B${lastRow + 5}`).font = {
+        color: { argb: "FFD32F2F" },
+      };
 
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
@@ -299,7 +314,8 @@ export default function AttendanceExportButtons({ attendances }) {
       handleClose();
     } catch (error) {
       console.error("Error al exportar Excel:", error);
-      alert("Error al exportar a Excel. Por favor, intente nuevamente.");
+      //alert("Error al exportar a Excel. Por favor, intente nuevamente.");
+      showError("Error al exportar a Excel. Por favor, intente nuevamente.")
     }
   };
 
@@ -333,18 +349,20 @@ export default function AttendanceExportButtons({ attendances }) {
           minute: "2-digit",
         })}`,
         14,
-        32
+        32,
       );
 
       const entriesCount = attendances.filter((a) => a.type === "IN").length;
       const exitsCount = attendances.filter((a) => a.type === "OUT").length;
-      const onTimeCount = attendances.filter((a) => a.status === "on_time").length;
+      const onTimeCount = attendances.filter(
+        (a) => a.status === "on_time",
+      ).length;
       const lateCount = attendances.filter((a) => a.status === "late").length;
 
       doc.text(
         `Total: ${attendances.length} | Entradas: ${entriesCount} | Salidas: ${exitsCount} | A tiempo: ${onTimeCount} | Tardanzas: ${lateCount}`,
         14,
-        37
+        37,
       );
 
       // Preparar datos de la tabla
@@ -361,7 +379,17 @@ export default function AttendanceExportButtons({ attendances }) {
       // Tabla principal
       doc.autoTable({
         startY: 42,
-        head: [["DNI", "Usuario", "Dispositivo", "Fecha y Hora", "Horario", "Tipo", "Estado"]],
+        head: [
+          [
+            "DNI",
+            "Usuario",
+            "Dispositivo",
+            "Fecha y Hora",
+            "Horario",
+            "Tipo",
+            "Estado",
+          ],
+        ],
         body: tableData,
         styles: {
           fontSize: 8,
@@ -378,7 +406,12 @@ export default function AttendanceExportButtons({ attendances }) {
           fontSize: 9,
         },
         columnStyles: {
-          0: { cellWidth: 20, halign: "center", fontStyle: "bold", textColor: [66, 66, 66] }, // DNI
+          0: {
+            cellWidth: 20,
+            halign: "center",
+            fontStyle: "bold",
+            textColor: [66, 66, 66],
+          }, // DNI
           1: { cellWidth: 45, fontStyle: "bold" }, // Usuario
           2: { cellWidth: 35, textColor: [117, 117, 117], fontSize: 7 }, // Dispositivo
           3: { cellWidth: 35, halign: "center", textColor: [21, 101, 192] }, // Fecha y Hora
@@ -400,7 +433,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(25, 118, 210);
               doc.setFontSize(8);
@@ -409,7 +442,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 type,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             } else if (type === "Salida") {
               doc.setFillColor(255, 243, 224);
@@ -418,7 +451,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(245, 124, 0);
               doc.setFontSize(8);
@@ -427,7 +460,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 type,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             }
           }
@@ -442,7 +475,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(46, 125, 50);
               doc.setFontSize(8);
@@ -451,7 +484,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             } else if (status === "Tardanza") {
               doc.setFillColor(255, 235, 238);
@@ -460,7 +493,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(211, 47, 47);
               doc.setFontSize(8);
@@ -469,7 +502,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             } else if (status === "Temprano") {
               doc.setFillColor(227, 242, 253);
@@ -478,7 +511,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(25, 118, 210);
               doc.setFontSize(8);
@@ -487,7 +520,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             } else if (status === "Justificado") {
               doc.setFillColor(243, 229, 245);
@@ -496,7 +529,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(123, 31, 162);
               doc.setFontSize(8);
@@ -505,7 +538,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             } else {
               doc.setFillColor(255, 243, 224);
@@ -514,7 +547,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(237, 108, 2);
               doc.setFontSize(8);
@@ -523,7 +556,7 @@ export default function AttendanceExportButtons({ attendances }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             }
           }
@@ -546,7 +579,7 @@ export default function AttendanceExportButtons({ attendances }) {
           14,
           doc.internal.pageSize.getHeight() - 15,
           pageWidth - 14,
-          doc.internal.pageSize.getHeight() - 15
+          doc.internal.pageSize.getHeight() - 15,
         );
 
         // Número de página
@@ -554,7 +587,7 @@ export default function AttendanceExportButtons({ attendances }) {
           `Página ${i} de ${pageCount}`,
           pageWidth / 2,
           doc.internal.pageSize.getHeight() - 10,
-          { align: "center" }
+          { align: "center" },
         );
       }
 
@@ -563,7 +596,7 @@ export default function AttendanceExportButtons({ attendances }) {
       handleClose();
     } catch (error) {
       console.error("Error al exportar PDF:", error);
-      alert("Error al exportar a PDF. Por favor, intente nuevamente.");
+      showError("Error al exportar a PDF. Por favor, intente nuevamente.");
     }
   };
 
@@ -574,7 +607,9 @@ export default function AttendanceExportButtons({ attendances }) {
   if (isMobile) {
     return (
       <>
-        <Tooltip title={isDisabled ? "No hay asistencias para exportar" : "Exportar"}>
+        <Tooltip
+          title={isDisabled ? "No hay asistencias para exportar" : "Exportar"}
+        >
           <span>
             <IconButton
               onClick={handleClick}
@@ -611,13 +646,19 @@ export default function AttendanceExportButtons({ attendances }) {
         >
           <MenuItem onClick={handleExportExcel}>
             <ListItemIcon>
-              <DescriptionIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
+              <DescriptionIcon
+                fontSize="small"
+                sx={{ color: theme.palette.success.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a Excel</ListItemText>
           </MenuItem>
           <MenuItem onClick={handleExportPDF}>
             <ListItemIcon>
-              <PictureAsPdfIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
+              <PictureAsPdfIcon
+                fontSize="small"
+                sx={{ color: theme.palette.error.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a PDF</ListItemText>
           </MenuItem>
@@ -630,14 +671,19 @@ export default function AttendanceExportButtons({ attendances }) {
   if (isTablet) {
     return (
       <Stack direction="row" spacing={1}>
-        <Tooltip title={isDisabled ? "No hay asistencias" : "Exportar a Excel"} arrow>
+        <Tooltip
+          title={isDisabled ? "No hay asistencias" : "Exportar a Excel"}
+          arrow
+        >
           <span>
             <IconButton
               onClick={handleExportExcel}
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
                 color: theme.palette.success.main,
                 border: `1px solid ${theme.palette.success.light}`,
                 "&:hover": {
@@ -653,14 +699,19 @@ export default function AttendanceExportButtons({ attendances }) {
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title={isDisabled ? "No hay asistencias" : "Exportar a PDF"} arrow>
+        <Tooltip
+          title={isDisabled ? "No hay asistencias" : "Exportar a PDF"}
+          arrow
+        >
           <span>
             <IconButton
               onClick={handleExportPDF}
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
                 color: theme.palette.error.main,
                 border: `1px solid ${theme.palette.error.light}`,
                 "&:hover": {
@@ -683,7 +734,14 @@ export default function AttendanceExportButtons({ attendances }) {
   // =============== VERSIÓN DESKTOP ===============
   return (
     <Stack direction="row" spacing={1.5}>
-      <Tooltip title={isDisabled ? "No hay asistencias para exportar" : "Descargar registro en formato Excel"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay asistencias para exportar"
+            : "Descargar registro en formato Excel"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -697,7 +755,9 @@ export default function AttendanceExportButtons({ attendances }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
               },
             }}
           >
@@ -705,7 +765,14 @@ export default function AttendanceExportButtons({ attendances }) {
           </Button>
         </span>
       </Tooltip>
-      <Tooltip title={isDisabled ? "No hay asistencias para exportar" : "Descargar registro en formato PDF"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay asistencias para exportar"
+            : "Descargar registro en formato PDF"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -719,7 +786,9 @@ export default function AttendanceExportButtons({ attendances }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
               },
             }}
           >

@@ -80,7 +80,7 @@ export default function Permissions() {
         setPermissions(data.permissions);
         setTotal(data.total);
       } catch (err) {
-        setError(err.response?.data?.message || "Error al cargar permisos");
+        setError(err?.message || "Error al cargar permisos");
       } finally {
         setLoading(false);
       }
@@ -117,7 +117,7 @@ export default function Permissions() {
       setPermissions(data.permissions);
       setTotal(data.total);
     } catch (err) {
-      setError(err.response?.data?.message || "Error al cargar permisos");
+      setError(err?.message|| "Error al cargar permisos");
     } finally {
       setLoading(false);
     }
@@ -143,7 +143,7 @@ export default function Permissions() {
         await refreshPermissions();
       } catch (err) {
         const errorMessage =
-          err.response?.data?.message ||
+          err?.message ||
           `Error al ${
             dialog.editPermission ? "actualizar" : "crear"
           } el permiso`;
@@ -188,7 +188,7 @@ export default function Permissions() {
       await refreshPermissions();
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || "Error al eliminar el permiso";
+        err?.message || "Error al eliminar el permiso";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);

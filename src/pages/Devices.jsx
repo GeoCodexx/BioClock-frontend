@@ -88,7 +88,7 @@ export default function Devices() {
         setDevices(data.devices);
         setTotal(data.total);
       } catch (err) {
-        setError(err.response?.data?.message || "Error al cargar dispositivos");
+        setError(err?.message || "Error al cargar dispositivos");
       } finally {
         setLoading(false);
       }
@@ -125,7 +125,7 @@ export default function Devices() {
       setDevices(data.devices);
       setTotal(data.total);
     } catch (err) {
-      setError(err.response?.data?.message || "Error al cargar dispositivos");
+      setError(err?.message || "Error al cargar dispositivos");
     } finally {
       setLoading(false);
     }
@@ -159,7 +159,7 @@ export default function Devices() {
         await refreshDevices();
       } catch (err) {
         const errorMessage =
-          err.response?.data?.message ||
+          err?.message ||
           `Error al ${
             dialog.editDevice ? "actualizar" : "crear"
           } el dispositivo`;
@@ -197,7 +197,7 @@ export default function Devices() {
       await refreshDevices();
     } catch (err) {
       const errorMessage =
-        err.response?.data?.message || "Error al eliminar el dispositivo";
+        err?.message || "Error al eliminar el dispositivo";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);

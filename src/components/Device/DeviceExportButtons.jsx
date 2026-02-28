@@ -20,6 +20,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import useSnackbarStore from "../../store/useSnackbarStore";
 
 export default function DeviceExportButtons({ devices }) {
   const theme = useTheme();
@@ -27,6 +28,7 @@ export default function DeviceExportButtons({ devices }) {
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const { showError } = useSnackbarStore();
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -39,7 +41,7 @@ export default function DeviceExportButtons({ devices }) {
   // Función para formatear el nombre completo
   const formatFullName = (user) => {
     const parts = [user.name, user.firstSurname, user.secondSurname].filter(
-      Boolean
+      Boolean,
     );
     return parts.join(" ") || "—";
   };
@@ -164,7 +166,7 @@ export default function DeviceExportButtons({ devices }) {
       handleClose();
     } catch (error) {
       console.error("Error al exportar Excel:", error);
-      alert("Error al exportar a Excel. Por favor, intente nuevamente.");
+      showError("Error al exportar a Excel. Por favor, intente nuevamente.");
     }
   };
 
@@ -201,7 +203,7 @@ export default function DeviceExportButtons({ devices }) {
           minute: "2-digit",
         })}`,
         margins,
-        32
+        32,
       );
       doc.text(`Total de dispositivos: ${devices.length}`, margins, 37);
 
@@ -272,7 +274,7 @@ export default function DeviceExportButtons({ devices }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(46, 125, 50);
               doc.setFontSize(8);
@@ -281,7 +283,7 @@ export default function DeviceExportButtons({ devices }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             } else if (status === "Inactivo") {
               doc.setFillColor(255, 235, 238);
@@ -290,7 +292,7 @@ export default function DeviceExportButtons({ devices }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(211, 47, 47);
               doc.setFontSize(8);
@@ -299,7 +301,7 @@ export default function DeviceExportButtons({ devices }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             }
           }
@@ -322,7 +324,7 @@ export default function DeviceExportButtons({ devices }) {
           margins,
           doc.internal.pageSize.getHeight() - 15,
           pageWidth - margins,
-          doc.internal.pageSize.getHeight() - 15
+          doc.internal.pageSize.getHeight() - 15,
         );
 
         // Número de página
@@ -330,7 +332,7 @@ export default function DeviceExportButtons({ devices }) {
           `Página ${i} de ${pageCount}`,
           pageWidth / 2,
           doc.internal.pageSize.getHeight() - 10,
-          { align: "center" }
+          { align: "center" },
         );
       }
 
@@ -341,7 +343,7 @@ export default function DeviceExportButtons({ devices }) {
       handleClose();
     } catch (error) {
       console.error("Error al exportar PDF:", error);
-      alert("Error al exportar a PDF. Por favor, intente nuevamente.");
+      showError("Error al exportar a PDF. Por favor, intente nuevamente.");
     }
   };
 
