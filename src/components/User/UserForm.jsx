@@ -56,8 +56,7 @@ const UserForm = ({
   const {
     control,
     handleSubmit,
-    formState: { errors },
-    watch,
+    formState: { errors, isDirty },
     reset,
   } = useForm({
     defaultValues: {
@@ -141,14 +140,12 @@ const UserForm = ({
   ]);
 
   // Detectar cambios en el formulario
-  useEffect(() => {
-    const subscription = watch(() => {
-      if (onChange) {
-        onChange();
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [watch, onChange]);
+ useEffect(() => {
+  if (isDirty && onChange) {
+    onChange();
+  }
+}, [isDirty, onChange]);
+
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);

@@ -46,6 +46,7 @@ import { format, parse } from "date-fns";
 import ActionBar from "../components/Justification/ActionBar";
 import JustificationFilterDrawer from "../components/Justification/FilterDrawer";
 import ActiveFilterChips from "../components/Justification/ActiveFilterChips";
+import useAuthStore from "../store/useAuthStore";
 
 /*function buildFormData(fields, files = []) {
   const fd = new FormData();
@@ -55,8 +56,9 @@ import ActiveFilterChips from "../components/Justification/ActiveFilterChips";
 }*/
 
 const Justifications = () => {
+  const user = useAuthStore(state=>state.user);
   const { can } = usePermission();
-  const { showSuccess, showError } = useSnackbarStore();
+  const { showError } = useSnackbarStore();
   const theme = useTheme();
   const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -298,9 +300,9 @@ const Justifications = () => {
   );
 
   // Manejar la busqueda en modo mobile:
-  const handleSearchBarMobile = (value) => {
+  /*const handleSearchBarMobile = (value) => {
     setSearchInput(value);
-  };
+  };*/
 
   const handleChangePage = useCallback((event, newPage) => {
     setPagination((prev) => ({ ...prev, page: newPage }));
@@ -567,11 +569,11 @@ const Justifications = () => {
             <Grid container alignItems="center" spacing={2}>
               {/* Buscador */}
               <Grid size={{ xs: 6 }}>
-                <JustificationSearchBar
+                {["Administrador", "RRHH"].includes(user?.role ?? "") && <JustificationSearchBar
                   searchInput={searchInput}
                   setSearchInput={setSearchInput}
                   onSearch={handleSearch}
-                />
+                />}
               </Grid>
 
               {/* Acciones */}

@@ -110,7 +110,7 @@ const menuItems = [
   {
     text: "Gestión de Asistencias",
     icon: <AssessmentIcon />,
-    permission: ["general-report:read", "attendances:read"],
+    permission: ["general-report:read", "attendances:read", "justifications:read"],
     children: [
       {
         text: "Reporte General",

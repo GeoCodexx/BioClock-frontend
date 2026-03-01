@@ -46,6 +46,15 @@ export const updateUser = async (id, userData) => {
   }
 };
 
+export const updateUserStatus = async (id, status) => {
+  try {
+    const { data } = await api.patch(`/users/${id}/status`, status);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al actualizar estado de usuario");
+  }
+};
+
 export const deleteUser = async (id) => {
   try {
     const { data } = await api.delete(`/users/${id}`);

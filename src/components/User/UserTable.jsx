@@ -40,10 +40,18 @@ import {
   Schedule as ScheduleIcon,
   Devices as DevicesIcon,
   CalendarToday as CalendarTodayIcon,
+  CheckCircleOutline,
+  Block,
 } from "@mui/icons-material";
 import { usePermission } from "../../utils/permissions";
 
-const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
+const UserTable = ({
+  users = [],
+  onEdit,
+  onChangeStatus,
+  onDelete,
+  loading = false,
+}) => {
   const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -73,6 +81,13 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
   const handleEdit = () => {
     if (selectedUser && onEdit) {
       onEdit(selectedUser);
+    }
+    handleMenuClose();
+  };
+
+  const handleChangeStatus = () => {
+    if (selectedUser && onChangeStatus) {
+      onChangeStatus(selectedUser);
     }
     handleMenuClose();
   };
@@ -635,6 +650,23 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
             </MenuItem>
           )}
           <Divider />
+          {can("users:changestatus") && (
+            <MenuItem onClick={handleChangeStatus}>
+              <ListItemIcon>
+                {selectedUser?.status && selectedUser.status === "active" ? (
+                  <Block fontSize="small" color="error" />
+                ) : (
+                  <CheckCircleOutline fontSize="small" color="success" />
+                )}
+              </ListItemIcon>
+              <ListItemText>
+                {selectedUser?.status && selectedUser.status === "active"
+                  ? "Desactivar"
+                  : "Activar"}
+              </ListItemText>
+            </MenuItem>
+          )}
+          <Divider />
           {can("users:delete") && (
             <MenuItem onClick={handleDelete}>
               <ListItemIcon>
@@ -833,6 +865,45 @@ const UserTable = ({ users = [], onEdit, onDelete, loading = false }) => {
                             }}
                           >
                             <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      {can("users:changestatus") && (
+                        <Tooltip
+                          title={
+                            user?.status && user.status === "active"
+                              ? "Desactivar usuario"
+                              : "Activar usuario"
+                          }
+                          arrow
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              onChangeStatus && onChangeStatus(user)
+                            }
+                            sx={{
+                              color:
+                                user?.status && user.status === "active"
+                                  ? theme.palette.error.main
+                                  : theme.palette.success.main,
+                              bgcolor:
+                                user?.status && user.status === "active"
+                                  ? alpha(theme.palette.error.main, 0.08)
+                                  : alpha(theme.palette.success.main, 0.08),
+                              "&:hover": {
+                                bgcolor:
+                                  user?.status && user.status === "active"
+                                    ? alpha(theme.palette.error.main, 0.15)
+                                    : alpha(theme.palette.success.main, 0.15),
+                              },
+                            }}
+                          >
+                            {user?.status && user.status === "active" ? (
+                              <Block fontSize="small" />
+                            ) : (
+                              <CheckCircleOutline fontSize="small" />
+                            )}
                           </IconButton>
                         </Tooltip>
                       )}

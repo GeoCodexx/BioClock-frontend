@@ -10,8 +10,10 @@ import {
   updateJustification,
   updateJustificationStatus,
 } from "../../services/justificationService";
+import { usePermission } from "../../utils/permissions";
 
 export default function ActionCell({ row, onRefresh, schedules }) {
+  const { can } = usePermission();
   const [drawer, setDrawer] = useState({ open: false, mode: "create" });
 
   const open = (mode) => setDrawer({ open: true, mode });
@@ -33,7 +35,7 @@ export default function ActionCell({ row, onRefresh, schedules }) {
         )}
 
         {/* Aprobar — solo pendientes */}
-        {isPending && (
+        {can("justifications:approve") && isPending && (
           <Tooltip title="Aprobar">
             <IconButton
               size="small"
@@ -46,7 +48,7 @@ export default function ActionCell({ row, onRefresh, schedules }) {
         )}
 
         {/* Rechazar — solo pendientes */}
-        {isPending && (
+        {can("justifications:reject") && isPending && (
           <Tooltip title="Rechazar">
             <IconButton
               size="small"
@@ -59,7 +61,7 @@ export default function ActionCell({ row, onRefresh, schedules }) {
         )}
 
         {/* Previsualizar archivos — si hay adjuntos */}
-        {hasFiles && (
+        {can("justifications:detail") && hasFiles && (
           <Tooltip title={`Ver archivos (${row.files.length})`}>
             <IconButton
               size="small"

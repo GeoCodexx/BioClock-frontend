@@ -18,6 +18,7 @@ import {
   getPaginatedUsers,
   updateUser,
   deleteUser,
+  updateUserStatus,
 } from "../services/userService";
 import UserTable from "../components/User/UserTable";
 import UserSearchBar from "../components/User/UserSearchBar";
@@ -34,6 +35,7 @@ import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
 import { usePermission } from "../utils/permissions";
+import ToggleStatusDialog from "../components/User/ToggleStatusDialog";
 
 export default function Users() {
   const { can } = usePermission();
@@ -61,6 +63,11 @@ export default function Users() {
     open: false,
     editUser: null,
     error: "",
+  });
+
+  const [dialogStatus, setDialogStatus] = useState({
+    open: false,
+    editUserStatus: null,
   });
 
   const [deleteState, setDeleteState] = useState({
@@ -153,7 +160,7 @@ export default function Users() {
         throw err;
       }
     },
-    [dialog.editUser, showSuccess, showError, refreshUsers]
+    [dialog.editUser, showSuccess, showError, refreshUsers],
   );
 
   const handleEdit = useCallback((user) => {
@@ -164,12 +171,41 @@ export default function Users() {
     });
   }, []);
 
+  const handleChangeStatus = useCallback((user) => {
+    setDialogStatus({
+      open: true,
+      editUserStatus: user,
+    });
+  }, []);
+
   const handleDelete = useCallback((userId) => {
     setDeleteState({
       id: userId,
       error: "",
     });
   }, []);
+
+  const handleToggleStatus = useCallback(async () => {
+    try {
+      const status =
+        dialogStatus.editUserStatus?.status === "active"
+          ? "inactive"
+          : "active";
+      /* console.log(
+        "HandleToggleStatus: ",
+        dialogStatus.editUserStatus?._id,
+        status,
+      );*/
+      await updateUserStatus(dialogStatus.editUserStatus?._id, { status });
+      showSuccess("Estado actualizado correctamente");
+      setDialogStatus({ open: false, editUserStatus: null });
+      await refreshUsers();
+    } catch (err) {
+      const errorMessage = err?.message || "Error al actualizar estado";
+      showError(errorMessage);
+      console.error("Error en handleToggleStatus:", err);
+    }
+  }, [dialogStatus.editUserStatus, showSuccess, showError, refreshUsers]);
 
   const confirmDelete = useCallback(async () => {
     setDeleteState((prev) => ({ ...prev, error: "" }));
@@ -179,8 +215,7 @@ export default function Users() {
       setDeleteState({ id: null, error: "" });
       await refreshUsers();
     } catch (err) {
-      const errorMessage =
-        err?.message || "Error al eliminar el rol";
+      const errorMessage = err?.message || "Error al eliminar usuario";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);
@@ -213,7 +248,7 @@ export default function Users() {
         page: 0,
       }));
     },
-    [searchInput]
+    [searchInput],
   );
 
   const handleOpenDialog = useCallback(() => {
@@ -255,15 +290,20 @@ export default function Users() {
         </Typography>
       </Breadcrumbs>
     ),
-    [isMobile]
+    [isMobile],
   );
 
   // Memorizar tabla
   const userTableMemo = useMemo(
     () => (
-      <UserTable users={users} onEdit={handleEdit} onDelete={handleDelete} />
+      <UserTable
+        users={users}
+        onEdit={handleEdit}
+        onChangeStatus={handleChangeStatus}
+        onDelete={handleDelete}
+      />
     ),
-    [users, handleEdit, handleDelete]
+    [users, handleEdit, handleDelete],
   );
 
   // Estado de carga inicial
@@ -469,6 +509,14 @@ export default function Users() {
         editUser={dialog.editUser}
         formError={dialog.error}
         onSubmit={handleSubmit}
+      />
+
+      <ToggleStatusDialog
+        open={dialogStatus.open}
+        onClose={() => setDialogStatus({ open: false, editUserStatus: null })}
+        onConfirm={() => handleToggleStatus(dialogStatus.editUserStatus)}
+        user={dialogStatus.editUserStatus}
+        currentStatus={dialogStatus.editUserStatus?.status} // "active" | "inactive"
       />
 
       <DeleteConfirmDialog
