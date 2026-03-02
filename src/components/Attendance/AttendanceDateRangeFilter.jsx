@@ -40,6 +40,7 @@ const AttendanceDateRangeFilter = memo(
               },
             }}
             minDate={startDate || undefined}
+            disableFuture
           />
         </Stack>
       </LocalizationProvider>

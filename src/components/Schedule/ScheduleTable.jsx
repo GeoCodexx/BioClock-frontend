@@ -254,7 +254,7 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                 }}
               >
                 <TableCell sx={{ width: 50 }} />
-                <TableCell>Horario</TableCell>
+                <TableCell>HORARIOS</TableCell>
                 <TableCell align="right" sx={{ width: 50 }} />
               </TableRow>
             </TableHead>

@@ -275,7 +275,7 @@ const UserTable = ({
                 }}
               >
                 <TableCell sx={{ width: 48 }} />
-                <TableCell>Usuario</TableCell>
+                <TableCell>USUARIOS</TableCell>
                 <TableCell align="right" sx={{ width: 48 }} />
               </TableRow>
             </TableHead>
@@ -320,7 +320,9 @@ const UserTable = ({
                       {/* Información del Usuario */}
                       <TableCell sx={{ py: 1.5 }}>
                         <Stack spacing={0.5} flex={1}>
-                          <Typography variant="body2">{fullName}</Typography>
+                          <Typography variant="body2" fontWeight={600}>
+                            {fullName}
+                          </Typography>
                           <Stack
                             direction="row"
                             spacing={1}

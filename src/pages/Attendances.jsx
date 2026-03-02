@@ -483,7 +483,7 @@ export default function Attendances() {
                   <span>
                     <IconButton
                       onClick={() => setOpenFilters((prev) => !prev)}
-                      disabled={!attendances || attendances.length === 0}
+                      //disabled={!attendances || attendances.length === 0}
                       sx={{
                         bgcolor: theme.palette.background.paper,
                         "&:hover": {
@@ -754,8 +754,8 @@ export default function Attendances() {
           onPageChange={handleChangePage}
           rowsPerPage={pagination.rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          showFirstButton
-          showLastButton
+          showFirstButton={!isMobile}
+          showLastButton={!isMobile}
           labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
           labelDisplayedRows={({ from, to, count, page }) =>
             isMobile

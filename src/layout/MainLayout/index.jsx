@@ -44,7 +44,7 @@ const MainLayout = () => {
         component="main"
         sx={{
           backgroundColor: theme.palette.background.default,
-          minWidth: "1%",
+          minWidth: "320px",
           width: isMobile
             ? "100%"
             : isDrawerOpen
@@ -55,7 +55,7 @@ const MainLayout = () => {
           marginTop: isMobile ? "56px" : "70px",
           marginRight: isMobile ? 0 : "20px",
           marginLeft: 0,
-          padding: isMobile ? "16px" : "20px",
+          padding: isMobile ? 0 : "20px",
           borderRadius: isMobile ? 0 : "8px 8px 0 0",
           transition: "all 0.5s ease-in-out",
         }}

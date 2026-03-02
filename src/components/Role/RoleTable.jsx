@@ -200,7 +200,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                 }}
               >
                 <TableCell sx={{ width: 48 }} />
-                <TableCell>Rol</TableCell>
+                <TableCell>ROLES</TableCell>
                 <TableCell align="right" sx={{ width: 48 }} />
               </TableRow>
             </TableHead>
@@ -243,7 +243,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                       {/* Información del Rol */}
                       <TableCell sx={{ py: 1.5 }}>
                         <Stack spacing={0.5}>
-                          <Typography variant="body2">{role.name}</Typography>
+                          <Typography variant="body2" fontWeight={600}>{role.name}</Typography>
                           <Stack
                             direction="row"
                             spacing={1}

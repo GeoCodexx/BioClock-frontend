@@ -788,8 +788,8 @@ const Justifications = () => {
           onPageChange={handleChangePage}
           rowsPerPage={pagination.rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
-          showFirstButton
-          showLastButton
+          showFirstButton={!isMobile}
+          showLastButton={!isMobile}
           labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
           labelDisplayedRows={({ from, to, count, page }) =>
             isMobile

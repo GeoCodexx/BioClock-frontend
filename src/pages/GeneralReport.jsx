@@ -403,6 +403,7 @@ const FiltersCard = memo(
                       value={dateTo}
                       onChange={onDateToChange}
                       minDate={dateFrom}
+                      disableFuture
                       slotProps={{
                         textField: {
                           size: "small",
@@ -474,6 +475,13 @@ const FiltersCard = memo(
               <FormControlLabel
                 control={<Checkbox onChange={handleCheckboxUserChange} />}
                 label="Incluir usuarios inactivos"
+                sx={{
+                  // Cambiar color de la etiqueta
+                  "& .MuiFormControlLabel-label": {
+                    color: "text.secondary", // O usa un color CSS como 'red', '#ff0000'
+                    fontSize: "0.9rem"
+                  },
+                }}
               />
             </Stack>
 
@@ -1263,8 +1271,8 @@ export default function GeneralReportPage() {
               rowsPerPage={rowsPerPage}
               onRowsPerPageChange={handleChangeRowsPerPage}
               rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
-              showFirstButton
-              showLastButton
+              showFirstButton={!isMobile}
+              showLastButton={!isMobile}
               labelRowsPerPage={isMobile ? "Filas:" : "Filas por página:"}
               labelDisplayedRows={({ from, to, count, page }) =>
                 isMobile

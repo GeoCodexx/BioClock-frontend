@@ -40,6 +40,7 @@ const JustificationDateRangeFilter = memo(
               },
             }}
             minDate={startDate || undefined}
+            disableFuture
           />
         </Stack>
       </LocalizationProvider>

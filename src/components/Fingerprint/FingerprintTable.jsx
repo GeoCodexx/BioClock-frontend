@@ -288,7 +288,7 @@ const FingerprintTable = ({
                 }}
               >
                 <TableCell sx={{ width: 50 }} />
-                <TableCell>Huella Dactilar</TableCell>
+                <TableCell>HUELLAS DACTILARES</TableCell>
                 <TableCell align="right" sx={{ width: 50 }} />
               </TableRow>
             </TableHead>
@@ -333,7 +333,7 @@ const FingerprintTable = ({
                         <Box>
                           <Typography
                             variant="body2"
-                            //fontWeight={600}
+                            fontWeight={600}
                             sx={{ mb: 0.5 }}
                           >
                             {formatters.fullName(fingerprint.userId)}

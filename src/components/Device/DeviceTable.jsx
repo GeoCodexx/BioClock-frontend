@@ -735,7 +735,7 @@ const DeviceTable = ({ devices = [], onEdit, onDelete }) => {
                 }}
               >
                 <TableCell sx={{ width: 48 }} />
-                <TableCell>Dispositivo</TableCell>
+                <TableCell>DISPOSITIVOS</TableCell>
                 <TableCell align="right" sx={{ width: 48 }} />
               </TableRow>
             </TableHead>

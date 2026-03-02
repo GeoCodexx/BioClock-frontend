@@ -172,8 +172,8 @@ const StatusChip = ({ status }) => {
         height: 24,
         bgcolor: alpha(color, 0.12),
         color,
-        border: `1px solid ${alpha(color, 0.35)}`,
-        borderRadius: 1,
+        //border: `1px solid ${alpha(color, 0.35)}`,
+        borderRadius: 1,  
       }}
     />
   );
@@ -434,7 +434,7 @@ const JustificationTable = ({
                 }}
               >
                 <TableCell sx={{ width: 40 }} />
-                <TableCell>Justificación</TableCell>
+                <TableCell align="center">JUSTIFICACIONES</TableCell>
                 <TableCell align="right" sx={{ width: 44 }} />
               </TableRow>
             </TableHead>
@@ -471,51 +471,47 @@ const JustificationTable = ({
                         </IconButton>
                       </TableCell>
 
-                      <TableCell sx={{ py: 1.5 }}>
-                        <Stack spacing={0.8}>
+                      <TableCell sx={{ py: 1.5, px: isMobile ? 0 : 2 }}>
+                        <Stack spacing={0.8} alignItems="center">
+                          {/* <UserAvatar user={j.userId} /> */}
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            lineHeight={1.3}
+                          >
+                            {getFullName(j.userId)}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {j.scheduleId?.name || "-"}
+                          </Typography>
+
                           <Stack
                             direction="row"
-                            spacing={1.2}
+                            spacing={1.5}
                             alignItems="center"
                           >
-                            <UserAvatar user={j.userId} />
-                            <Stack spacing={0.2}>
-                              <Typography
-                                variant="body2"
-                                fontWeight={600}
-                                lineHeight={1.3}
-                              >
-                                {getFullName(j.userId)}
-                              </Typography>
-                              <Stack
-                                direction="row"
-                                spacing={0.5}
-                                alignItems="center"
-                              >
-                                <CalendarIcon
-                                  sx={{
-                                    fontSize: 11,
-                                    color: theme.palette.text.disabled,
-                                  }}
-                                />
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  {formatDate(j.date)}
-                                </Typography>
-                              </Stack>
-                            </Stack>
+                            {/* <CalendarIcon
+                              sx={{
+                                fontSize: 11,
+                                color: theme.palette.text.disabled,
+                              }}
+                            /> */}
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {formatDate(j.date)}
+                            </Typography>
+                            <Box
+                            /*sx={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                  }}*/
+                            >
+                              <StatusChip status={j.status}/>
+                            </Box>
                           </Stack>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                            }}
-                          >
-                            <StatusChip status={j.status} />
-                          </Box>
                         </Stack>
                       </TableCell>
 

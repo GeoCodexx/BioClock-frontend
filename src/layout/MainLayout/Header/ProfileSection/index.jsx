@@ -16,15 +16,12 @@ import {
   useTheme,
   Fade,
   alpha,
-  useMediaQuery,
   Tooltip,
 } from "@mui/material";
 
 // icons
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import SettingsIcon from "@mui/icons-material/Settings";
 import LogoutIcon from "@mui/icons-material/Logout";
-//import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import useAuthStore from "../../../../store/useAuthStore";
 import ProfileDialog from "../../../../components/Profile/ProfileDialog";
 
@@ -78,15 +75,24 @@ const ProfileSection = () => {
     return name.trim().split(" ")[0];
   };
 
+  const getInitials = () => {
+    if (!isAuthenticated || !user) return "";
+
+    const nameInitial = user.name?.charAt(0)?.toUpperCase() || "";
+    const surnameInitial = user.firstSurname?.charAt(0)?.toUpperCase() || "";
+
+    return `${nameInitial}${surnameInitial}`;
+  };
+
   return (
     <Box sx={{ flexShrink: 0, ml: 0.75 }}>
       <Tooltip title="Perfil" arrow>
         <ButtonBase
           sx={{
             p: 0.25,
-            bgcolor: open
+           /* bgcolor: open
               ? alpha(theme.palette.primary.main, 0.08)
-              : "transparent",
+              : "transparent",*/
             borderRadius: 2,
             transition: "all 0.2s ease-in-out",
             "&:hover": {
@@ -98,31 +104,30 @@ const ProfileSection = () => {
           ref={anchorRef}
           aria-controls={open ? "profile-grow" : undefined}
           aria-haspopup="true"
+          disableRipple
           onClick={handleToggle}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, p: 0.5 }}>
-            <Avatar
-              src="/static/images/avatar.jpg"
-              sx={{
-                width: /*isMobile ? 24 :*/ 36,
-                height: /*isMobile ? 24 :*/ 36,
-                bgcolor: theme.palette.primary.main,
-                color: theme.palette.primary.contrastText,
-                border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                //fontSize: "1rem",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  transform: "scale(1.05)",
-                  boxShadow: `0 0 0 4px ${alpha(
-                    theme.palette.primary.main,
-                    0.1,
-                  )}`,
-                },
-              }}
-            >
-              {isAuthenticated && user ? user.name.charAt(0) : ""}
-            </Avatar>
-          </Box>
+          <Avatar
+            sx={{
+              width: 36,
+              height: 36,
+              bgcolor: alpha(theme.palette.primary.main, 0.8),
+              color: theme.palette.primary.contrastText,
+              fontWeight: 600,
+              fontSize: "0.9rem",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                bgcolor: theme.palette.primary.main
+                //transform: "scale(1.05)",
+                /*boxShadow: `0 0 0 4px ${alpha(
+                  theme.palette.primary.main,
+                  0.1,
+                )}`,*/
+              },
+            }}
+          >
+            {getInitials()}
+          </Avatar>
         </ButtonBase>
       </Tooltip>
 
@@ -151,7 +156,7 @@ const ProfileSection = () => {
         sx={{ zIndex: theme.zIndex.modal }}
       >
         {({ TransitionProps }) => (
-          <Fade {...TransitionProps} timeout={250}>
+          <Fade {...TransitionProps} timeout={100}>
             <Paper
               elevation={8}
               sx={{

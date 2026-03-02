@@ -59,7 +59,7 @@ const AttendanceTable = ({
   const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const [orderBy, setOrderBy] = useState("userId");
+  const [orderBy, setOrderBy] = useState("timestamp");
   const [order, setOrder] = useState("desc");
   const [openRowId, setOpenRowId] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -92,20 +92,6 @@ const AttendanceTable = ({
   const handleDelete = () => {
     if (selectedAttendance && onDelete) {
       onDelete(selectedAttendance._id);
-    }
-    handleMenuClose();
-  };
-
-  const handleJustify = () => {
-    if (selectedAttendance && onJustify) {
-      onJustify(selectedAttendance);
-    }
-    handleMenuClose();
-  };
-
-  const handleDeleteJustification = () => {
-    if (selectedAttendance && onDelete) {
-      onDeleteJustification(selectedAttendance);
     }
     handleMenuClose();
   };
@@ -290,6 +276,7 @@ const AttendanceTable = ({
     },
     { id: "userId", label: "Usuario", sortable: true, minWidth: 200 },
     { id: "timestamp", label: "Fecha y Hora", sortable: true, minWidth: 160 },
+    { id: "schedule", label: "Horario", sortable: true, minWidth: 180 },
 
     {
       id: "type",
@@ -436,7 +423,7 @@ const AttendanceTable = ({
                 }}
               >
                 <TableCell sx={{ width: 48 }} />
-                <TableCell>Asistencia</TableCell>
+                <TableCell align="center">ASISTENCIAS</TableCell>
                 <TableCell align="right" sx={{ width: 48 }} />
               </TableRow>
             </TableHead>
@@ -478,7 +465,7 @@ const AttendanceTable = ({
                       </TableCell>
 
                       {/* Información de la Asistencia */}
-                      <TableCell sx={{ py: 1.5 }}>
+                      <TableCell sx={{ py: 1.5, px: 0 }}>
                         <Stack spacing={1}>
                           {/* Usuario y Avatar */}
                           <Stack
@@ -498,7 +485,7 @@ const AttendanceTable = ({
                             >
                               {getInitials(attendance.userId)}
                             </Avatar> */}
-                            <Stack spacing={0.3} flex={1}>
+                            <Stack spacing={0.3} flex={1} alignItems="center">
                               <Typography variant="body2" fontWeight={600}>
                                 {fullName}
                               </Typography>
@@ -512,7 +499,11 @@ const AttendanceTable = ({
                           </Stack>
 
                           {/* Chips de Tipo y Estado */}
-                          <Stack direction="column" spacing={1}>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            justifyContent="center"
+                          >
                             <Chip
                               icon={getTypeIcon(attendance.type)}
                               label={formatType(attendance.type)}
@@ -709,133 +700,6 @@ const AttendanceTable = ({
                                     }}
                                   />
                                 </Stack>
-
-                                <Divider />
-
-                                {/* Justificación */}
-                                {attendance.justification && (
-                                  <Stack spacing={1.5}>
-                                    <Stack
-                                      direction="row"
-                                      spacing={1}
-                                      alignItems="center"
-                                    >
-                                      <CheckCircleIcon
-                                        sx={{
-                                          fontSize: 16,
-                                          color: theme.palette.main,
-                                        }}
-                                      />
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        fontWeight={600}
-                                      >
-                                        JUSTIFICACIÓN:
-                                      </Typography>
-                                      <Chip
-                                        icon={
-                                          attendance.justification.approved ? (
-                                            <CheckCircleIcon
-                                              sx={{ fontSize: 16 }}
-                                            />
-                                          ) : (
-                                            <PendingIcon
-                                              sx={{ fontSize: 16 }}
-                                            />
-                                          )
-                                        }
-                                        label={
-                                          attendance.justification.approved
-                                            ? "Aprobada"
-                                            : "Pendiente"
-                                        }
-                                        size="small"
-                                        sx={{
-                                          fontSize: "0.7rem",
-                                          height: 24,
-                                          fontWeight: 700,
-                                          bgcolor: attendance.justification
-                                            .approved
-                                            ? theme.palette.success.main
-                                            : theme.palette.warning.main,
-                                          color: "white",
-                                          "& .MuiChip-icon": {
-                                            color: "white",
-                                          },
-                                        }}
-                                      />
-                                    </Stack>
-                                    <Stack
-                                      direction="row"
-                                      spacing={1}
-                                      alignItems="center"
-                                    >
-                                      <EditNoteIcon
-                                        sx={{
-                                          fontSize: 16,
-                                          color: theme.palette.main,
-                                        }}
-                                      />
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        fontWeight={600}
-                                      >
-                                        MOTIVO:
-                                      </Typography>
-                                      <Typography variant="body2">
-                                        {attendance.justification.reason}
-                                      </Typography>
-                                    </Stack>
-                                    <Stack
-                                      direction="row"
-                                      spacing={1}
-                                      alignItems="center"
-                                    >
-                                      <PersonIcon
-                                        sx={{
-                                          fontSize: 16,
-                                          color: theme.palette.main,
-                                        }}
-                                      />
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        fontWeight={600}
-                                      >
-                                        APROBADO POR:
-                                      </Typography>
-                                      <Typography variant="body2">
-                                        {`${attendance.justification.approvedBy.name} ${attendance.justification.approvedBy.firstSurname} ${attendance.justification.approvedBy.secondSurname}`}
-                                      </Typography>
-                                    </Stack>
-                                    <Stack
-                                      direction="row"
-                                      spacing={1}
-                                      alignItems="center"
-                                    >
-                                      <EventAvailableIcon
-                                        sx={{
-                                          fontSize: 16,
-                                          color: theme.palette.main,
-                                        }}
-                                      />
-                                      <Typography
-                                        variant="caption"
-                                        color="text.secondary"
-                                        fontWeight={600}
-                                      >
-                                        FECHA DE APROBACIÓN:
-                                      </Typography>
-                                      <Typography variant="body2">
-                                        {formatDateTime(
-                                          attendance.justification.approvedAt,
-                                        )}
-                                      </Typography>
-                                    </Stack>
-                                  </Stack>
-                                )}
                               </Stack>
                             </Stack>
                           </Box>
@@ -1047,6 +911,13 @@ const AttendanceTable = ({
                     </Stack>
                   </TableCell>
 
+                  {/* Horario */}
+                  <TableCell>
+                    <Typography variant="body2">
+                      {attendance.scheduleId?.name || "—"}
+                    </Typography>
+                  </TableCell>
+
                   {/* Tipo */}
                   <TableCell align="center">
                     <Chip
@@ -1078,34 +949,12 @@ const AttendanceTable = ({
                         bgcolor: statusConfig.bgcolor,
                         color: statusConfig.color,
                         //border: `1px solid ${alpha(statusConfig.color, 0.5)}`,
-                        //borderRadius: 1,
+                        borderRadius: 1,
                         /*"& .MuiChip-icon": {
                           color: statusConfig.color,
                         },*/
                       }}
                     />
-                    {/* <Stack spacing={0.5}>
-                      <Chip
-                        //icon={getStatusIcon(attendance.status)}
-                        label={formatStatus(attendance.status)}
-                        size="small"
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: "0.75rem",
-                          bgcolor: statusConfig.bgcolor,
-                          color: statusConfig.color,
-                          //borderRadius: 1,
-                          "& .MuiChip-icon": {
-                            color: statusConfig.color,
-                          },
-                        }}
-                      />
-                      { {attendance.justification?.approved && (
-                        <Typography variant="caption" color="text.secondary">
-                          (Justificado)
-                        </Typography>
-                      )} }
-                    </Stack> */}
                   </TableCell>
 
                   {/* Acciones */}

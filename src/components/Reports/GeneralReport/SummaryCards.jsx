@@ -94,7 +94,8 @@ const StatValue = memo(({ value, color, isPercentage, isLoading, error }) => {
       <Typography
         variant="h3"
         fontWeight={700}
-        color={color === "disabled" ? "text." + color : color + ".main"}
+        //color={color === "disabled" ? "text." + color : color + ".main"}
+        color="primary.main"
         sx={{
           lineHeight: 1,
           fontSize: { xs: "2rem", sm: "2.5rem" },
@@ -104,7 +105,8 @@ const StatValue = memo(({ value, color, isPercentage, isLoading, error }) => {
       </Typography>
 
       {isPercentage && (
-        <Typography variant="h5" color={color + ".main"} fontWeight={600}>
+        // <Typography variant="h5" color={color + ".main"} fontWeight={600}>
+        <Typography variant="h5" color={"primary"} fontWeight={600}>
           %
         </Typography>
       )}
@@ -118,13 +120,13 @@ StatValue.displayName = "StatValue";
 const StatCard = memo(({ label, subtitle, icon: Icon, color, children }) => {
   const theme = useTheme();
 
-  const colorValue =
+ /* const colorValue =
     color === "disabled"
       ? theme.palette.text.disabled
       : color !== "disabled"
         ? theme.palette[color]?.main
         : theme.palette.grey[500];
-  const bgColor = alpha(colorValue, 0.08);
+  const bgColor = alpha(colorValue, 0.08);*/
 
   return (
     <Card
@@ -134,15 +136,15 @@ const StatCard = memo(({ label, subtitle, icon: Icon, color, children }) => {
         borderRadius: 2,
         border: "1px solid",
         borderColor: "divider",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+       /* transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         "&:hover": {
           borderColor: color === "disabled" ? "divider" : color + ".main",
           transform: { xs: "none", sm: "translateY(-4px)" },
           boxShadow: {
             xs: "none",
-            sm: `0 8px 16px ${alpha(colorValue, 0.15)}`,
+            //sm: `0 8px 16px ${alpha(colorValue, 0.15)}`,
           },
-        },
+        },*/
       }}
     >
       <CardContent
@@ -181,14 +183,16 @@ const StatCard = memo(({ label, subtitle, icon: Icon, color, children }) => {
               width: 48,
               height: 48,
               borderRadius: 2,
-              bgcolor: bgColor,
+              //bgcolor: bgColor,
+              bgcolor: alpha(theme.palette.primary.main, 0.2),
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
             }}
           >
-            <Icon sx={{ color: colorValue, fontSize: 24 }} />
+            {/* <Icon sx={{ color: colorValue, fontSize: 24 }} /> */}
+            <Icon sx={{ color: "primary.main", fontSize: 24 }} />
           </Box>
         </Box>
 

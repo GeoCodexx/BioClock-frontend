@@ -210,7 +210,7 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                 }}
               >
                 <TableCell sx={{ width: 50 }} />
-                <TableCell>Departamento</TableCell>
+                <TableCell>DEPARTAMENTOS</TableCell>
                 <TableCell align="right" sx={{ width: 50 }} />
               </TableRow>
             </TableHead>

@@ -4,7 +4,7 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
   return (
     <Card
       sx={{
-        p: 3,
+        p: { xs: 1, sm: 3 },
         //height: "100%",
         borderRadius: 4,
         backgroundColor: (theme) => theme.palette.background.paper,
@@ -13,7 +13,7 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
         //border: '1px solid',
         borderColor: "rgba(255, 255, 255, 0.3)",
         position: "relative",
-        overflow: "hidden",
+        overflow: "hidden", 
         transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
         cursor: "pointer",
         boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
@@ -52,7 +52,7 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
       }}
     >
       {/* Partículas flotantes */}
-      <Box
+      {/* <Box
         sx={{
           position: "absolute",
           inset: 0,
@@ -84,9 +84,9 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
         <Box component="div" />
         <Box component="div" />
         <Box component="div" />
-      </Box>
+      </Box> */}
 
-      <Box sx={{ position: "relative", zIndex: 1 }}>
+      <Box sx={{ /*position: "relative",*/ zIndex: 1 }}>
         {/* Header: Ícono y Badge de tendencia */}
         <Box
           /*sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',*/ sx={{
@@ -126,18 +126,18 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
             }}
           >
             {icon}
-          </Box>
+          </Box >
         </Box>
 
         {/* Contador */}
         <Typography
-          variant="h2"
+          variant="h6"
           align="center"
           sx={{
             fontWeight: 800,
             mb: 1.5,
             color: "text.primary",
-            fontSize: { xs: "2.5rem", sm: "3rem" },
+            fontSize: "2rem",
             lineHeight: 1,
             transition: "all 0.3s ease",
             ".MuiCard-root:hover &": {
@@ -164,8 +164,8 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
               color: "text.secondary",
               fontWeight: 600,
               fontSize: "0.875rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
+              //textTransform: "uppercase",
+              //letterSpacing: "0.5px",
             }}
           >
             {title}

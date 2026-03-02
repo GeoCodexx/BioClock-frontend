@@ -499,7 +499,7 @@ export default function TopUsersRanking({
               </Typography>
             </Box>
           </Box>
-          <Box>
+          <Box sx={{ width: { xs: "100%", sm: "auto" }, mt: { xs: 2, sm: 0 } }}>
             <ToggleButtonGroup
               color="primary"
               size="small"
@@ -507,6 +507,13 @@ export default function TopUsersRanking({
               exclusive
               onChange={handleChangePeriod}
               aria-label="Periodo del ranking"
+              //fullWidth
+              sx={{
+                width: { xs: "100%", sm: "auto" },
+                "& .MuiToggleButton-root": {
+                  flex: 1,
+                },
+              }}
             >
               <ToggleButton value="weekly">Semanal</ToggleButton>
               <ToggleButton value="monthly">Mensual</ToggleButton>

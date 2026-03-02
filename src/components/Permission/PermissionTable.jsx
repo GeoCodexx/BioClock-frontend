@@ -203,7 +203,7 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
                 }}
               >
                 <TableCell sx={{ width: 50 }} />
-                <TableCell>Permiso</TableCell>
+                <TableCell>PERMISOS</TableCell>
                 <TableCell align="right" sx={{ width: 50 }} />
               </TableRow>
             </TableHead>
@@ -246,7 +246,7 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
                       {/* Código del Permiso */}
                       <TableCell sx={{ py: 1.5 }}>
                         <Box>
-                          <Typography variant="body2" sx={{ mb: 0.5 }}>
+                          <Typography variant="body2" sx={{ mb: 0.5 }} fontWeight={600}>
                             {permission.name || "—"}
                           </Typography>
                           <Stack

@@ -13,6 +13,7 @@ export default function FloatingAddButton({ onClick }) {
       color="primary"
       aria-label="add"
       onClick={onClick}
+      size="medium"
       sx={{
         position: "fixed",
         bottom: theme.spacing(3),
