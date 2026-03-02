@@ -24,6 +24,8 @@ import {
   ToggleButton,
   Collapse,
   IconButton,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -59,7 +61,6 @@ import AttendanceExportButtons from "../components/Reports/GeneralReport/Attenda
 import ScrollToTopButton from "../components/common/ScrolltoTopButton";
 import { createJustification } from "../services/justificationService";
 
-
 // Constantes
 const STATUS_OPTIONS = [
   //{ value: "", label: "Todos los estados" },
@@ -71,7 +72,6 @@ const STATUS_OPTIONS = [
   { value: "absent", label: "Ausente" },
   { value: "justified", label: "Justificado" },
 ];
-
 
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25, 50, 100];
 
@@ -205,6 +205,7 @@ const FiltersCard = memo(
     onDateToChange,
     onClearFilters,
     onChangeViewMode,
+    onChangeCheckboxUser,
     viewMode,
     totalRecords,
     error,
@@ -217,6 +218,10 @@ const FiltersCard = memo(
         //setViewMode(newMode);
         onChangeViewMode(newMode);
       }
+    }, []);
+
+    const handleCheckboxUserChange = useCallback((event) => {
+      onChangeCheckboxUser(event.target.checked);
     }, []);
 
     return (
@@ -440,7 +445,7 @@ const FiltersCard = memo(
               borderColor: "divider",
             }}
           >
-            {
+            <Stack spacing={1} direction="row">
               <ToggleButtonGroup
                 color="primary"
                 value={viewMode}
@@ -466,7 +471,11 @@ const FiltersCard = memo(
                   Tabla
                 </ToggleButton>
               </ToggleButtonGroup>
-            }
+              <FormControlLabel
+                control={<Checkbox onChange={handleCheckboxUserChange} />}
+                label="Incluir usuarios inactivos"
+              />
+            </Stack>
 
             <Stack
               direction={{ xs: "column", sm: "row" }}
@@ -567,6 +576,9 @@ export default function GeneralReportPage() {
   //Vista modo matriz o tabla
   const [viewMode, setViewMode] = useState("matrix");
 
+  //Vista modo matriz o tabla
+  const [checkboxInactiveUser, setCheckboxInactiveUser] = useState(false);
+
   //Estado para cachear data
   const [matrixCache, setMatrixCache] = useState({});
 
@@ -574,9 +586,14 @@ export default function GeneralReportPage() {
   const [fadeKey, setFadeKey] = useState(0);
 
   // Asignar key para cada mes que sera almacenado en cache
-  const monthKey = useMemo(
+  /*const monthKey = useMemo(
     () => format(currentMonth, "yyyy-MM"),
     [currentMonth],
+  );*/
+
+  const monthKey = useMemo(
+    () => `${format(currentMonth, "yyyy-MM")}-inactive:${checkboxInactiveUser}`,
+    [currentMonth, checkboxInactiveUser],
   );
 
   //Detectar cache
@@ -761,10 +778,9 @@ export default function GeneralReportPage() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [searchValue, handleClearSearch]);
-  console.log(dateFrom, dateTo);
+
   // Modificar el fetch de datos para usar debouncedSearch en matriz
   const fetchData = useCallback(async () => {
-    console.log(dateFrom, dateTo);
     setError(null);
 
     if (viewMode === "table" && isRangeValid) setLoadingTable(true);
@@ -832,6 +848,9 @@ export default function GeneralReportPage() {
       if (dateTo && viewMode === "table")
         params.set("endDate", format(dateTo, "yyyy-MM-dd"));
 
+      if (checkboxInactiveUser)
+        params.set("inactiveUsers", checkboxInactiveUser);
+
       const response = await getGeneralReport(params);
 
       if (viewMode === "matrix") {
@@ -868,6 +887,7 @@ export default function GeneralReportPage() {
     monthKey,
     filterMatrixData,
     isRangeValid,
+    checkboxInactiveUser,
   ]);
 
   // Fetch de turnos
@@ -891,7 +911,7 @@ export default function GeneralReportPage() {
 
     setLoadingMatrix(true);
     fetchData();
-  }, [currentMonth, debouncedSearch, scheduleId, status]); // ← Cambio aquí
+  }, [currentMonth, debouncedSearch, scheduleId, status, checkboxInactiveUser]);
 
   // Efecto para filtrado local cuando hay cache - USAR debouncedSearch
   useEffect(() => {
@@ -908,7 +928,7 @@ export default function GeneralReportPage() {
 
     setDataMatrix(filteredData);
     setFadeKey((prev) => prev + 1);
-  }, [debouncedSearch, scheduleId, status, viewMode, monthKey]); // ← Cambio aquí
+  }, [debouncedSearch, scheduleId, status, viewMode, monthKey]);
 
   // Limpiar estados al cambiar de vista
   useEffect(() => {
@@ -949,7 +969,15 @@ export default function GeneralReportPage() {
     }, 700);
 
     return () => clearTimeout(handler);
-  }, [viewMode, dateFrom, dateTo, search, scheduleId, status]);
+  }, [
+    viewMode,
+    dateFrom,
+    dateTo,
+    search,
+    scheduleId,
+    status,
+    checkboxInactiveUser,
+  ]);
 
   // SIN debounce → paginación inmediata
   // TABLE pagination
@@ -1020,6 +1048,10 @@ export default function GeneralReportPage() {
     setViewMode(newValue);
   }, []);
 
+  const handleChangeCheckboxUser = useCallback((value) => {
+    setCheckboxInactiveUser(value);
+  }, []);
+
   // Manejar justificación
   const handleJustify = useCallback(async (payload, files) => {
     try {
@@ -1033,9 +1065,7 @@ export default function GeneralReportPage() {
       const response = await createJustification(formattedData, files);
 
       if (response?.success) {
-        showSuccess(
-          response?.message || "Justificación creada correctamente",
-        );
+        showSuccess(response?.message || "Justificación creada correctamente");
 
         fetchData();
         // Mostrar notificación de éxito (puedes usar Snackbar)
@@ -1159,6 +1189,7 @@ export default function GeneralReportPage() {
         onDateToChange={handleDateToChange}
         onClearFilters={handleClearFilters}
         onChangeViewMode={handleChangeViewMode}
+        onChangeCheckboxUser={handleChangeCheckboxUser}
         viewMode={effectiveViewMode}
         totalRecords={
           viewMode === "matrix"
