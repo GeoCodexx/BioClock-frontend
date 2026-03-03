@@ -27,6 +27,16 @@ export const updateDevice = async (id, deviceData) => {
   }
 };
 
+export const updateDeviceStatus = async (id, status) => {
+  try {
+    const { data } = await api.patch(`/devices/${id}/status`, status);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al actualizar estado de dispositivo");
+  }
+};
+
+
 export const getDevices = async () => {
   try {
     const { data } = await api.get("/devices");

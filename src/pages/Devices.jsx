@@ -18,6 +18,7 @@ import {
   createDevice,
   updateDevice,
   deleteDevice,
+  updateDeviceStatus,
 } from "../services/deviceService";
 import DeviceTable from "../components/Device/DeviceTable";
 import DeviceSearchBar from "../components/Device/DeviceSearchBar";
@@ -34,6 +35,7 @@ import LoadingOverlay from "../components/common/LoadingOverlay";
 import useAuthStore from "../store/useAuthStore";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
+import ToggleStatusDialog from "../components/common/ToggleStatusDialog";
 
 const generateDeviceId = () => {
   const now = new Date();
@@ -68,6 +70,11 @@ export default function Devices() {
     open: false,
     editDevice: null,
     error: "",
+  });
+
+  const [dialogStatus, setDialogStatus] = useState({
+    open: false,
+    editRecord: null,
   });
 
   const [deleteState, setDeleteState] = useState({
@@ -170,7 +177,7 @@ export default function Devices() {
         throw err;
       }
     },
-    [dialog.editDevice, showSuccess, showError, refreshDevices]
+    [dialog.editDevice, showSuccess, showError, refreshDevices],
   );
 
   const handleEdit = useCallback((device) => {
@@ -188,6 +195,29 @@ export default function Devices() {
     });
   }, []);
 
+  // Handler para manejar cambio de estado de registro
+  const handleChangeStatus = useCallback((record) => {
+    setDialogStatus({
+      open: true,
+      editRecord: record,
+    });
+  }, []);
+
+  const handleToggleStatus = useCallback(async () => {
+    try {
+      const status =
+        dialogStatus.editRecord?.status === "active" ? "inactive" : "active";
+      await updateDeviceStatus(dialogStatus.editRecord?._id, { status });
+      showSuccess("Estado actualizado correctamente");
+      setDialogStatus({ open: false, editRecord: null });
+      await refreshDevices();
+    } catch (err) {
+      const errorMessage = err?.message || "Error al actualizar estado";
+      showError(errorMessage);
+      console.error("Error en handleToggleStatus:", err);
+    }
+  }, [dialogStatus.editRecord, showSuccess, showError, refreshDevices]);
+
   const confirmDelete = useCallback(async () => {
     setDeleteState((prev) => ({ ...prev, error: "" }));
     try {
@@ -196,8 +226,7 @@ export default function Devices() {
       setDeleteState({ id: null, error: "" });
       await refreshDevices();
     } catch (err) {
-      const errorMessage =
-        err?.message || "Error al eliminar el dispositivo";
+      const errorMessage = err?.message || "Error al eliminar el dispositivo";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);
@@ -230,7 +259,7 @@ export default function Devices() {
         page: 0,
       }));
     },
-    [searchInput]
+    [searchInput],
   );
 
   const handleOpenDialog = useCallback(() => {
@@ -272,7 +301,7 @@ export default function Devices() {
         </Typography>
       </Breadcrumbs>
     ),
-    [isMobile]
+    [isMobile],
   );
 
   // Memorizar tabla
@@ -281,10 +310,11 @@ export default function Devices() {
       <DeviceTable
         devices={devices}
         onEdit={handleEdit}
+        onChangeStatus={handleChangeStatus}
         onDelete={handleDelete}
       />
     ),
-    [devices, handleEdit, handleDelete]
+    [devices, handleEdit, handleDelete],
   );
 
   // Estado de carga inicial
@@ -486,6 +516,15 @@ export default function Devices() {
         editDevice={dialog.editDevice}
         formError={dialog.error}
         onSubmit={handleSubmit}
+      />
+
+      <ToggleStatusDialog
+        open={dialogStatus.open}
+        onClose={() => setDialogStatus({ open: false, editRecord: null })}
+        onConfirm={() => handleToggleStatus(dialogStatus.editRecord)}
+        record={dialogStatus.editRecord}
+        nameRecord={"dispositivo"}
+        currentStatus={dialogStatus.editRecord?.status}
       />
 
       <DeleteConfirmDialog

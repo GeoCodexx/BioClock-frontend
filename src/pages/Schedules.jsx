@@ -18,6 +18,7 @@ import {
   getPaginatedSchedules,
   updateSchedule,
   deleteSchedule,
+  updateScheduleStatus,
 } from "../services/scheduleService";
 import ScheduleTable from "../components/Schedule/ScheduleTable";
 import ScheduleSearchBar from "../components/Schedule/ScheduleSearchBar";
@@ -34,6 +35,7 @@ import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
 import { usePermission } from "../utils/permissions";
+import ToggleStatusDialog from "../components/common/ToggleStatusDialog";
 
 export default function Schedules() {
   const { can } = usePermission();
@@ -61,6 +63,11 @@ export default function Schedules() {
     open: false,
     editSchedule: null,
     error: "",
+  });
+
+  const [dialogStatus, setDialogStatus] = useState({
+    open: false,
+    editRecord: null,
   });
 
   const [deleteState, setDeleteState] = useState({
@@ -153,7 +160,7 @@ export default function Schedules() {
         throw err;
       }
     },
-    [dialog.editSchedule, showSuccess, showError, refreshSchedules]
+    [dialog.editSchedule, showSuccess, showError, refreshSchedules],
   );
 
   const handleEdit = useCallback((schedule) => {
@@ -171,6 +178,29 @@ export default function Schedules() {
     });
   }, []);
 
+  // Handler para manejar cambio de estado de registro
+  const handleChangeStatus = useCallback((record) => {
+    setDialogStatus({
+      open: true,
+      editRecord: record,
+    });
+  }, []);
+
+  const handleToggleStatus = useCallback(async () => {
+    try {
+      const status =
+        dialogStatus.editRecord?.status === "active" ? "inactive" : "active";
+      await updateScheduleStatus(dialogStatus.editRecord?._id, { status });
+      showSuccess("Estado actualizado correctamente");
+      setDialogStatus({ open: false, editRecord: null });
+      await refreshSchedules();
+    } catch (err) {
+      const errorMessage = err?.message || "Error al actualizar estado";
+      showError(errorMessage);
+      console.error("Error en handleToggleStatus:", err);
+    }
+  }, [dialogStatus.editRecord, showSuccess, showError, refreshSchedules]);
+
   const confirmDelete = useCallback(async () => {
     setDeleteState((prev) => ({ ...prev, error: "" }));
     try {
@@ -179,8 +209,7 @@ export default function Schedules() {
       setDeleteState({ id: null, error: "" });
       await refreshSchedules();
     } catch (err) {
-      const errorMessage =
-        err?.message || "Error al eliminar el horario";
+      const errorMessage = err?.message || "Error al eliminar el horario";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);
@@ -213,7 +242,7 @@ export default function Schedules() {
         page: 0,
       }));
     },
-    [searchInput]
+    [searchInput],
   );
 
   const handleOpenDialog = useCallback(() => {
@@ -255,7 +284,7 @@ export default function Schedules() {
         </Typography>
       </Breadcrumbs>
     ),
-    [isMobile]
+    [isMobile],
   );
 
   // Memorizar tabla
@@ -264,10 +293,11 @@ export default function Schedules() {
       <ScheduleTable
         schedules={schedules}
         onEdit={handleEdit}
+        onChangeStatus={handleChangeStatus}
         onDelete={handleDelete}
       />
     ),
-    [schedules, handleEdit, handleDelete]
+    [schedules, handleEdit, handleDelete],
   );
 
   // Estado de carga inicial
@@ -477,6 +507,15 @@ export default function Schedules() {
         editSchedule={dialog.editSchedule}
         formError={dialog.error}
         onSubmit={handleSubmit}
+      />
+
+      <ToggleStatusDialog
+        open={dialogStatus.open}
+        onClose={() => setDialogStatus({ open: false, editRecord: null })}
+        onConfirm={() => handleToggleStatus(dialogStatus.editRecord)}
+        record={dialogStatus.editRecord}
+        nameRecord={"horario"}
+        currentStatus={dialogStatus.editRecord?.status}
       />
 
       <DeleteConfirmDialog

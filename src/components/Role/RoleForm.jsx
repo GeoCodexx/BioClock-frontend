@@ -44,6 +44,7 @@ const RoleForm = ({
     "general-report": "Reporte General",
     roles: "Roles",
     users: "Usuarios",
+    system: "Sistema",
   };
 
   // Mapeo de acciones a nombres legibles
@@ -57,6 +58,7 @@ const RoleForm = ({
     unjustify: "Desjustificar",
     approve: "Aprobar",
     reject: "Rechazar",
+    configuration: "Configuración",
   };
 
   // Normalizar permisos
@@ -164,7 +166,7 @@ const RoleForm = ({
         : [...currentValue, permissionId];
       setValue("permissions", newValue, { shouldValidate: false });
     },
-    [setValue]
+    [setValue],
   );
 
   // Verificar si todos los permisos de un módulo están seleccionados
@@ -177,7 +179,7 @@ const RoleForm = ({
   const isModulePartiallySelected = (module, selectedPermissions) => {
     const modulePerms = groupedPermissions[module] || [];
     const selectedCount = modulePerms.filter((p) =>
-      selectedPermissions.includes(p._id)
+      selectedPermissions.includes(p._id),
     ).length;
     return selectedCount > 0 && selectedCount < modulePerms.length;
   };
@@ -195,7 +197,7 @@ const RoleForm = ({
 
       setValue("permissions", newValue, { shouldValidate: false });
     },
-    [setValue, groupedPermissions]
+    [setValue, groupedPermissions],
   );
 
   return (
@@ -342,7 +344,7 @@ const RoleForm = ({
                             checked={isModuleFullySelected(module, field.value)}
                             indeterminate={isModulePartiallySelected(
                               module,
-                              field.value
+                              field.value,
                             )}
                             onChange={() =>
                               handleModuleToggle(module, field.value)
@@ -369,12 +371,12 @@ const RoleForm = ({
                               control={
                                 <Checkbox
                                   checked={field.value?.includes(
-                                    permission._id
+                                    permission._id,
                                   )}
                                   onChange={() =>
                                     handlePermissionToggle(
                                       permission._id,
-                                      field.value
+                                      field.value,
                                     )
                                   }
                                   disabled={disabled}

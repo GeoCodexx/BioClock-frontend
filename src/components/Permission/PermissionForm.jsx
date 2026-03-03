@@ -18,6 +18,7 @@ const MODULES = [
   { value: "general-report", label: "Reporte General" },
   { value: "roles", label: "Roles" },
   { value: "users", label: "Usuarios" },
+  { value: "system", label: "Sistema" },
 ];
 
 const ACTIONS = [
@@ -32,6 +33,7 @@ const ACTIONS = [
   { value: "export", label: "Exportar", color: "info" },
   { value: "detail", label: "Ver detalles", color: "info" },
   { value: "changestatus", label: "Cambiar estado", color: "info" },
+  { value: "configuration", label: "Configuración", color: "info" },
 ];
 
 const PermissionForm = ({

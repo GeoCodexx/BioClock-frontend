@@ -27,6 +27,15 @@ export const updateSchedule = async (id, scheduleData) => {
   }
 };
 
+export const updateScheduleStatus = async (id, status) => {
+  try {
+    const { data } = await api.patch(`/schedules/${id}/status`, status);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al actualizar estado de horario");
+  }
+};
+
 export const getSchedules = async () => {
   try {
     const { data } = await api.get("/schedules");

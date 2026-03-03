@@ -34,8 +34,14 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { usePermission } from "../../utils/permissions";
+import { Block, CheckCircleOutline } from "@mui/icons-material";
 
-const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
+const PermissionTable = ({
+  permissions = [],
+  onEdit,
+  onChangeStatus,
+  onDelete,
+}) => {
   const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -64,6 +70,13 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
   const handleEdit = () => {
     if (selectedPermission && onEdit) {
       onEdit(selectedPermission);
+    }
+    handleMenuClose();
+  };
+
+  const handleChangeStatus = () => {
+    if (selectedPermission && onChangeStatus) {
+      onChangeStatus(selectedPermission);
     }
     handleMenuClose();
   };
@@ -246,7 +259,11 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
                       {/* Código del Permiso */}
                       <TableCell sx={{ py: 1.5 }}>
                         <Box>
-                          <Typography variant="body2" sx={{ mb: 0.5 }} fontWeight={600}>
+                          <Typography
+                            variant="body2"
+                            sx={{ mb: 0.5 }}
+                            fontWeight={600}
+                          >
                             {permission.name || "—"}
                           </Typography>
                           <Stack
@@ -423,6 +440,26 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
               <ListItemText>Editar</ListItemText>
             </MenuItem>
           )}
+          <Divider />
+          {can("permissions:update") && (
+            <MenuItem onClick={handleChangeStatus}>
+              <ListItemIcon>
+                {selectedPermission?.status &&
+                selectedPermission.status === "active" ? (
+                  <Block fontSize="small" color="error" />
+                ) : (
+                  <CheckCircleOutline fontSize="small" color="success" />
+                )}
+              </ListItemIcon>
+              <ListItemText>
+                {selectedPermission?.status &&
+                selectedPermission.status === "active"
+                  ? "Desactivar"
+                  : "Activar"}
+              </ListItemText>
+            </MenuItem>
+          )}
+          <Divider />
           {can("permissions:delete") && (
             <MenuItem onClick={handleDelete}>
               <ListItemIcon>
@@ -573,36 +610,79 @@ const PermissionTable = ({ permissions = [], onEdit, onDelete }) => {
                 <Box
                   sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}
                 >
-                  <Tooltip title="Editar horario" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={() => onEdit && onEdit(permission)}
-                      sx={{
-                        color: theme.palette.primary.main,
-                        bgcolor: alpha(theme.palette.primary.main, 0.08),
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.primary.main, 0.15),
-                        },
-                      }}
+                  {can("permissions:update") && (
+                    <Tooltip title="Editar permiso" arrow>
+                      <IconButton
+                        size="small"
+                        onClick={() => onEdit && onEdit(permission)}
+                        sx={{
+                          color: theme.palette.primary.main,
+                          bgcolor: alpha(theme.palette.primary.main, 0.08),
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.primary.main, 0.15),
+                          },
+                        }}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {can("permissions:update") && (
+                    <Tooltip
+                      title={
+                        permission?.status && permission.status === "active"
+                          ? "Desactivar permiso"
+                          : "Activar permiso"
+                      }
+                      arrow
                     >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Eliminar horario" arrow>
-                    <IconButton
-                      size="small"
-                      onClick={() => onDelete && onDelete(permission._id)}
-                      sx={{
-                        color: theme.palette.error.main,
-                        bgcolor: alpha(theme.palette.error.main, 0.08),
-                        "&:hover": {
-                          bgcolor: alpha(theme.palette.error.main, 0.15),
-                        },
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          onChangeStatus && onChangeStatus(permission)
+                        }
+                        sx={{
+                          color:
+                            permission?.status && permission.status === "active"
+                              ? theme.palette.error.main
+                              : theme.palette.success.main,
+                          bgcolor:
+                            permission?.status && permission.status === "active"
+                              ? alpha(theme.palette.error.main, 0.08)
+                              : alpha(theme.palette.success.main, 0.08),
+                          "&:hover": {
+                            bgcolor:
+                              permission?.status && permission.status === "active"
+                                ? alpha(theme.palette.error.main, 0.15)
+                                : alpha(theme.palette.success.main, 0.15),
+                          },
+                        }}
+                      >
+                        {permission?.status && permission.status === "active" ? (
+                          <Block fontSize="small" />
+                        ) : (
+                          <CheckCircleOutline fontSize="small" />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {can("permissions:delete") && (
+                    <Tooltip title="Eliminar permiso" arrow>
+                      <IconButton
+                        size="small"
+                        onClick={() => onDelete && onDelete(permission._id)}
+                        sx={{
+                          color: theme.palette.error.main,
+                          bgcolor: alpha(theme.palette.error.main, 0.08),
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.error.main, 0.15),
+                          },
+                        }}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </Box>
               </TableCell>
             </TableRow>

@@ -18,6 +18,7 @@ import {
   getPaginatedRoles,
   updateRole,
   deleteRole,
+  updateRoleStatus,
 } from "../services/roleService";
 import RoleTable from "../components/Role/RoleTable";
 import RoleSearchBar from "../components/Role/RoleSearchBar";
@@ -34,6 +35,7 @@ import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
 import { usePermission } from "../utils/permissions";
+import ToggleStatusDialog from "../components/common/ToggleStatusDialog";
 
 export default function Roles() {
   const { can } = usePermission();
@@ -61,6 +63,11 @@ export default function Roles() {
     open: false,
     editRole: null,
     error: "",
+  });
+
+  const [dialogStatus, setDialogStatus] = useState({
+    open: false,
+    editRecord: null,
   });
 
   const [deleteState, setDeleteState] = useState({
@@ -153,7 +160,7 @@ export default function Roles() {
         throw err;
       }
     },
-    [dialog.editRole, showSuccess, showError, refreshRoles]
+    [dialog.editRole, showSuccess, showError, refreshRoles],
   );
 
   const handleEdit = useCallback((role) => {
@@ -171,6 +178,29 @@ export default function Roles() {
     });
   }, []);
 
+  // Handler para manejar cambio de estado de registro
+  const handleChangeStatus = useCallback((record) => {
+    setDialogStatus({
+      open: true,
+      editRecord: record,
+    });
+  }, []);
+
+  const handleToggleStatus = useCallback(async () => {
+    try {
+      const status =
+        dialogStatus.editRecord?.status === "active" ? "inactive" : "active";
+      await updateRoleStatus(dialogStatus.editRecord?._id, { status });
+      showSuccess("Estado actualizado correctamente");
+      setDialogStatus({ open: false, editRecord: null });
+      await refreshRoles();
+    } catch (err) {
+      const errorMessage = err?.message || "Error al actualizar estado";
+      showError(errorMessage);
+      console.error("Error en handleToggleStatus:", err);
+    }
+  }, [dialogStatus.editRecord, showSuccess, showError, refreshRoles]);
+
   const confirmDelete = useCallback(async () => {
     setDeleteState((prev) => ({ ...prev, error: "" }));
     try {
@@ -179,8 +209,7 @@ export default function Roles() {
       setDeleteState({ id: null, error: "" });
       await refreshRoles();
     } catch (err) {
-      const errorMessage =
-        err?.message || "Error al eliminar el rol";
+      const errorMessage = err?.message || "Error al eliminar el rol";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);
@@ -213,7 +242,7 @@ export default function Roles() {
         page: 0,
       }));
     },
-    [searchInput]
+    [searchInput],
   );
 
   const handleOpenDialog = useCallback(() => {
@@ -255,15 +284,20 @@ export default function Roles() {
         </Typography>
       </Breadcrumbs>
     ),
-    [isMobile]
+    [isMobile],
   );
 
   // Memorizar tabla
   const roleTableMemo = useMemo(
     () => (
-      <RoleTable roles={roles} onEdit={handleEdit} onDelete={handleDelete} />
+      <RoleTable
+        roles={roles}
+        onEdit={handleEdit}
+        onChangeStatus={handleChangeStatus}
+        onDelete={handleDelete}
+      />
     ),
-    [roles, handleEdit, handleDelete]
+    [roles, handleEdit, handleDelete],
   );
 
   // Estado de carga inicial
@@ -469,6 +503,15 @@ export default function Roles() {
         editRole={dialog.editRole}
         formError={dialog.error}
         onSubmit={handleSubmit}
+      />
+
+      <ToggleStatusDialog
+        open={dialogStatus.open}
+        onClose={() => setDialogStatus({ open: false, editRecord: null })}
+        onConfirm={() => handleToggleStatus(dialogStatus.editRecord)}
+        record={dialogStatus.editRecord}
+        nameRecord={"rol"}
+        currentStatus={dialogStatus.editRecord?.status}
       />
 
       <DeleteConfirmDialog

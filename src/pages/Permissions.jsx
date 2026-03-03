@@ -18,6 +18,7 @@ import {
   createPermission,
   updatePermission,
   deletePermission,
+  updatePermissionStatus,
 } from "../services/permissionService";
 import PermissionTable from "../components/Permission/PermissionTable";
 import PermissionSearchBar from "../components/Permission/PermissionSearchBar";
@@ -34,6 +35,7 @@ import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
 import { usePermission } from "../utils/permissions";
+import ToggleStatusDialog from "../components/common/ToggleStatusDialog";
 
 export default function Permissions() {
   const { can } = usePermission();
@@ -60,6 +62,11 @@ export default function Permissions() {
     open: false,
     editPermission: null,
     error: "",
+  });
+
+  const [dialogStatus, setDialogStatus] = useState({
+    open: false,
+    editRecord: null,
   });
 
   const [deleteState, setDeleteState] = useState({
@@ -117,7 +124,7 @@ export default function Permissions() {
       setPermissions(data.permissions);
       setTotal(data.total);
     } catch (err) {
-      setError(err?.message|| "Error al cargar permisos");
+      setError(err?.message || "Error al cargar permisos");
     } finally {
       setLoading(false);
     }
@@ -154,7 +161,7 @@ export default function Permissions() {
         throw err;
       }
     },
-    [dialog.editPermission, showSuccess, showError, refreshPermissions]
+    [dialog.editPermission, showSuccess, showError, refreshPermissions],
   );
 
   const handleEdit = useCallback((permission) => {
@@ -179,6 +186,29 @@ export default function Permissions() {
     });
   }, []);
 
+  // Handler para manejar cambio de estado de registro
+  const handleChangeStatus = useCallback((record) => {
+    setDialogStatus({
+      open: true,
+      editRecord: record,
+    });
+  }, []);
+
+  const handleToggleStatus = useCallback(async () => {
+    try {
+      const status =
+        dialogStatus.editRecord?.status === "active" ? "inactive" : "active";
+      await updatePermissionStatus(dialogStatus.editRecord?._id, { status });
+      showSuccess("Estado actualizado correctamente");
+      setDialogStatus({ open: false, editRecord: null });
+      await refreshPermissions();
+    } catch (err) {
+      const errorMessage = err?.message || "Error al actualizar estado";
+      showError(errorMessage);
+      console.error("Error en handleToggleStatus:", err);
+    }
+  }, [dialogStatus.editRecord, showSuccess, showError, refreshPermissions]);
+
   const confirmDelete = useCallback(async () => {
     setDeleteState((prev) => ({ ...prev, error: "" }));
     try {
@@ -187,8 +217,7 @@ export default function Permissions() {
       setDeleteState({ id: null, error: "" });
       await refreshPermissions();
     } catch (err) {
-      const errorMessage =
-        err?.message || "Error al eliminar el permiso";
+      const errorMessage = err?.message || "Error al eliminar el permiso";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);
@@ -221,7 +250,7 @@ export default function Permissions() {
         page: 0,
       }));
     },
-    [searchInput]
+    [searchInput],
   );
 
   const handleOpenDialog = useCallback(() => {
@@ -263,7 +292,7 @@ export default function Permissions() {
         </Typography>
       </Breadcrumbs>
     ),
-    [isMobile]
+    [isMobile],
   );
 
   // Memorizar tabla
@@ -272,10 +301,11 @@ export default function Permissions() {
       <PermissionTable
         permissions={permissions}
         onEdit={handleEdit}
+        onChangeStatus={handleChangeStatus}
         onDelete={handleDelete}
       />
     ),
-    [permissions, handleEdit, handleDelete]
+    [permissions, handleEdit, handleDelete],
   );
 
   // Estado de carga inicial
@@ -485,6 +515,15 @@ export default function Permissions() {
         editPermission={dialog.editPermission}
         formError={dialog.error}
         onSubmit={handleSubmit}
+      />
+
+      <ToggleStatusDialog
+        open={dialogStatus.open}
+        onClose={() => setDialogStatus({ open: false, editRecord: null })}
+        onConfirm={() => handleToggleStatus(dialogStatus.editRecord)}
+        record={dialogStatus.editRecord}
+        nameRecord={"permiso"}
+        currentStatus={dialogStatus.editRecord?.status}
       />
 
       <DeleteConfirmDialog

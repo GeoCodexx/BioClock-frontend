@@ -23,6 +23,7 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Divider,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -32,8 +33,14 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PlaceIcon from "@mui/icons-material/Place";
 import { usePermission } from "../../utils/permissions";
+import { Block, CheckCircleOutline } from "@mui/icons-material";
 
-const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
+const DepartmentTable = ({
+  departments = [],
+  onEdit,
+  onChangeStatus,
+  onDelete,
+}) => {
   const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -70,6 +77,13 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
   const handleEdit = () => {
     if (selectedDepartment && onEdit) {
       onEdit(selectedDepartment);
+    }
+    handleMenuClose();
+  };
+
+  const handleChangeStatus = () => {
+    if (selectedDepartment && onChangeStatus) {
+      onChangeStatus(selectedDepartment);
     }
     handleMenuClose();
   };
@@ -254,7 +268,11 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                       {/* Nombre del Departamento */}
                       <TableCell sx={{ py: 1.5 }}>
                         <Box>
-                          <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+                          <Typography
+                            variant="body2"
+                            fontWeight={600}
+                            sx={{ mb: 0.5 }}
+                          >
                             {department.name || "—"}
                           </Typography>
                           <Stack
@@ -388,6 +406,26 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
               <ListItemText>Editar</ListItemText>
             </MenuItem>
           )}
+          <Divider />
+          {can("departments:update") && (
+            <MenuItem onClick={handleChangeStatus}>
+              <ListItemIcon>
+                {selectedDepartment?.status &&
+                selectedDepartment.status === "active" ? (
+                  <Block fontSize="small" color="error" />
+                ) : (
+                  <CheckCircleOutline fontSize="small" color="success" />
+                )}
+              </ListItemIcon>
+              <ListItemText>
+                {selectedDepartment?.status &&
+                selectedDepartment.status === "active"
+                  ? "Desactivar"
+                  : "Activar"}
+              </ListItemText>
+            </MenuItem>
+          )}
+          <Divider />
           {can("departments:delete") && (
             <MenuItem onClick={handleDelete}>
               <ListItemIcon>
@@ -498,23 +536,23 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
 
               {/* Ubicación */}
               <TableCell>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <PlaceIcon
-                sx={{ fontSize: 18, color: theme.palette.text.secondary }}
-              />
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {department.location || "Sin ubicación"}
-              </Typography>
-            </Box>
-          </TableCell>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <PlaceIcon
+                    sx={{ fontSize: 18, color: theme.palette.text.secondary }}
+                  />
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {department.location || "Sin ubicación"}
+                  </Typography>
+                </Box>
+              </TableCell>
 
               {/* Estado */}
               <TableCell align="center">
@@ -563,6 +601,47 @@ const DepartmentTable = ({ departments = [], onEdit, onDelete }) => {
                         }}
                       >
                         <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                  {can("departments:update") && (
+                    <Tooltip
+                      title={
+                        department?.status && department.status === "active"
+                          ? "Desactivar departamento"
+                          : "Activar departamento"
+                      }
+                      arrow
+                    >
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          onChangeStatus && onChangeStatus(department)
+                        }
+                        sx={{
+                          color:
+                            department?.status && department.status === "active"
+                              ? theme.palette.error.main
+                              : theme.palette.success.main,
+                          bgcolor:
+                            department?.status && department.status === "active"
+                              ? alpha(theme.palette.error.main, 0.08)
+                              : alpha(theme.palette.success.main, 0.08),
+                          "&:hover": {
+                            bgcolor:
+                              department?.status &&
+                              department.status === "active"
+                                ? alpha(theme.palette.error.main, 0.15)
+                                : alpha(theme.palette.success.main, 0.15),
+                          },
+                        }}
+                      >
+                        {department?.status &&
+                        department.status === "active" ? (
+                          <Block fontSize="small" />
+                        ) : (
+                          <CheckCircleOutline fontSize="small" />
+                        )}
                       </IconButton>
                     </Tooltip>
                   )}

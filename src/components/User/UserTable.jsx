@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -62,50 +62,49 @@ const UserTable = ({
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const handleRowToggle = (userId) => {
+  const handleRowToggle = useCallback((userId) => {
     setOpenRowId((prev) => (prev === userId ? null : userId));
-  };
-
+  }, []);
   // Menu de acciones (mobile)
-  const handleMenuOpen = (event, user) => {
+  const handleMenuOpen = useCallback((event, user) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
     setSelectedUser(user);
-  };
+  }, []);
 
-  const handleMenuClose = () => {
+  const handleMenuClose = useCallback(() => {
     setAnchorEl(null);
     setSelectedUser(null);
-  };
+  }, []);
 
-  const handleEdit = () => {
+  const handleEdit = useCallback(() => {
     if (selectedUser && onEdit) {
       onEdit(selectedUser);
     }
     handleMenuClose();
-  };
+  }, [selectedUser, onEdit, handleMenuClose]);
 
-  const handleChangeStatus = () => {
+  const handleChangeStatus = useCallback(() => {
     if (selectedUser && onChangeStatus) {
       onChangeStatus(selectedUser);
     }
     handleMenuClose();
-  };
+  }, [selectedUser, onEdit, handleMenuClose]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     if (selectedUser && onDelete) {
       onDelete(selectedUser._id);
     }
     handleMenuClose();
-  };
+  }, [selectedUser, onEdit, handleMenuClose]);
 
   // Formatear nombre completo
-  const getFullName = (user) => {
+  const getFullName = useCallback((user) => {
     const parts = [user.name, user.firstSurname, user.secondSurname].filter(
       Boolean,
     );
     return parts.join(" ") || "—";
-  };
+  }, []);
 
   // Formatear fecha
   const formatDate = (dateString) => {
@@ -180,11 +179,11 @@ const UserTable = ({
   ];
 
   // Funciones de ordenamiento
-  const getComparator = (order, orderBy) => {
+  const getComparator = useCallback((order, orderBy) => {
     return order === "desc"
       ? (a, b) => descendingComparator(a, b, orderBy)
       : (a, b) => -descendingComparator(a, b, orderBy);
-  };
+  }, []);
 
   const descendingComparator = (a, b, orderBy) => {
     // Ordenar por nombre completo

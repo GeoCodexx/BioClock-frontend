@@ -33,10 +33,18 @@ import {
   VpnKey as VpnKeyIcon,
   Description as DescriptionIcon,
   Security as SecurityIcon,
+  Block,
+  CheckCircleOutline,
 } from "@mui/icons-material";
 import { usePermission } from "../../utils/permissions";
 
-const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
+const RoleTable = ({
+  roles = [],
+  onEdit,
+  onChangeStatus,
+  onDelete,
+  loading = false,
+}) => {
   const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -65,6 +73,13 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
   const handleEdit = () => {
     if (selectedRole && onEdit) {
       onEdit(selectedRole);
+    }
+    handleMenuClose();
+  };
+
+  const handleChangeStatus = () => {
+    if (selectedRole && onChangeStatus) {
+      onChangeStatus(selectedRole);
     }
     handleMenuClose();
   };
@@ -243,7 +258,9 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                       {/* Información del Rol */}
                       <TableCell sx={{ py: 1.5 }}>
                         <Stack spacing={0.5}>
-                          <Typography variant="body2" fontWeight={600}>{role.name}</Typography>
+                          <Typography variant="body2" fontWeight={600}>
+                            {role.name}
+                          </Typography>
                           <Stack
                             direction="row"
                             spacing={1}
@@ -382,7 +399,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                                           height: 22,
                                           borderColor: alpha(
                                             theme.palette.primary.main,
-                                            0.3
+                                            0.3,
                                           ),
                                           color: theme.palette.primary.main,
                                         }}
@@ -438,6 +455,23 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                 <EditIcon fontSize="small" color="primary" />
               </ListItemIcon>
               <ListItemText>Editar</ListItemText>
+            </MenuItem>
+          )}
+          <Divider />
+          {can("roles:update") && (
+            <MenuItem onClick={handleChangeStatus}>
+              <ListItemIcon>
+                {selectedRole?.status && selectedRole.status === "active" ? (
+                  <Block fontSize="small" color="error" />
+                ) : (
+                  <CheckCircleOutline fontSize="small" color="success" />
+                )}
+              </ListItemIcon>
+              <ListItemText>
+                {selectedRole?.status && selectedRole.status === "active"
+                  ? "Desactivar"
+                  : "Activar"}
+              </ListItemText>
             </MenuItem>
           )}
           <Divider />
@@ -580,7 +614,7 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                               height: 24,
                               borderColor: alpha(
                                 theme.palette.primary.main,
-                                0.3
+                                0.3,
                               ),
                               color: theme.palette.primary.main,
                               fontWeight: 500,
@@ -655,6 +689,45 @@ const RoleTable = ({ roles = [], onEdit, onDelete, loading = false }) => {
                           }}
                         >
                           <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                    {can("roles:update") && (
+                      <Tooltip
+                        title={
+                          role?.status && role.status === "active"
+                            ? "Desactivar rol"
+                            : "Activar rol"
+                        }
+                        arrow
+                      >
+                        <IconButton
+                          size="small"
+                          onClick={() =>
+                            onChangeStatus && onChangeStatus(role)
+                          }
+                          sx={{
+                            color:
+                              role?.status && role.status === "active"
+                                ? theme.palette.error.main
+                                : theme.palette.success.main,
+                            bgcolor:
+                              role?.status && role.status === "active"
+                                ? alpha(theme.palette.error.main, 0.08)
+                                : alpha(theme.palette.success.main, 0.08),
+                            "&:hover": {
+                              bgcolor:
+                                role?.status && role.status === "active"
+                                  ? alpha(theme.palette.error.main, 0.15)
+                                  : alpha(theme.palette.success.main, 0.15),
+                            },
+                          }}
+                        >
+                          {role?.status && role.status === "active" ? (
+                            <Block fontSize="small" />
+                          ) : (
+                            <CheckCircleOutline fontSize="small" />
+                          )}
                         </IconButton>
                       </Tooltip>
                     )}

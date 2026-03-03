@@ -35,8 +35,14 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import { usePermission } from "../../utils/permissions";
+import { Block, CheckCircleOutline } from "@mui/icons-material";
 
-const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
+const ScheduleTable = ({
+  schedules = [],
+  onEdit,
+  onChangeStatus,
+  onDelete,
+}) => {
   const { can } = usePermission();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -94,6 +100,13 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
   const handleEdit = () => {
     if (selectedSchedule && onEdit) {
       onEdit(selectedSchedule);
+    }
+    handleMenuClose();
+  };
+
+  const handleChangeStatus = () => {
+    if (selectedSchedule && onChangeStatus) {
+      onChangeStatus(selectedSchedule);
     }
     handleMenuClose();
   };
@@ -398,7 +411,7 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                                           height: 22,
                                           borderColor: alpha(
                                             theme.palette.primary.main,
-                                            0.3
+                                            0.3,
                                           ),
                                           color: theme.palette.primary.main,
                                         }}
@@ -492,7 +505,7 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                                   sx={{
                                     bgcolor: alpha(
                                       theme.palette.info.main,
-                                      0.1
+                                      0.1,
                                     ),
                                     color: theme.palette.info.main,
                                     fontWeight: 500,
@@ -532,18 +545,42 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
             },
           }}
         >
-          <MenuItem onClick={handleEdit}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" color="primary" />
-            </ListItemIcon>
-            <ListItemText>Editar</ListItemText>
-          </MenuItem>
-          <MenuItem onClick={handleDelete}>
-            <ListItemIcon>
-              <DeleteIcon fontSize="small" color="error" />
-            </ListItemIcon>
-            <ListItemText>Eliminar</ListItemText>
-          </MenuItem>
+          {can("schedules:update") && (
+            <MenuItem onClick={handleEdit}>
+              <ListItemIcon>
+                <EditIcon fontSize="small" color="primary" />
+              </ListItemIcon>
+              <ListItemText>Editar</ListItemText>
+            </MenuItem>
+          )}
+          <Divider />
+          {can("schedules:update") && (
+            <MenuItem onClick={handleChangeStatus}>
+              <ListItemIcon>
+                {selectedSchedule?.status &&
+                selectedSchedule.status === "active" ? (
+                  <Block fontSize="small" color="error" />
+                ) : (
+                  <CheckCircleOutline fontSize="small" color="success" />
+                )}
+              </ListItemIcon>
+              <ListItemText>
+                {selectedSchedule?.status &&
+                selectedSchedule.status === "active"
+                  ? "Desactivar"
+                  : "Activar"}
+              </ListItemText>
+            </MenuItem>
+          )}
+          <Divider />
+          {can("schedules:delete") && (
+            <MenuItem onClick={handleDelete}>
+              <ListItemIcon>
+                <DeleteIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText>Eliminar</ListItemText>
+            </MenuItem>
+          )}
         </Menu>
       </>
     );
@@ -778,6 +815,46 @@ const ScheduleTable = ({ schedules = [], onEdit, onDelete }) => {
                         }}
                       >
                         <EditIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+
+                  {can("schedules:update") && (
+                    <Tooltip
+                      title={
+                        schedule?.status && schedule.status === "active"
+                          ? "Desactivar horario"
+                          : "Activar horario"
+                      }
+                      arrow
+                    >
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          onChangeStatus && onChangeStatus(schedule)
+                        }
+                        sx={{
+                          color:
+                            schedule?.status && schedule.status === "active"
+                              ? theme.palette.error.main
+                              : theme.palette.success.main,
+                          bgcolor:
+                            schedule?.status && schedule.status === "active"
+                              ? alpha(theme.palette.error.main, 0.08)
+                              : alpha(theme.palette.success.main, 0.08),
+                          "&:hover": {
+                            bgcolor:
+                              schedule?.status && schedule.status === "active"
+                                ? alpha(theme.palette.error.main, 0.15)
+                                : alpha(theme.palette.success.main, 0.15),
+                          },
+                        }}
+                      >
+                        {schedule?.status && schedule.status === "active" ? (
+                          <Block fontSize="small" />
+                        ) : (
+                          <CheckCircleOutline fontSize="small" />
+                        )}
                       </IconButton>
                     </Tooltip>
                   )}

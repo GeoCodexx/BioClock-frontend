@@ -14,7 +14,7 @@ export const createDepartment = async (departmentData) => {
     const { data } = await api.post("/departments", departmentData);
     return data;
   } catch (error) {
-    handleApiError(error, "Error al crear el deparamento");
+    handleApiError(error, "Error al crear el departamento");
   }
 };
 
@@ -23,7 +23,16 @@ export const updateDepartment = async (id, departmentData) => {
     const { data } = await api.put(`/departments/${id}`, departmentData);
     return data;
   } catch (error) {
-    handleApiError(error, "Error al actualizar el deparamento");
+    handleApiError(error, "Error al actualizar el departamento");
+  }
+};
+
+export const updateDepartmentStatus = async (id, status) => {
+  try {
+    const { data } = await api.patch(`/departments/${id}/status`, status);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al actualizar estado de departamento");
   }
 };
 
@@ -32,7 +41,7 @@ export const getDepartments = async () => {
     const { data } = await api.get("/departments");
     return data;
   } catch (error) {
-    handleApiError(error, "Error al obtener los deparamentos");
+    handleApiError(error, "Error al obtener los departamentos");
   }
 };
 
@@ -41,7 +50,7 @@ export const deleteDepartment = async (id) => {
     const { data } = await api.delete(`/departments/${id}`);
     return data;
   } catch (error) {
-    handleApiError(error, "Error al eliminar el deparamento");
+    handleApiError(error, "Error al eliminar el departamento");
   }
 };
 
@@ -50,7 +59,7 @@ export const getDepartmentById = async (id) => {
     const { data } = await api.get(`/departments/${id}`);
     return data;
   } catch (error) {
-    handleApiError(error, "Error al obtener el deparamento");
+    handleApiError(error, "Error al obtener el departamento");
   }
 };
 

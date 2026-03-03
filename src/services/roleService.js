@@ -26,6 +26,15 @@ export const updateRole = async (id, roleData) => {
   }
 };
 
+export const updateRoleStatus = async (id, status) => {
+  try {
+    const { data } = await api.patch(`/roles/${id}/status`, status);
+    return data;
+  } catch (error) {
+    handleApiError(error, "Error al actualizar estado de rol");
+  }
+};
+
 export const getRoles = async () => {
   try {
     const { data } = await api.get("/roles");

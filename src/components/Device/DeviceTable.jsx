@@ -24,6 +24,7 @@ import {
   ListItemText,
   Grid,
   Card,
+  Divider,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -36,6 +37,8 @@ import NetworkCheckIcon from "@mui/icons-material/NetworkCheck";
 import RouterIcon from "@mui/icons-material/Router";
 import PlaceIcon from "@mui/icons-material/Place";
 import PersonIcon from "@mui/icons-material/Person";
+import { Block, CheckCircleOutline } from "@mui/icons-material";
+import { usePermission } from "../../utils/permissions";
 
 // ============================================
 // COMPONENTES AUXILIARES MEMOIZADOS
@@ -304,41 +307,69 @@ const MobileDeviceDetails = memo(({ device, getFullName }) => {
 
 MobileDeviceDetails.displayName = "MobileDeviceDetails";
 
-const MobileActionMenu = memo(({ anchorEl, onClose, onEdit, onDelete }) => (
-  <Menu
-    anchorEl={anchorEl}
-    open={Boolean(anchorEl)}
-    onClose={onClose}
-    transformOrigin={{ horizontal: "right", vertical: "top" }}
-    anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-    slotProps={{
-      paper: {
-        sx: {
-          mt: 0.5,
-          minWidth: 160,
-          borderRadius: 2,
-          border: (theme) =>
-                  theme.palette.mode === "dark"
-                    ? "1px solid rgba(255, 255, 255, 0.1)"
-                    : "none",
-        },
-      },
-    }}
-  >
-    <MenuItem onClick={onEdit} sx={{ py: 1.5 }}>
-      <ListItemIcon>
-        <EditIcon fontSize="small" color="primary" />
-      </ListItemIcon>
-      <ListItemText>Editar</ListItemText>
-    </MenuItem>
-    <MenuItem onClick={onDelete} sx={{ py: 1.5 }}>
-      <ListItemIcon>
-        <DeleteIcon fontSize="small" color="error" />
-      </ListItemIcon>
-      <ListItemText>Eliminar</ListItemText>
-    </MenuItem>
-  </Menu>
-));
+const MobileActionMenu = memo(
+  ({ anchorEl, onClose, onEdit, onChangeStatus, onDelete, selectedDevice }) => {
+    const { can } = usePermission();
+    return (
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={onClose}
+        transformOrigin={{ horizontal: "right", vertical: "top" }}
+        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 0.5,
+              minWidth: 160,
+              borderRadius: 2,
+              border: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "1px solid rgba(255, 255, 255, 0.1)"
+                  : "none",
+            },
+          },
+        }}
+      >
+        {can("devices:update") && (
+          <MenuItem onClick={onEdit} sx={{ py: 1.5 }}>
+            <ListItemIcon>
+              <EditIcon fontSize="small" color="primary" />
+            </ListItemIcon>
+            <ListItemText>Editar</ListItemText>
+          </MenuItem>
+        )}
+        <Divider />
+        {can("devices:update") && (
+          <MenuItem onClick={onChangeStatus}>
+            <ListItemIcon>
+              {selectedDevice?.status &&
+              selectedDevice.status === "active" ? (
+                <Block fontSize="small" color="error" />
+              ) : (
+                <CheckCircleOutline fontSize="small" color="success" />
+              )}
+            </ListItemIcon>
+            <ListItemText>
+              {selectedDevice?.status && selectedDevice.status === "active"
+                ? "Desactivar"
+                : "Activar"}
+            </ListItemText>
+          </MenuItem>
+        )}
+        <Divider />
+        {can("devices:delete") && (
+          <MenuItem onClick={onDelete} sx={{ py: 1.5 }}>
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <ListItemText>Eliminar</ListItemText>
+          </MenuItem>
+        )}
+      </Menu>
+    );
+  },
+);
 
 MobileActionMenu.displayName = "MobileActionMenu";
 
@@ -422,14 +453,15 @@ const MobileDeviceRow = memo(
         </TableRow>
       </React.Fragment>
     );
-  }
+  },
 );
 
 MobileDeviceRow.displayName = "MobileDeviceRow";
 
 const DesktopDeviceRow = memo(
-  ({ device, index, isOpen, onToggle, onEdit, onDelete, getFullName }) => {
+  ({ device, index, isOpen, onToggle, onEdit,onChangeStatus, onDelete, getFullName }) => {
     const theme = useTheme();
+    const { can } = usePermission();
 
     return (
       <React.Fragment>
@@ -521,23 +553,63 @@ const DesktopDeviceRow = memo(
           {/* Acciones */}
           <TableCell align="center">
             <Box sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}>
-              <Tooltip title="Editar dispositivo" arrow>
-                <IconButton
-                  size="small"
-                  onClick={() => onEdit(device)}
-                  sx={{
-                    color: theme.palette.primary.main,
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                    "&:hover": {
-                      bgcolor: alpha(theme.palette.primary.main, 0.15),
-                      transform: "scale(1.1)",
-                    },
-                    transition: "all 0.2s ease",
-                  }}
+              {can("devices:update") && (
+                <Tooltip title="Editar dispositivo" arrow>
+                  <IconButton
+                    size="small"
+                    onClick={() => onEdit(device)}
+                    sx={{
+                      color: theme.palette.primary.main,
+                      bgcolor: alpha(theme.palette.primary.main, 0.08),
+                      "&:hover": {
+                        bgcolor: alpha(theme.palette.primary.main, 0.15),
+                        transform: "scale(1.1)",
+                      },
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
+
+              {can("devices:update") && (
+                <Tooltip
+                  title={
+                    device?.status && device.status === "active"
+                      ? "Desactivar dispositivo"
+                      : "Activar dispositivo"
+                  }
+                  arrow
                 >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+                  <IconButton
+                    size="small"
+                    onClick={() => onChangeStatus && onChangeStatus(device)}
+                    sx={{
+                      color:
+                        device?.status && device.status === "active"
+                          ? theme.palette.error.main
+                          : theme.palette.success.main,
+                      bgcolor:
+                        device?.status && device.status === "active"
+                          ? alpha(theme.palette.error.main, 0.08)
+                          : alpha(theme.palette.success.main, 0.08),
+                      "&:hover": {
+                        bgcolor:
+                          device?.status && device.status === "active"
+                            ? alpha(theme.palette.error.main, 0.15)
+                            : alpha(theme.palette.success.main, 0.15),
+                      },
+                    }}
+                  >
+                    {device?.status && device.status === "active" ? (
+                      <Block fontSize="small" />
+                    ) : (
+                      <CheckCircleOutline fontSize="small" />
+                    )}
+                  </IconButton>
+                </Tooltip>
+              )}
               <Tooltip title="Eliminar dispositivo" arrow>
                 <IconButton
                   size="small"
@@ -581,7 +653,7 @@ const DesktopDeviceRow = memo(
         </TableRow>
       </React.Fragment>
     );
-  }
+  },
 );
 
 DesktopDeviceRow.displayName = "DesktopDeviceRow";
@@ -590,7 +662,7 @@ DesktopDeviceRow.displayName = "DesktopDeviceRow";
 // COMPONENTE PRINCIPAL
 // ============================================
 
-const DeviceTable = ({ devices = [], onEdit, onDelete }) => {
+const DeviceTable = ({ devices = [], onEdit, onChangeStatus, onDelete }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [orderBy, setOrderBy] = useState("index");
@@ -627,13 +699,13 @@ const DeviceTable = ({ devices = [], onEdit, onDelete }) => {
         align: "center",
       },
     ],
-    []
+    [],
   );
 
   const getFullName = useCallback((user) => {
     if (!user) return "—";
     const parts = [user.name, user.firstSurname, user.secondSurname].filter(
-      Boolean
+      Boolean,
     );
     return parts.join(" ") || "—";
   }, []);
@@ -659,6 +731,13 @@ const DeviceTable = ({ devices = [], onEdit, onDelete }) => {
     handleMenuClose();
   }, [selectedDevice, onEdit, handleMenuClose]);
 
+  const handleChangeStatus = useCallback(() => {
+    if (selectedDevice && onChangeStatus) {
+      onChangeStatus(selectedDevice);
+    }
+    handleMenuClose();
+  }, [selectedDevice, onChangeStatus, handleMenuClose]);
+
   const handleDelete = useCallback(() => {
     if (selectedDevice && onDelete) {
       onDelete(selectedDevice._id);
@@ -674,7 +753,7 @@ const DeviceTable = ({ devices = [], onEdit, onDelete }) => {
       });
       setOrderBy(property);
     },
-    [orderBy]
+    [orderBy],
   );
 
   const getComparator = useCallback((order, orderBy) => {
@@ -759,7 +838,9 @@ const DeviceTable = ({ devices = [], onEdit, onDelete }) => {
           anchorEl={anchorEl}
           onClose={handleMenuClose}
           onEdit={handleEdit}
+          onChangeStatus={handleChangeStatus}
           onDelete={handleDelete}
+          selectedDevice={selectedDevice}
         />
       </>
     );
@@ -831,6 +912,7 @@ const DeviceTable = ({ devices = [], onEdit, onDelete }) => {
               isOpen={openRowId === device._id}
               onToggle={() => handleRowToggle(device._id)}
               onEdit={onEdit}
+              onChangeStatus={onChangeStatus}
               onDelete={onDelete}
               getFullName={getFullName}
             />

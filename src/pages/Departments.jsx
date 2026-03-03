@@ -18,6 +18,7 @@ import {
   createDepartment,
   updateDepartment,
   deleteDepartment,
+  updateDepartmentStatus,
 } from "../services/departmentService";
 import DepartmentTable from "../components/Department/DepartmentTable";
 import DepartmentSearchBar from "../components/Department/DepartmentSearchBar";
@@ -34,6 +35,7 @@ import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
 import { usePermission } from "../utils/permissions";
+import ToggleStatusDialog from "../components/common/ToggleStatusDialog";
 
 export default function Departments() {
   const { can } = usePermission();
@@ -61,6 +63,11 @@ export default function Departments() {
     open: false,
     editDepartment: null,
     error: "",
+  });
+
+  const [dialogStatus, setDialogStatus] = useState({
+    open: false,
+    editRecord: null,
   });
 
   const [deleteState, setDeleteState] = useState({
@@ -175,6 +182,29 @@ export default function Departments() {
     });
   }, []);
 
+  // Handler para manejar cambio de estado de registro
+  const handleChangeStatus = useCallback((record) => {
+    setDialogStatus({
+      open: true,
+      editRecord: record,
+    });
+  }, []);
+
+  const handleToggleStatus = useCallback(async () => {
+    try {
+      const status =
+        dialogStatus.editRecord?.status === "active" ? "inactive" : "active";
+      await updateDepartmentStatus(dialogStatus.editRecord?._id, { status });
+      showSuccess("Estado actualizado correctamente");
+      setDialogStatus({ open: false, editRecord: null });
+      await refreshDepartments();
+    } catch (err) {
+      const errorMessage = err?.message || "Error al actualizar estado";
+      showError(errorMessage);
+      console.error("Error en handleToggleStatus:", err);
+    }
+  }, [dialogStatus.editRecord, showSuccess, showError, refreshDepartments]);
+
   const confirmDelete = useCallback(async () => {
     setDeleteState((prev) => ({ ...prev, error: "" }));
     try {
@@ -268,6 +298,7 @@ export default function Departments() {
       <DepartmentTable
         departments={departments}
         onEdit={handleEdit}
+        onChangeStatus={handleChangeStatus}
         onDelete={handleDelete}
       />
     ),
@@ -481,6 +512,15 @@ export default function Departments() {
         editDepartment={dialog.editDepartment}
         formError={dialog.error}
         onSubmit={handleSubmit}
+      />
+
+      <ToggleStatusDialog
+        open={dialogStatus.open}
+        onClose={() => setDialogStatus({ open: false, editRecord: null })}
+        onConfirm={() => handleToggleStatus(dialogStatus.editRecord)}
+        record={dialogStatus.editRecord}
+        nameRecord={"departamento"}
+        currentStatus={dialogStatus.editRecord?.status}
       />
 
       <DeleteConfirmDialog
