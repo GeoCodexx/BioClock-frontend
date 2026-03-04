@@ -97,6 +97,33 @@ const formatBytes = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const InactiveBadge = () => (
+  <Chip
+    label="Inactivo"
+    size="small"
+    sx={(theme) => ({
+      height: 18,
+      fontSize: "0.65rem",
+      fontWeight: 600,
+      borderRadius: "4px",
+      ml: 1,
+      backgroundColor: alpha(theme.palette.error.main, 0.12),
+      color: theme.palette.error.main,
+      border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+      "& .MuiChip-label": { px: 0.75 },
+    })}
+  />
+);
+
+const inactiveMenuItemSx = (theme) => ({
+  //opacity: 0.95,
+  borderLeft: `3px solid ${alpha(theme.palette.error.main, 0.6)}`,
+  backgroundColor: alpha(theme.palette.error.main, 0.04),
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.error.main, 0.1),
+  },
+});
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 /**
@@ -629,6 +656,39 @@ export default function JustificationDrawer({
                 isOptionEqualToValue={(option, value) =>
                   option._id === value._id
                 }
+                // 👇 1. Deshabilita la opción lógicamente
+                getOptionDisabled={(option) => option.status === "inactive"}
+                // 👇 2. Renderiza la opción con feedback visual
+                renderOption={(props, option) => {
+                  const isInactive = option.status === "inactive";
+                  return (
+                    <Box
+                      component="li"
+                      {...props}
+                      sx={
+                        isInactive
+                          ? (theme) => ({
+                              borderLeft: `3px solid ${alpha(theme.palette.error.main, 0.5)}`,
+                              backgroundColor: alpha(
+                                theme.palette.error.main,
+                                0.04,
+                              ),
+                              opacity: 0.65,
+                            })
+                          : undefined
+                      }
+                    >
+                      <Stack spacing={0} width="100%">
+                        <Stack direction="row" alignItems="center">
+                          <Typography variant="body2" fontWeight="medium">
+                            {option.name} {option.firstSurname ?? ""}
+                          </Typography>
+                          {isInactive && <InactiveBadge />}
+                        </Stack>
+                      </Stack>
+                    </Box>
+                  );
+                }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -655,7 +715,7 @@ export default function JustificationDrawer({
             {/* Schedule */}
             <TextField
               select
-              label="Turno"
+              label="Horario"
               name="scheduleId"
               value={form.scheduleId}
               onChange={(e) => handleChange(e.target.name, e.target.value)}
@@ -665,8 +725,35 @@ export default function JustificationDrawer({
               disabled={mode === "edit"}
             >
               {schedules.map((s) => (
-                <MenuItem key={s._id} value={s._id}>
-                  {s.name}
+                <MenuItem
+                  key={s._id}
+                  value={s._id}
+                  disabled={
+                    s.status === "inactive" && !schedules?.includes(s._id)
+                  }
+                  sx={s.status === "inactive" ? inactiveMenuItemSx : undefined}
+                >
+                  <Stack spacing={0.5} width="100%">
+                    <Stack direction="row" alignItems="center">
+                      <Typography
+                        variant="body2"
+                        fontWeight="medium"
+                        color={
+                          s.status === "inactive"
+                            ? "text.secondary"
+                            : "text.primary"
+                        }
+                      >
+                        {s.name}
+                      </Typography>
+                      {s.status === "inactive" && <InactiveBadge />}
+                    </Stack>
+                    {s.startTime && s.endTime && (
+                      <Typography variant="caption" color="text.secondary">
+                        {s.startTime} - {s.endTime}
+                      </Typography>
+                    )}
+                  </Stack>
                 </MenuItem>
               ))}
             </TextField>
@@ -867,7 +954,7 @@ function JustificationDetails({ justification, theme }) {
       value: justification.userId?.name || justification.userId || "—",
     },
     {
-      label: "Turno",
+      label: "Horario",
       value: justification.scheduleId?.name || justification.scheduleId || "—",
     },
     {

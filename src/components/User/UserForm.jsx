@@ -13,12 +13,44 @@ import {
   InputAdornment,
   IconButton,
   Skeleton,
+  alpha,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { getRoles } from "../../services/roleService";
 import { getDepartments } from "../../services/departmentService";
 import { getSchedules } from "../../services/scheduleService";
 import { getDevices } from "../../services/deviceService";
+
+// Componente reutilizable para el badge de inactivo
+// Badge con tema dinámico
+const InactiveBadge = () => (
+  <Chip
+    label="Inactivo"
+    size="small"
+    sx={(theme) => ({
+      height: 18,
+      fontSize: "0.65rem",
+      fontWeight: 600,
+      borderRadius: "4px",
+      ml: 1,
+      backgroundColor: alpha(theme.palette.error.main, 0.12),
+      color: theme.palette.error.main,
+      border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+      "& .MuiChip-label": { px: 0.75 },
+    })}
+  />
+);
+
+// MenuItem sx con tema dinámico
+// Úsalo como función donde se apliques: sx={inactiveMenuItemSx}
+const inactiveMenuItemSx = (theme) => ({
+  //opacity: 0.95,
+  borderLeft: `3px solid ${alpha(theme.palette.error.main, 0.6)}`,
+  backgroundColor: alpha(theme.palette.error.main, 0.04),
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.error.main, 0.1),
+  },
+});
 
 const UserForm = ({
   onSubmit,
@@ -88,10 +120,14 @@ const UserForm = ({
             getDevices(),
           ]);
 
-        setRoles(rolesData.filter((r) => r.status === "active"));
-        setDepartments(deptsData.filter((d) => d.status === "active"));
-        setSchedules(schedulesData.filter((s) => s.status === "active"));
-        setDevices(devicesData.filter((d) => d.status === "active"));
+        // setRoles(rolesData.filter((r) => r.status === "active"));
+        // setDepartments(deptsData.filter((d) => d.status === "active"));
+        // setSchedules(schedulesData.filter((s) => s.status === "active"));
+        // setDevices(devicesData.filter((d) => d.status === "active"));
+        setRoles(rolesData);
+        setDepartments(deptsData);
+        setSchedules(schedulesData);
+        setDevices(devicesData);
       } catch (error) {
         console.error("Error fetching form data:", error);
         setDataError("Error al cargar los datos del formulario");
@@ -140,12 +176,11 @@ const UserForm = ({
   ]);
 
   // Detectar cambios en el formulario
- useEffect(() => {
-  if (isDirty && onChange) {
-    onChange();
-  }
-}, [isDirty, onChange]);
-
+  useEffect(() => {
+    if (isDirty && onChange) {
+      onChange();
+    }
+  }, [isDirty, onChange]);
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -209,7 +244,7 @@ const UserForm = ({
         )}
 
         {/* Nombre */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 12 }}>
           <Controller
             name="name"
             control={control}
@@ -254,7 +289,7 @@ const UserForm = ({
         </Grid>
 
         {/* Apellido Paterno */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Controller
             name="firstSurname"
             control={control}
@@ -290,7 +325,7 @@ const UserForm = ({
         </Grid>
 
         {/* Apellido Materno */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Controller
             name="secondSurname"
             control={control}
@@ -326,7 +361,7 @@ const UserForm = ({
         </Grid>
 
         {/* DNI */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Controller
             name="dni"
             control={control}
@@ -363,46 +398,8 @@ const UserForm = ({
           />
         </Grid>
 
-        {/* Email */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <Controller
-            name="email"
-            control={control}
-            rules={{
-              required: "El correo electrónico es obligatorio",
-              pattern: {
-                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: "Correo electrónico inválido",
-              },
-            }}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                label="Correo Electrónico"
-                fullWidth
-                required
-                size="small"
-                type="email"
-                disabled={disabled}
-                error={!!errors.email}
-                helperText={errors.email?.message}
-                //placeholder="usuario@example.com"
-                // slotProps={{
-                //   input: {
-                //     startAdornment: (
-                //       <InputAdornment position="start">
-                //         <Email fontSize="small" color="action" />
-                //       </InputAdornment>
-                //     ),
-                //   },
-                // }}
-              />
-            )}
-          />
-        </Grid>
-
         {/* Teléfono */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Controller
             name="phone"
             control={control}
@@ -439,9 +436,47 @@ const UserForm = ({
           />
         </Grid>
 
+        {/* Email */}
+        <Grid size={{ xs: 12, md: 12 }}>
+          <Controller
+            name="email"
+            control={control}
+            rules={{
+              required: "El correo electrónico es obligatorio",
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                message: "Correo electrónico inválido",
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Correo Electrónico"
+                fullWidth
+                required
+                size="small"
+                type="email"
+                disabled={disabled}
+                error={!!errors.email}
+                helperText={errors.email?.message}
+                //placeholder="usuario@example.com"
+                // slotProps={{
+                //   input: {
+                //     startAdornment: (
+                //       <InputAdornment position="start">
+                //         <Email fontSize="small" color="action" />
+                //       </InputAdornment>
+                //     ),
+                //   },
+                // }}
+              />
+            )}
+          />
+        </Grid>
+
         {/* Contraseña - Solo visible al crear */}
         {!isEditing && (
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12, md: 12 }}>
             <Controller
               name="password"
               control={control}
@@ -533,11 +568,34 @@ const UserForm = ({
                   </MenuItem>
                 ) : (
                   roles.map((role) => (
-                    <MenuItem key={role._id} value={role._id}>
-                      <Stack spacing={0.5}>
-                        <Typography variant="body2" fontWeight="medium">
-                          {role.name}
-                        </Typography>
+                    <MenuItem
+                      key={role._id}
+                      value={role._id}
+                      disabled={
+                        role.status === "inactive" &&
+                        !field.value?.includes(role._id)
+                      }
+                      sx={
+                        role.status === "inactive"
+                          ? inactiveMenuItemSx
+                          : undefined
+                      }
+                    >
+                      <Stack spacing={0.5} width="100%">
+                        <Stack direction="row" alignItems="center">
+                          <Typography
+                            variant="body2"
+                            fontWeight="medium"
+                            color={
+                              role.status === "inactive"
+                                ? "text.secondary"
+                                : "text.primary"
+                            }
+                          >
+                            {role.name}
+                          </Typography>
+                          {role.status === "inactive" && <InactiveBadge />}
+                        </Stack>
                         {role.description && (
                           <Typography variant="caption" color="text.secondary">
                             {role.description}
@@ -590,11 +648,34 @@ const UserForm = ({
                   </MenuItem>
                 ) : (
                   departments.map((dept) => (
-                    <MenuItem key={dept._id} value={dept._id}>
-                      <Stack spacing={0.5}>
-                        <Typography variant="body2" fontWeight="medium">
-                          {dept.name}
-                        </Typography>
+                    <MenuItem
+                      key={dept._id}
+                      value={dept._id}
+                      disabled={
+                        dept.status === "inactive" &&
+                        !field.value?.includes(dept._id)
+                      }
+                      sx={
+                        dept.status === "inactive"
+                          ? inactiveMenuItemSx
+                          : undefined
+                      }
+                    >
+                      <Stack spacing={0.5} width="100%">
+                        <Stack direction="row" alignItems="center">
+                          <Typography
+                            variant="body2"
+                            fontWeight="medium"
+                            color={
+                              dept.status === "inactive"
+                                ? "text.secondary"
+                                : "text.primary"
+                            }
+                          >
+                            {dept.name}
+                          </Typography>
+                          {dept.status === "inactive" && <InactiveBadge />}
+                        </Stack>
                         {dept.location && (
                           <Typography variant="caption" color="text.secondary">
                             {dept.location}
@@ -677,11 +758,34 @@ const UserForm = ({
                   </MenuItem>
                 ) : (
                   schedules.map((schedule) => (
-                    <MenuItem key={schedule._id} value={schedule._id}>
-                      <Stack spacing={0.5}>
-                        <Typography variant="body2" fontWeight="medium">
-                          {schedule.name}
-                        </Typography>
+                    <MenuItem
+                      key={schedule._id}
+                      value={schedule._id}
+                      disabled={
+                        schedule.status === "inactive" &&
+                        !field.value?.includes(schedule._id)
+                      }
+                      sx={
+                        schedule.status === "inactive"
+                          ? inactiveMenuItemSx
+                          : undefined
+                      }
+                    >
+                      <Stack spacing={0.5} width="100%">
+                        <Stack direction="row" alignItems="center">
+                          <Typography
+                            variant="body2"
+                            fontWeight="medium"
+                            color={
+                              schedule.status === "inactive"
+                                ? "text.secondary"
+                                : "text.primary"
+                            }
+                          >
+                            {schedule.name}
+                          </Typography>
+                          {schedule.status === "inactive" && <InactiveBadge />}
+                        </Stack>
                         {schedule.startTime && schedule.endTime && (
                           <Typography variant="caption" color="text.secondary">
                             {schedule.startTime} - {schedule.endTime}
@@ -759,11 +863,34 @@ const UserForm = ({
                   </MenuItem>
                 ) : (
                   devices.map((dev) => (
-                    <MenuItem key={dev._id} value={dev._id}>
-                      <Stack spacing={0.5}>
-                        <Typography variant="body2" fontWeight="medium">
-                          {dev.name}
-                        </Typography>
+                    <MenuItem
+                      key={dev._id}
+                      value={dev._id}
+                      disabled={
+                        dev.status === "inactive" &&
+                        !field.value?.includes(dev._id)
+                      }
+                      sx={
+                        dev.status === "inactive"
+                          ? inactiveMenuItemSx
+                          : undefined
+                      }
+                    >
+                      <Stack spacing={0.5} width="100%">
+                        <Stack direction="row" alignItems="center">
+                          <Typography
+                            variant="body2"
+                            fontWeight="medium"
+                            color={
+                              dev.status === "inactive"
+                                ? "text.secondary"
+                                : "text.primary"
+                            }
+                          >
+                            {dev.name}
+                          </Typography>
+                          {dev.status === "inactive" && <InactiveBadge />}
+                        </Stack>
                         {dev.location && (
                           <Typography variant="caption" color="text.secondary">
                             {dev.location}

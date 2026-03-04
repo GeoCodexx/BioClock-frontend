@@ -15,9 +15,28 @@ import {
   FormGroup,
   FormControlLabel,
   Paper,
+  alpha,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { getPermissions } from "../../services/permissionService";
+
+const InactiveBadge = () => (
+  <Chip
+    label="Inactivo"
+    size="small"
+    sx={(theme) => ({
+      height: 18,
+      fontSize: "0.65rem",
+      fontWeight: 600,
+      borderRadius: "4px",
+      ml: 1,
+      backgroundColor: alpha(theme.palette.error.main, 0.12),
+      color: theme.palette.error.main,
+      border: `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
+      "& .MuiChip-label": { px: 0.75 },
+    })}
+  />
+);
 
 const RoleForm = ({
   onSubmit,
@@ -58,6 +77,7 @@ const RoleForm = ({
     unjustify: "Desjustificar",
     approve: "Aprobar",
     reject: "Rechazar",
+    detail: "Detalles",
     configuration: "Configuración",
   };
 
@@ -113,7 +133,8 @@ const RoleForm = ({
         setLoadingPermissions(true);
         setPermissionsError(null);
         const data = await getPermissions();
-        setPermissions(data.filter((p) => p.status === "active"));
+        //setPermissions(data.filter((p) => p.status === "active"));
+        setPermissions(data);
       } catch (error) {
         setPermissionsError("Error al cargar los permisos");
         console.error("Error fetching permissions:", error);
@@ -365,42 +386,54 @@ const RoleForm = ({
 
                         {/* Acciones del módulo */}
                         <FormGroup sx={{ pl: 4, mb: 2 }}>
-                          {groupedPermissions[module].map((permission) => (
-                            <FormControlLabel
-                              key={permission._id}
-                              control={
-                                <Checkbox
-                                  checked={field.value?.includes(
-                                    permission._id,
-                                  )}
-                                  onChange={() =>
-                                    handlePermissionToggle(
-                                      permission._id,
-                                      field.value,
-                                    )
-                                  }
-                                  disabled={disabled}
-                                  checkedIcon={<CheckIcon />}
-                                  size="small"
-                                />
-                              }
-                              label={
-                                <Stack spacing={0}>
-                                  <Typography variant="body2">
-                                    {getPermissionLabel(permission)}
-                                  </Typography>
-                                  {permission.description && (
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                    >
-                                      {permission.description}
-                                    </Typography>
-                                  )}
-                                </Stack>
-                              }
-                            />
-                          ))}
+                          {groupedPermissions[module].map((permission) => {
+                            const isSelected = field.value?.includes(
+                              permission._id,
+                            );
+                            const isInactive = permission.status === "inactive";
+
+                            const shouldDisable =
+                              disabled || (isInactive && !isSelected);
+
+                            return (
+                              <FormControlLabel
+                                key={permission._id}
+                                disabled={shouldDisable}
+                                control={
+                                  <Checkbox
+                                    checked={isSelected}
+                                    onChange={() =>
+                                      handlePermissionToggle(
+                                        permission._id,
+                                        field.value,
+                                      )
+                                    }
+                                    disabled={shouldDisable}
+                                    checkedIcon={<CheckIcon />}
+                                    size="small"
+                                  />
+                                }
+                                label={
+                                  <Stack spacing={0}>
+                                    <Stack direction="row" alignItems="center">
+                                      <Typography variant="body2" color={isInactive ? "text.disabled" : "text.primary"}>
+                                        {getPermissionLabel(permission)}
+                                      </Typography>
+                                      {isInactive && <InactiveBadge />}
+                                    </Stack>
+                                    {permission.description && (
+                                      <Typography
+                                        variant="caption"
+                                        color={isInactive ? "text.disabled" : "text.secondary"}
+                                      >
+                                        {permission.description}
+                                      </Typography>
+                                    )}
+                                  </Stack>
+                                }
+                              />
+                            );
+                          })}
                         </FormGroup>
 
                         {/* Divider entre módulos */}
