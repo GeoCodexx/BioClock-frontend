@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Box, Container, useTheme, useMediaQuery } from "@mui/material";
 import { Outlet } from "react-router-dom";
-import Logo from "../../assets/images/bitel_logo.png";
 
 // Componentes del layout
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import { useThemeMode } from "../../contexts/ThemeContext";
 
 const drawerWidth = 260;
 const collapsedWidth = 80;
@@ -16,7 +14,6 @@ const MainLayout = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [isDrawerOpen, setIsDrawerOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { mode, toggleTheme } = useThemeMode();
 
   const handleDrawerToggle = () => {
     if (isMobile) {
@@ -28,12 +25,7 @@ const MainLayout = () => {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
-      <Header
-        toggleTheme={toggleTheme}
-        isDarkMode={mode === "dark"}
-        handleDrawerToggle={handleDrawerToggle}
-        logoSrc={Logo} // ← Pasa el logo aquí
-      />
+      <Header handleDrawerToggle={handleDrawerToggle} />
       <Sidebar
         isOpen={isDrawerOpen}
         //handleDrawerToggle={handleDrawerToggle}
@@ -48,8 +40,8 @@ const MainLayout = () => {
           width: isMobile
             ? "100%"
             : isDrawerOpen
-            ? `calc(100% - ${drawerWidth}px)`
-            : `calc(100% - ${collapsedWidth}px)`,
+              ? `calc(100% - ${drawerWidth}px)`
+              : `calc(100% - ${collapsedWidth}px)`,
           minHeight: "calc(100vh - 88px)",
           flexGrow: 1,
           marginTop: isMobile ? "56px" : "70px",

@@ -31,10 +31,11 @@ import {
   //ReadMore,
   Schedule,
 } from "@mui/icons-material";
-import CloseIcon from "@mui/icons-material/Close";
+//import CloseIcon from "@mui/icons-material/Close";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import LogoBitel from "../../../assets/images/bitel_logo.png";
+//import LogoBitel from "../../../assets/images/bitel_logo.png";
 import { usePermission } from "../../../utils/permissions";
+//import { useLogoContext } from "../../../contexts/LogoContext";
 
 const drawerWidth = 260;
 const collapsedWidth = 80;
@@ -110,7 +111,11 @@ const menuItems = [
   {
     text: "Gestión de Asistencias",
     icon: <AssessmentIcon />,
-    permission: ["general-report:read", "attendances:read", "justifications:read"],
+    permission: [
+      "general-report:read",
+      "attendances:read",
+      "justifications:read",
+    ],
     children: [
       {
         text: "Reporte General",
@@ -139,6 +144,7 @@ const Sidebar = ({ isOpen, mobileOpen, setMobileOpen }) => {
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { can, canAny } = usePermission();
+  //const { logoUrl } = useLogoContext();
 
   const [openMenu, setOpenMenu] = useState(() => {
     const current = menuItems.find((item) =>
@@ -265,7 +271,7 @@ const Sidebar = ({ isOpen, mobileOpen, setMobileOpen }) => {
 
   const drawerContent = (
     <>
-      <Box
+      {/* <Box
         sx={{
           px: 2.5,
           pt: isOpen ? 0.3 : 1.7,
@@ -275,12 +281,23 @@ const Sidebar = ({ isOpen, mobileOpen, setMobileOpen }) => {
           alignItems: "center",
         }}
       >
-        {(isOpen && isMobile) && (
+        {isOpen && isMobile && (
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <img src={LogoBitel} alt="logo" width="130px" />
+            {logoUrl ? (
+              <Box
+                component="img"
+                src={logoUrl}
+                alt="Logo"
+                sx={{ height: 40, objectFit: "contain" }}
+              />
+            ) : (
+              <Typography variant="h6" fontWeight="bold">
+                BioClock Pro
+              </Typography>
+            )}
           </Box>
         )}
-        
+
         {isMobile && (
           <IconButton
             color="inherit"
@@ -290,7 +307,7 @@ const Sidebar = ({ isOpen, mobileOpen, setMobileOpen }) => {
             <CloseIcon />
           </IconButton>
         )}
-      </Box>
+      </Box> */}
       <List component="nav" sx={{ px: 2, pt: 2 }}>
         {renderMenuItems(menuItems)}
       </List>

@@ -17,6 +17,7 @@ import {
   HomeOutlined,
   MailOutline,
   ArrowBackOutlined,
+  Logout,
 } from "@mui/icons-material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import { keyframes } from "@mui/system";
@@ -186,6 +187,17 @@ export default function NoAccessPage() {
                 }
               >
                 Contactar Soporte
+              </Button>
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={<Logout />}
+                onClick={() => {
+                  logout();
+                  navigate("/", { replace: true });
+                }}
+              >
+                Salir
               </Button>
             </Stack>
 

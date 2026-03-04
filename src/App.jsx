@@ -18,6 +18,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import useAuthStore from "./store/useAuthStore";
 import NoAccessPage from "./pages/NoAccessPage";
 import Justifications from "./pages/Justifications";
+import { LogoProvider } from "./contexts/LogoContext";
 
 function AuthRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
@@ -59,122 +60,124 @@ function HomeRedirect() {
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <AuthRoute>
-                <MainLayout />
-              </AuthRoute>
-            }
-          >
-            {/* Ruta index que redirige según el rol */}
-            <Route index element={<HomeRedirect />} />
+      <LogoProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/"
+              element={
+                <AuthRoute>
+                  <MainLayout />
+                </AuthRoute>
+              }
+            >
+              {/* Ruta index que redirige según el rol */}
+              <Route index element={<HomeRedirect />} />
 
-            <Route
-              path="dashboard"
-              element={
-                <PermissionRoute permission="dashboard:read">
-                  <Dashboard />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="users"
-              element={
-                <PermissionRoute permission="users:read">
-                  <Users />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="fingerprints"
-              element={
-                <PermissionRoute permission="fingerprints:read">
-                  <Fingerprint />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="users/roles"
-              element={
-                <PermissionRoute permission="roles:read">
-                  <Roles />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="users/permissions"
-              element={
-                <PermissionRoute permission="permissions:read">
-                  <Permissions />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="devices"
-              element={
-                <PermissionRoute permission="devices:read">
-                  <Devices />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="departments"
-              element={
-                <PermissionRoute permission="departments:read">
-                  <Departments />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="schedules"
-              element={
-                <PermissionRoute permission="schedules:read">
-                  <Schedules />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="attendances"
-              element={
-                <PermissionRoute permission="attendances:read">
-                  <Attendances />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="myattendance"
-              element={
-                <PermissionRoute permission="my-attendance:read">
-                  <MyAttendances />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="general-report"
-              element={
-                <PermissionRoute permission="general-report:read">
-                  <GeneralReportPage />
-                </PermissionRoute>
-              }
-            />
-            <Route
-              path="justifications"
-              element={
-                <PermissionRoute permission="justifications:read">
-                  <Justifications />
-                </PermissionRoute>
-              }
-            />
-          </Route>
-          <Route path="/403" element={<NoAccessPage />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </BrowserRouter>
-      <GlobalSnackbar />
+              <Route
+                path="dashboard"
+                element={
+                  <PermissionRoute permission="dashboard:read">
+                    <Dashboard />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="users"
+                element={
+                  <PermissionRoute permission="users:read">
+                    <Users />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="fingerprints"
+                element={
+                  <PermissionRoute permission="fingerprints:read">
+                    <Fingerprint />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="users/roles"
+                element={
+                  <PermissionRoute permission="roles:read">
+                    <Roles />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="users/permissions"
+                element={
+                  <PermissionRoute permission="permissions:read">
+                    <Permissions />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="devices"
+                element={
+                  <PermissionRoute permission="devices:read">
+                    <Devices />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="departments"
+                element={
+                  <PermissionRoute permission="departments:read">
+                    <Departments />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="schedules"
+                element={
+                  <PermissionRoute permission="schedules:read">
+                    <Schedules />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="attendances"
+                element={
+                  <PermissionRoute permission="attendances:read">
+                    <Attendances />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="myattendance"
+                element={
+                  <PermissionRoute permission="my-attendance:read">
+                    <MyAttendances />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="general-report"
+                element={
+                  <PermissionRoute permission="general-report:read">
+                    <GeneralReportPage />
+                  </PermissionRoute>
+                }
+              />
+              <Route
+                path="justifications"
+                element={
+                  <PermissionRoute permission="justifications:read">
+                    <Justifications />
+                  </PermissionRoute>
+                }
+              />
+            </Route>
+            <Route path="/403" element={<NoAccessPage />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </BrowserRouter>
+        <GlobalSnackbar />
+      </LogoProvider>
     </ThemeProvider>
   );
 }
