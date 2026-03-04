@@ -16,6 +16,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import NotificationSection from "./NotificationSection";
 import ProfileSection from "./ProfileSection";
 import { useLogoContext } from "../../../contexts/LogoContext";
+import { Link } from "react-router-dom";
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 const Logo = memo(({ src, alt = "Logo", size = "medium" }) => {
@@ -70,7 +71,26 @@ const MobileView = memo(({ handleDrawerToggle, logoUrl }) => (
         px: 2,
       }}
     >
-      {logoUrl && <Logo src={logoUrl} alt="Logo" size="small" />}
+      {logoUrl && (
+        <Box
+          component={Link}
+          to="/"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            textDecoration: "none",
+          }}
+        >
+          <Logo
+            src={logoUrl}
+            alt="Logo"
+            size="small"
+            sx={{
+              cursor: "pointer",
+            }}
+          />
+        </Box>
+      )}
       {/* <Typography
         variant="h6"
         fontWeight="bold"
@@ -107,7 +127,26 @@ const DesktopView = memo(({ logoUrl, handleDrawerToggle }) => {
             alignItems: "center",
           }}
         >
-          {logoUrl && <Logo src={logoUrl} alt="Logo" size="large" />}
+          {logoUrl && (
+            <Box
+              component={Link}
+              to="/"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                textDecoration: "none",
+              }}
+            >
+              <Logo
+                src={logoUrl}
+                alt="Logo"
+                size="large"
+                sx={{
+                  cursor: "pointer",
+                }}
+              />
+            </Box>
+          )}
         </Box>
         <Avatar
           onClick={handleDrawerToggle}

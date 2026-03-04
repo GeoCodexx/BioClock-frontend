@@ -8,6 +8,7 @@ import {
   useMemo,
 } from "react";
 import api from "../services/api";
+import useSnackbarStore from "../store/useSnackbarStore";
 
 const API_URL = import.meta.env.VITE_REACT_APP_API_URL;
 
@@ -71,6 +72,9 @@ export const LogoProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const showSuccess = useSnackbarStore((s) => s.showSuccess);
+  const showError = useSnackbarStore((s) => s.showError);
+
   // ── Al montar: sincronizar con el backend (la URL del backend tiene prioridad) ──
   useEffect(() => {
     let cancelled = false;
@@ -127,20 +131,24 @@ export const LogoProvider = ({ children }) => {
         await deleteLogoFromAPI();
         setLogoUrl(null);
         localStorage.removeItem(STORAGE_KEY);
+        showSuccess("Logo eliminado correctamente.");
       } else if (pendingLogo) {
         //const { logoUrl: newUrl } = await uploadLogoToAPI(pendingLogo.file);
         const { data } = await uploadLogoToAPI(pendingLogo.file);
         setLogoUrl(buildFullLogoUrl(data.logoUrl));
         localStorage.setItem(STORAGE_KEY, data.logoUrl);
+        showSuccess("Logo actualizado correctamente.");
       }
       setPendingLogo(null);
       setPendingRemove(false);
     } catch (err) {
-      setError(err.message ?? "Error al guardar el logo");
+      const message = err.message ?? "Error al guardar el logo";
+      setError(message);
+      showError(message);
     } finally {
       setLoading(false);
     }
-  }, [pendingLogo, pendingRemove]);
+  }, [pendingLogo, pendingRemove, showSuccess, showError]);
 
   // ── Valor derivado: lo que debe mostrarse en el preview del uploader ────
   const previewUrl = useMemo(() => {

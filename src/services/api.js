@@ -32,7 +32,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Si el error es 403 y no hemos reintentado ya esta petición
-    if (error.response.status === 403 && !originalRequest._retry) {
+    if (error.response?.status === 403 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {

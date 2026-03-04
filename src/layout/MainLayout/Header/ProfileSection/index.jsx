@@ -177,7 +177,7 @@ const ProfileSection = () => {
               sx={{
                 boxShadow: `0 8px 40px ${alpha(theme.palette.common.black, 0.14)},
                              0 2px 8px  ${alpha(theme.palette.common.black, 0.08)}`,
-                borderRadius: 3, width: 268, overflow: "hidden",
+                borderRadius: 3, overflow: "hidden",
                 border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
               }}
             >
