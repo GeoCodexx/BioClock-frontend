@@ -5,6 +5,7 @@ import {
   Typography,
   Chip,
   useTheme,
+  alpha,
 } from "@mui/material";
 import ReactApexChart from "react-apexcharts";
 import AssignmentIcon from "@mui/icons-material/Assignment";
@@ -12,7 +13,7 @@ import { useThemeMode } from "../../contexts/ThemeContext";
 
 const AttendanceChart = ({ weeklyAttendances }) => {
   const theme = useTheme();
-  const { mode } = useThemeMode(); // 'light' o 'dark'
+  const { themeMode } = useThemeMode(); // 'light' o 'dark'
   const onTimeStatusData =
     Array.isArray(weeklyAttendances) && weeklyAttendances.length === 7
       ? weeklyAttendances.map((c) => c.on_time)
@@ -57,7 +58,7 @@ const AttendanceChart = ({ weeklyAttendances }) => {
     ],
     options: {
       theme: {
-        mode: mode,
+        mode: themeMode,
       },
       chart: {
         type: "area",
@@ -114,7 +115,7 @@ const AttendanceChart = ({ weeklyAttendances }) => {
         labels: {
           style: {
             fontSize: "12px",
-            colors: "#666", 
+            colors: "#666",
           },
         },
       },
@@ -205,9 +206,9 @@ const AttendanceChart = ({ weeklyAttendances }) => {
                 alignItems: "center",
                 justifyContent: "center",
                 //background: "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)",
-                background: theme.palette.primary.main,
+                background: alpha(theme.palette.primary.main, 0.2),
                 borderRadius: 2,
-                color: "white",
+                color: theme.palette.primary.main,
                 //boxShadow: "0 4px 12px rgba(33, 150, 243, 0.3)",
               }}
             >

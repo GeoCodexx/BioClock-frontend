@@ -17,6 +17,7 @@ import NotificationSection from "./NotificationSection";
 import ProfileSection from "./ProfileSection";
 import { useLogoContext } from "../../../contexts/LogoContext";
 import { Link } from "react-router-dom";
+import NotificationBell from "../../../components/Notification/NotificationBell";
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 const Logo = memo(({ src, alt = "Logo", size = "medium" }) => {
@@ -106,7 +107,8 @@ const MobileView = memo(({ handleDrawerToggle, logoUrl }) => (
       </Typography> */}
     </Box>
 
-    <NotificationSection />
+    {/* <NotificationSection /> */}
+    <NotificationBell />
     <ProfileSection />
   </>
 ));
@@ -195,7 +197,8 @@ const DesktopView = memo(({ logoUrl, handleDrawerToggle }) => {
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-        <NotificationSection />
+        {/* <NotificationSection /> */}
+        <NotificationBell />
         <ProfileSection />
       </Box>
     </>

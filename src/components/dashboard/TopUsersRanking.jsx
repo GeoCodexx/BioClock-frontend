@@ -73,40 +73,6 @@ const NoDataCard = ({ title }) => {
     </Card>
   );
 };
-
-/*const RankingSkeleton = () => (
-  <Stack direction="row" spacing={2} width="100%">
-    {[1, 2, 3].map((i) => (
-      <Card
-        key={i}
-        variant="outlined"
-        sx={{
-          flex: 1,
-          minHeight: 350,
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <CardContent sx={{ width: "100%" }}>
-          <Box
-            sx={{
-              width: "90%",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-evenly",
-              alignItems: "center",
-            }}
-          >
-            <Skeleton variant="text" width="60%" />
-            <Skeleton variant="text" width="60%" />
-            <Skeleton variant="text" width="60%" />
-          </Box>
-        </CardContent>
-      </Card>
-    ))}
-  </Stack>
-);*/
 const RankingSkeleton = () => {
   // Simulamos 3 ítems de carga
   const skeletonRows = [1, 2, 3];
@@ -480,10 +446,9 @@ export default function TopUsersRanking({
                 alignItems: "center",
                 justifyContent: "center",
                 //background: 'linear-gradient(135deg, #673AB7 0%, #512DA8 100%)',
-                background: theme.palette.primary.main,
+                background: alpha(theme.palette.primary.main, 0.2),
                 borderRadius: 2,
-                color: "white",
-                boxShadow: "0 4px 12px rgba(103, 58, 183, 0.3)",
+                color: theme.palette.primary.main,
               }}
             >
               <TableChartIcon sx={{ fontSize: 20 }} />

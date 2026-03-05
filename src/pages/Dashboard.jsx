@@ -28,7 +28,7 @@ import TopUsersRanking from "../components/dashboard/TopUsersRanking";
 
 const Dashboard = () => {
   const theme = useTheme();
-  const { mode } = useThemeMode();
+  const { themeMode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [loading, setLoading] = useState(true);
@@ -93,8 +93,8 @@ const Dashboard = () => {
   }, []);
 
   const memoizedTopUsersData = useMemo(() => {
-  return topUsersData;
-}, [topUsersData]);
+    return topUsersData;
+  }, [topUsersData]);
 
   // Componente Header memoizado
   const PageHeader = memo(({ date, isMobile }) => {
@@ -108,7 +108,7 @@ const Dashboard = () => {
           borderColor: "divider",
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
           color: "white",*/
-          borderLeft: mode === "dark" ? "none" : "6px solid",
+          borderLeft: themeMode === "dark" ? "none" : "6px solid",
           borderColor: "primary.main",
         }}
       >
@@ -125,15 +125,11 @@ const Dashboard = () => {
                   <Typography variant="h6" fontWeight={700} gutterBottom>
                     Panel Estadístico
                   </Typography>
-                  <Chip
-                    label={format(new Date(), "d 'de' MMMM 'de' yyyy", {
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", {
                       locale: es,
                     })}
-                    size="small"
-                    sx={{
-                      fontWeight: 500,
-                    }}
-                  />
+                  </Typography>
                 </Box>
               </Stack>
             </Stack>

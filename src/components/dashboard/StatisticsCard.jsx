@@ -1,4 +1,4 @@
-import { Box, Card, Typography } from "@mui/material";
+import { alpha, Box, Card, Typography } from "@mui/material";
 
 const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
   return (
@@ -51,41 +51,6 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
         },
       }}
     >
-      {/* Partículas flotantes */}
-      {/* <Box
-        sx={{
-          position: "absolute",
-          inset: 0,
-          overflow: "hidden",
-          pointerEvents: "none",
-          "& > div": {
-            position: "absolute",
-            width: "4px",
-            height: "4px",
-            background: `${color}80`,
-            borderRadius: "50%",
-            animation: "float 3s ease-in-out infinite",
-            "@keyframes float": {
-              "0%, 100%": {
-                transform: "translateY(0) scale(1)",
-                opacity: 0,
-              },
-              "50%": {
-                transform: "translateY(-30px) scale(1.2)",
-                opacity: 0.6,
-              },
-            },
-          },
-          "& > div:nth-of-type(1)": { left: "20%", animationDelay: "0s" },
-          "& > div:nth-of-type(2)": { left: "50%", animationDelay: "0.5s" },
-          "& > div:nth-of-type(3)": { left: "80%", animationDelay: "1s" },
-        }}
-      >
-        <Box component="div" />
-        <Box component="div" />
-        <Box component="div" />
-      </Box> */}
-
       <Box sx={{ /*position: "relative",*/ zIndex: 1 }}>
         {/* Header: Ícono y Badge de tendencia */}
         <Box
@@ -101,7 +66,7 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 3,
-              background: color,
+              background: alpha(color, 0.2),
               //boxShadow: `0 8px 24px ${color}40`,
               position: "relative",
               overflow: "hidden",
@@ -119,7 +84,7 @@ const StatisticsCard = ({ title, count, icon, color, trend = "+12%" }) => {
               },
               "& .MuiSvgIcon-root": {
                 fontSize: 32,
-                color: "white",
+                color: color,
                 position: "relative",
                 zIndex: 1,
               },

@@ -15,7 +15,7 @@ import { useThemeMode } from "../../contexts/ThemeContext";
 
 const DepartmentDistribution = ({ attendanceByStatus }) => {
   const theme = useTheme();
-  const { mode } = useThemeMode(); // 'light' o 'dark'
+  const { themeMode } = useThemeMode(); // 'light' o 'dark'
   // Mapeo de estados y sus configuraciones
   const statusConfig = {
     on_time: {
@@ -107,7 +107,7 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
 
   const options = {
     theme: {
-      mode: mode,
+      mode: themeMode,
     },
     chart: {
       type: "donut",
@@ -261,10 +261,10 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
                 alignItems: "center",
                 justifyContent: "center",
                 //background: 'linear-gradient(135deg, #673AB7 0%, #512DA8 100%)',
-                background: theme.palette.primary.main,
+                background: alpha(theme.palette.primary.main, 0.2),
                 borderRadius: 2,
-                color: "white",
-                boxShadow: "0 4px 12px rgba(103, 58, 183, 0.3)",
+                color: theme.palette.primary.main,
+                //boxShadow: "0 4px 12px rgba(103, 58, 183, 0.3)",
               }}
             >
               <PieChartIcon sx={{ fontSize: 20 }} />
