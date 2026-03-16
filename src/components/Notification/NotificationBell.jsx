@@ -32,8 +32,8 @@ export default function NotificationBell() {
 
   useEffect(() => {
     fetchCount();
-    const interval = setInterval(fetchCount, 30000);
-    return () => clearInterval(interval);
+    /*const interval = setInterval(fetchCount, 30000);
+    return () => clearInterval(interval);*/
   }, []);
 
   const handleOpen = (event) => setAnchorEl(event.currentTarget);
@@ -79,7 +79,11 @@ export default function NotificationBell() {
       `}</style>
 
       <Tooltip
-        title={count > 0 ? `${count} notificación${count !== 1 ? "es" : ""} sin leer` : "Notificaciones"}
+        title={
+          count > 0
+            ? `${count} notificación${count !== 1 ? "es" : ""} sin leer`
+            : "Notificaciones"
+        }
         placement="bottom"
         arrow
       >
@@ -106,7 +110,10 @@ export default function NotificationBell() {
                 padding: "0 4px",
                 animation: count > 0 ? "pulse 2s infinite" : "none",
                 border: "2px solid",
-                borderColor: "primary.main",
+                borderColor: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? theme.palette.background.paper
+                    : "white",
               },
             }}
           >

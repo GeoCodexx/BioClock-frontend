@@ -14,6 +14,7 @@ import {
   IconButton,
   Skeleton,
   alpha,
+  Tooltip,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { getRoles } from "../../services/roleService";
@@ -51,6 +52,14 @@ const inactiveMenuItemSx = (theme) => ({
     backgroundColor: alpha(theme.palette.error.main, 0.1),
   },
 });
+
+//helper
+const truncateText = (text, maxLength = 25) => {
+  if (!text) return "";
+  return text.length > maxLength
+    ? text.slice(0, maxLength).trim() + "..."
+    : text;
+};
 
 const UserForm = ({
   onSubmit,
@@ -96,6 +105,8 @@ const UserForm = ({
       firstSurname: "",
       secondSurname: "",
       dni: "",
+      address: "",
+      position: "",
       email: "",
       phone: "",
       password: "",
@@ -156,6 +167,8 @@ const UserForm = ({
         firstSurname: defaultValues.firstSurname || "",
         secondSurname: defaultValues.secondSurname || "",
         dni: defaultValues.dni || "",
+        address: defaultValues.address || "",
+        position: defaultValues.position || "",
         email: defaultValues.email || "",
         phone: defaultValues.phone || "",
         password: "",
@@ -436,6 +449,29 @@ const UserForm = ({
           />
         </Grid>
 
+        {/* Dirección */}
+        <Grid size={12}>
+          <Controller
+            name="address"
+            control={control}
+            rules={{
+              required: "La dirección es obligatoria",
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Dirección"
+                fullWidth
+                required
+                size="small"
+                disabled={disabled}
+                error={!!errors.address}
+                helperText={errors.address?.message}
+              />
+            )}
+          />
+        </Grid>
+
         {/* Email */}
         <Grid size={{ xs: 12, md: 12 }}>
           <Controller
@@ -531,6 +567,23 @@ const UserForm = ({
           </Grid>
         )}
 
+        {/* Cargo */}
+        <Grid size={12}>
+          <Controller
+            name="position"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Cargo"
+                fullWidth
+                size="small"
+                disabled={disabled}
+              />
+            )}
+          />
+        </Grid>
+
         {/* Rol */}
         <Grid size={{ xs: 12, md: isEditing ? 6 : 6 }}>
           <Controller
@@ -572,8 +625,7 @@ const UserForm = ({
                       key={role._id}
                       value={role._id}
                       disabled={
-                        role.status === "inactive" &&
-                        !field.value?.includes(role._id)
+                        role.status === "inactive" && field.value !== role._id
                       }
                       sx={
                         role.status === "inactive"
@@ -597,9 +649,14 @@ const UserForm = ({
                           {role.status === "inactive" && <InactiveBadge />}
                         </Stack>
                         {role.description && (
-                          <Typography variant="caption" color="text.secondary">
-                            {role.description}
-                          </Typography>
+                          <Tooltip title={role.description || ""} arrow>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {truncateText(role.description, 30)}
+                            </Typography>
+                          </Tooltip>
                         )}
                       </Stack>
                     </MenuItem>

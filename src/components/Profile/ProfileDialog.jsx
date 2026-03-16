@@ -1,3 +1,8 @@
+/**
+ * ProfileDialog — versión simplificada.
+ * Solo muestra un resumen rápido del usuario y ofrece ir a la ProfilePage completa.
+ * Toda la edición de datos y cambio de contraseña ocurre en ProfilePage.
+ */
 import {
   Dialog,
   DialogTitle,
@@ -8,363 +13,181 @@ import {
   Avatar,
   Divider,
   Button,
-  TextField,
-  Collapse,
   IconButton,
+  Chip,
   Stack,
-  LinearProgress,
-  Snackbar,
-  Alert,
-  CircularProgress,
-  InputAdornment,
-  useMediaQuery,
 } from "@mui/material";
 import {
   Close,
-  LockResetOutlined,
-  Visibility,
-  VisibilityOff,
   PersonOutline,
+  OpenInNewOutlined,
+  AdminPanelSettingsOutlined,
 } from "@mui/icons-material";
 import { alpha, useTheme } from "@mui/material/styles";
-import { useState, useMemo } from "react";
-import { useForm, Controller } from "react-hook-form";
-import zxcvbn from "zxcvbn";
-import useAuthStore from "../../store/useAuthStore";
-import { changePassword, reAuthenticate } from "../../services/authService";
 import { useNavigate } from "react-router-dom";
+//import useAuthStore from "../../store/useAuthStore";
 
 export default function ProfileDialog({ open, onClose, user }) {
   const theme = useTheme();
-
-  // Detecta si el ancho de pantalla es menor a 'sm' (habitualmente 600px)
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
-  const { logout } = useAuthStore();
+  //const user = useAuthStore((s) => s.user);
 
-  const [showForm, setShowForm] = useState(false);
-  const [verified, setVerified] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [snackbar, setSnackbar] = useState(null);
+  console.log(user);
 
-  const [show, setShow] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
+  const fullName = [user?.name, user?.firstSurname, user?.secondSurname]
+    .filter(Boolean)
+    .join(" ");
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    reset,
-    formState: { errors, isValid },
-  } = useForm({ mode: "onChange" });
+  const initials = [user?.name, user?.firstSurname]
+    .filter(Boolean)
+    .map((s) => s[0])
+    .join("")
+    .toUpperCase();
 
-  const handleClose = () => {
+  const handleGoToProfile = () => {
     onClose();
-    setShowForm(false);
-    reset({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
-    setVerified(false);
-    setSnackbar(null);
-  };
-
-  const newPassword = watch("newPassword");
-  const score = useMemo(
-    () => (newPassword ? zxcvbn(newPassword).score : 0),
-    [newPassword]
-  );
-
-  const strengthLabel = [
-    "Muy débil",
-    "Débil",
-    "Aceptable",
-    "Fuerte",
-    "Muy fuerte",
-  ];
-  const strengthColor = ["error", "error", "warning", "info", "success"];
-
-  const handleReAuth = async ({ currentPassword }) => {
-    try {
-      setLoading(true);
-      await reAuthenticate(currentPassword);
-      setVerified(true);
-    } catch (error) {
-      // Verificar si es un error del cliente (4xx)
-      if (error.isClientError) {
-        setSnackbar({
-          type: "error", // Cambiado a warning para errores 4xx
-          msg: error.message,
-        });
-      } else {
-        // Error del servidor (5xx) o de red
-        setSnackbar({
-          type: "error",
-          msg: error.message || "Error inesperado al autenticar",
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Función para cambiar contraseña
-  const onSubmit = async (data) => {
-    try {
-      setLoading(true);
-      const response = await changePassword(data);
-
-      // Si el backend indica que debe cerrar sesión
-      if (response.forceLogout) {
-        logout(
-          response.message ||
-            "Contraseña actualizada. Inicia sesión nuevamente."
-        );
-        navigate("/login", { replace: true });
-      }
-    } catch (error) {
-      // Verificar si es un error del cliente (4xx)
-      if (error.isClientError) {
-        setSnackbar({
-          type: "warning", // Advertencia para errores de validación
-          msg: error.message,
-        });
-      } else {
-        // Error del servidor (5xx) o de red
-        setSnackbar({
-          type: "error",
-          msg: error.message || "Error crítico al cambiar contraseña",
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
+    navigate("/profile"); // ajusta esta ruta según tu router
   };
 
   return (
-    <>
-      <Dialog
-        open={open}
-        onClose={handleClose}
-        fullScreen={isMobile}
-        maxWidth="sm"
-        fullWidth
-        disableScrollLock={true}
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xs"
+      fullWidth
+      disableScrollLock
+      PaperProps={{
+        sx: { borderRadius: 3, overflow: "hidden" },
+      }}
+    >
+      {/* Header con gradiente */}
+      <Box
+        sx={{
+          /*background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.9)}, ${alpha(
+            theme.palette.primary.dark,
+            0.95,
+          )})`,*/
+          bgcolor: theme.palette.primary.main,
+          pt: 3,
+          pb: 2.5,
+          px: 3,
+          color: "#fff",
+          position: "relative",
+        }}
       >
-        <DialogTitle sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Typography fontWeight={600}>Perfil</Typography>
-          <IconButton onClick={handleClose}>
-            <Close />
-          </IconButton>
-        </DialogTitle>
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{
+            position: "absolute",
+            top: 10,
+            right: 10,
+            color: "rgba(255,255,255,0.7)",
+            "&:hover": { color: "#fff", bgcolor: "rgba(255,255,255,0.1)" },
+          }}
+        >
+          <Close fontSize="small" />
+        </IconButton>
 
-        <DialogContent>
-          {/* PERFIL */}
-          <Box sx={{ textAlign: "center", mb: 3 }}>
-            <Avatar sx={{ mx: "auto", mb: 1, bgcolor: "primary.main" }}>
-              <PersonOutline />
-            </Avatar>
-            <Typography
-              fontWeight={600}
-            >{`${user?.name} ${user?.firstSurname} ${user?.secondSurname}`}</Typography>
-            <Typography variant="body2">{user?.email}</Typography>
-            <Typography variant="caption">{user?.role}</Typography>
-          </Box>
-
-          <Divider sx={{ mb: 2 }} />
-
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<LockResetOutlined />}
-            onClick={() => setShowForm((v) => !v)}
-            sx={{ textTransform: "none", borderRadius: 2, mb: 2 }}
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Avatar
+            sx={{
+              width: 56,
+              height: 56,
+              bgcolor: "rgba(255,255,255,0.2)",
+              color: "#fff",
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              border: "2px solid rgba(255,255,255,0.35)",
+            }}
           >
-            Cambiar contraseña
-          </Button>
-          <Collapse in={showForm}>
-            <Box
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                //bgcolor: (t) => alpha(t.palette.primary.main, 0.05),
-              }}
+            {initials || <PersonOutline />}
+          </Avatar>
+          <Box>
+            <Typography fontWeight={700} sx={{ lineHeight: 1.2, mb: 0.4 }}>
+              {fullName || "Usuario"}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{ opacity: 0.85, display: "block", mb: 0.75 }}
             >
-              <form onSubmit={handleSubmit(verified ? onSubmit : handleReAuth)}>
-                <Stack spacing={2}>
-                  {/* ACTUAL */}
-                  <Controller
-                    name="currentPassword"
-                    defaultValue={""}
-                    control={control}
-                    rules={{ required: "Obligatoria" }}
-                    render={({ field }) => (
-                      <TextField
-                        {...field}
-                        label="Contraseña actual"
-                        size={isMobile ? "small" : "medium"}
-                        type={show.current ? "text" : "password"}
-                        error={!!errors.currentPassword}
-                        helperText={errors.currentPassword?.message}
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                onClick={() =>
-                                  setShow((s) => ({
-                                    ...s,
-                                    current: !s.current,
-                                  }))
-                                }
-                              >
-                                {show.current ? (
-                                  <VisibilityOff />
-                                ) : (
-                                  <Visibility />
-                                )}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    )}
+              {user?.email}
+            </Typography>
+            {user?.role && (
+              <Chip
+                icon={
+                  <AdminPanelSettingsOutlined
+                    sx={{
+                      fontSize: "0.8rem !important",
+                      color: "rgba(255,255,255,0.9) !important",
+                    }}
                   />
+                }
+                label={user.role}
+                size="small"
+                sx={{
+                  bgcolor: "rgba(255,255,255,0.18)",
+                  color: "#fff",
+                  fontSize: "0.68rem",
+                  fontWeight: 600,
+                  height: 22,
+                  border: "1px solid rgba(255,255,255,0.25)",
+                }}
+              />
+            )}
+          </Box>
+        </Stack>
+      </Box>
 
-                  {verified && (
-                    <>
-                      {/* NUEVA */}
-                      <Controller
-                        name="newPassword"
-                        control={control}
-                        defaultValue={""}
-                        rules={{
-                          required: "Obligatoria",
-                          minLength: {
-                            value: 8,
-                            message: "Mínimo 8 caracteres",
-                          },
-                        }}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Nueva contraseña"
-                            size={isMobile ? "small" : "medium"}
-                            type={show.new ? "text" : "password"}
-                            error={!!errors.newPassword}
-                            helperText={errors.newPassword?.message}
-                            InputProps={{
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <IconButton
-                                    onClick={() =>
-                                      setShow((s) => ({ ...s, new: !s.new }))
-                                    }
-                                  >
-                                    {show.new ? (
-                                      <VisibilityOff />
-                                    ) : (
-                                      <Visibility />
-                                    )}
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        )}
-                      />
+      <DialogContent sx={{ px: 3, py: 2 }}>
+        <Stack spacing={0.5}>
+          {user?.position && <InfoRow label="Cargo" value={user.position} />}
+          {user?.department && (
+            <InfoRow label="Departamento" value={user.department} />
+          )}
+          {user?.phone && <InfoRow label="Teléfono" value={user.phone} />}
+        </Stack>
+      </DialogContent>
 
-                      {/* FUERZA */}
-                      <LinearProgress
-                        variant="determinate"
-                        value={(score + 1) * 20}
-                        color={strengthColor[score]}
-                      />
-                      <Typography
-                        variant="caption"
-                        color={`${strengthColor[score]}.main`}
-                      >
-                        {strengthLabel[score]}
-                      </Typography>
+      <Divider />
 
-                      {/* CONFIRM */}
-                      <Controller
-                        name="confirmPassword"
-                        defaultValue={""}
-                        control={control}
-                        rules={{
-                          validate: (v) => v === newPassword || "No coinciden",
-                        }}
-                        render={({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Confirmar contraseña"
-                            size={isMobile ? "small" : "medium"}
-                            type={show.confirm ? "text" : "password"}
-                            error={!!errors.confirmPassword}
-                            helperText={errors.confirmPassword?.message}
-                            InputProps={{
-                              endAdornment: (
-                                <InputAdornment position="end">
-                                  <IconButton
-                                    onClick={() =>
-                                      setShow((s) => ({
-                                        ...s,
-                                        confirm: !s.confirm,
-                                      }))
-                                    }
-                                  >
-                                    {show.confirm ? (
-                                      <VisibilityOff />
-                                    ) : (
-                                      <Visibility />
-                                    )}
-                                  </IconButton>
-                                </InputAdornment>
-                              ),
-                            }}
-                          />
-                        )}
-                      />
-                    </>
-                  )}
+      <DialogActions sx={{ px: 2.5, py: 1.5, gap: 1 }}>
+        <Button
+          onClick={onClose}
+          size="small"
+          sx={{
+            textTransform: "none",
+            borderRadius: 2,
+            color: "text.secondary",
+          }}
+        >
+          Cerrar
+        </Button>
+        <Button
+          variant="contained"
+          disableElevation
+          size="small"
+          endIcon={<OpenInNewOutlined sx={{ fontSize: "0.9rem !important" }} />}
+          onClick={handleGoToProfile}
+          sx={{ textTransform: "none", borderRadius: 2, fontWeight: 600 }}
+        >
+          Ver perfil completo
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
 
-                  <Box mb={2}>
-                    {!verified && snackbar?.msg && (
-                      <Alert severity={snackbar.type}>{snackbar.msg}</Alert>
-                    )}
-                  </Box>
-
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={loading || (verified && (!isValid || score < 2))}
-                    startIcon={loading && <CircularProgress size={16} />}
-                  >
-                    {verified ? "Guardar cambios" : "Verificar identidad"}
-                  </Button>
-                </Stack>
-              </form>
-            </Box>
-          </Collapse>
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={handleClose}>Cerrar</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* SNACKBAR */}
-      {/* <Snackbar
-        open={!!snackbar}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar(null)}
-      >
-        <Alert severity={snackbar?.type}>{snackbar?.msg}</Alert>
-      </Snackbar> */}
-    </>
+/* Fila de dato simple */
+function InfoRow({ label, value }) {
+  return (
+    <Box sx={{ display: "flex", gap: 1, py: 0.5 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 110 }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" fontWeight={500}>
+        {value}
+      </Typography>
+    </Box>
   );
 }

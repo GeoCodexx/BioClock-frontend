@@ -472,14 +472,14 @@ const AttendanceWeekView = ({ data }) => {
         </Stack>
 
         {/* Días de la semana */}
-        <Grid container spacing={1.5} justifyContent="center" mb={3}>
+        <Grid container spacing={1.5} justifyContent="center">
           {weekDays.map((day, idx) => (
             <DayCard key={idx} day={day} />
           ))}
         </Grid>
 
         {/* Estadísticas */}
-        <Divider sx={{ my: 2 }} />
+        {/* <Divider sx={{ my: 2 }} />
         <Grid container spacing={2}>
           <Grid size={{ xs: 2.4 }}>
             <Box textAlign="center">
@@ -531,7 +531,7 @@ const AttendanceWeekView = ({ data }) => {
               </Typography>
             </Box>
           </Grid>
-        </Grid>
+        </Grid> */}
       </Paper>
 
       <AttendanceDetailsDialog

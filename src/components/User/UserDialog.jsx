@@ -124,7 +124,7 @@ const UserDialog = ({ open, onClose, editUser, formError, onSubmit }) => {
               <SaveIcon color="primary" />
             )}
             <Typography variant="h6" component="span" fontWeight={600}>
-              {isEdit ? "Editar Rol" : "Nuevo Rol"}
+              {isEdit ? "Editar Usuario" : "Nuevo Usuario"}
             </Typography>
           </Box>
           <IconButton

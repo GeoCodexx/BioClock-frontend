@@ -1,5 +1,5 @@
 // NotificationItem.jsx
-import { Box, Typography, Chip } from "@mui/material";
+import { Box, Typography, Chip, alpha } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { markAsRead } from "../../services/notificationService";
 
@@ -15,11 +15,12 @@ function formatRelativeTime(dateStr) {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffSecs < 60)   return "Justo ahora";
-  if (diffMins < 60)   return `Hace ${diffMins} min${diffMins !== 1 ? "s" : ""}`;
-  if (diffHours < 24)  return `Hace ${diffHours} h${diffHours !== 1 ? "rs" : "r"}`;
-  if (diffDays === 1)  return "Ayer";
-  if (diffDays < 7)    return `Hace ${diffDays} días`;
+  if (diffSecs < 60) return "Justo ahora";
+  if (diffMins < 60) return `Hace ${diffMins} min${diffMins !== 1 ? "s" : ""}`;
+  if (diffHours < 24)
+    return `Hace ${diffHours} h${diffHours !== 1 ? "rs" : "r"}`;
+  if (diffDays === 1) return "Ayer";
+  if (diffDays < 7) return `Hace ${diffDays} días`;
 
   return date.toLocaleDateString("es-ES", {
     day: "2-digit",
@@ -43,21 +44,39 @@ function formatAbsoluteDate(dateStr) {
 
 // ─── Module color accent ─────────────────────────────────────────────────────
 const MODULE_COLORS = {
-  pedidos:        "#3b82f6",
-  inventario:     "#10b981",
-  facturacion:    "#f59e0b",
-  usuarios:       "#8b5cf6",
-  reportes:       "#ef4444",
-  justifications: "#0ea5e9",   // ← módulo que llega del backend
-  default:        "#6366f1",
+  users: "#3b82f6",
+  "my-attendance": "#10b981",
+  schedules: "#f59e0b",
+  attendances: "#8b5cf6",
+  devices: "#ef4444",
+  justifications: "#0ea5e9",
+  default: "#6366f1",
+};
+
+const MODULE_CHIP = {
+  users: "Usuarios",
+  "my-attendance": "Mi asistencia",
+  schedules: "Horarios",
+  attendances: "Asistencias",
+  devices: "Dispositivos",
+  justifications: "Justificaciones",
+  default: "Desconocido",
 };
 
 function getModuleColor(module = "default") {
   return MODULE_COLORS[module.toLowerCase()] ?? MODULE_COLORS.default;
 }
 
+function getModulLabel(module = "default") {
+  return MODULE_CHIP[module.toLowerCase()] ?? MODULE_COLORS.default;
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
-export default function NotificationItem({ notification, refreshCount, reload }) {
+export default function NotificationItem({
+  notification,
+  refreshCount,
+  reload,
+}) {
   const navigate = useNavigate();
   const accentColor = getModuleColor(notification.module);
   const relativeTime = formatRelativeTime(notification.createdAt);
@@ -113,7 +132,8 @@ export default function NotificationItem({ notification, refreshCount, reload })
             height: 7,
             borderRadius: "50%",
             bgcolor: accentColor,
-            boxShadow: `0 0 0 2px white`,
+            //border: `1px solid ${accentColor}`,
+            //boxShadow: `0 0 0 2px white`,
           }}
         />
       )}
@@ -153,10 +173,15 @@ export default function NotificationItem({ notification, refreshCount, reload })
         </Typography>
 
         {/* Footer: module chip + date */}
-        <Box display="flex" alignItems="center" justifyContent="space-between" gap={1}>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          gap={1}
+        >
           {notification.module && (
             <Chip
-              label={notification.module}
+              label={getModulLabel(notification.module)}
               size="small"
               sx={{
                 height: 18,

@@ -49,6 +49,15 @@ const useAuthStore = create((set) => {
       });
     },
     clearLogoutMessage: () => set({ logoutMessage: null }),
+
+    updateUser: (fields) => {
+      set((state) => {
+        const updatedUser = { ...state.user, ...fields };
+        // Sincroniza localStorage igual que lo hace login
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        return { user: updatedUser };
+      });
+    },
   };
 });
 

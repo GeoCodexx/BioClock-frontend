@@ -201,6 +201,7 @@ const AttendanceMonthCalendar = ({ data, fetchData }) => {
           sx={{
             "& .fc": {
               fontSize: isMobile ? "0.75rem" : "0.875rem",
+              "--fc-border-color": theme.palette.divider,
             },
             "& .fc-toolbar-title": {
               fontSize: isMobile ? "1rem" : "1.5rem",
@@ -229,6 +230,12 @@ const AttendanceMonthCalendar = ({ data, fetchData }) => {
               fontSize: isMobile ? "0.7rem" : "0.875rem",
               fontWeight: 600,
               padding: isMobile ? "4px" : "8px",
+            },
+
+            "& .fc-col-header-cell": {
+              bgcolor: theme.palette.background.paper /* Azul de ejemplo */,
+              color: "text.primary",
+              padding: "10px 0",
             },
           }}
         >

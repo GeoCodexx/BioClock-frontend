@@ -19,6 +19,7 @@ import useAuthStore from "./store/useAuthStore";
 import NoAccessPage from "./pages/NoAccessPage";
 import Justifications from "./pages/Justifications";
 import { LogoProvider } from "./contexts/LogoContext";
+import ProfilePage from "./pages/ProfilePage";
 
 function AuthRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
@@ -171,6 +172,7 @@ export default function App() {
                   </PermissionRoute>
                 }
               />
+              <Route path="profile" element={<ProfilePage />} />
             </Route>
             <Route path="/403" element={<NoAccessPage />} />
             <Route path="*" element={<Navigate to="/" />} />

@@ -214,7 +214,7 @@ export default function NotificationMenu({
 
       {/* ── Footer ── */}
       {!loading && notifications.length > 0 && (
-        <>
+        <Box component="div">
           <Divider />
           <Box
             px={2}
@@ -239,7 +239,7 @@ export default function NotificationMenu({
               Ver todas las notificaciones
             </Button>
           </Box>
-        </>
+        </Box>
       )}
     </Menu>
   );

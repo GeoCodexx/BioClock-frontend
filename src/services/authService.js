@@ -67,3 +67,12 @@ export const changePassword = async (data) => {
     handleApiError(error, "Error al cambiar contraseña");
   }
 };
+
+export const updateUserProfile = async (data) => {
+  try {
+    const res = await api.post("/auth/profile", data);
+    return res.data;
+  } catch (error) {
+    handleApiError(error, "Error al actualizar datos");
+  }
+};
