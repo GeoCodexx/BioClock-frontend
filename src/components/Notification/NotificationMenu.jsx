@@ -89,7 +89,7 @@ export default function NotificationMenu({
 
   const handleSeeAll = () => {
     onClose();
-    navigate("/notificaciones");
+    navigate("notifications");
   };
 
   const hasUnread = unreadCount > 0;

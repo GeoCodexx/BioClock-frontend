@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 
-import NotificationSection from "./NotificationSection";
+//import NotificationSection from "./NotificationSection";
 import ProfileSection from "./ProfileSection";
 import { useLogoContext } from "../../../contexts/LogoContext";
 import { Link } from "react-router-dom";
@@ -50,7 +50,7 @@ Logo.displayName = "Logo";
 const MobileView = memo(({ handleDrawerToggle, logoUrl }) => (
   <>
     <IconButton
-      color="inherit"
+      color="primary"
       aria-label="abrir menú de navegación"
       onClick={handleDrawerToggle}
       edge="start"

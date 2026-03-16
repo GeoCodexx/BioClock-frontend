@@ -2,6 +2,7 @@
 import { Box, Typography, Chip, alpha } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { markAsRead } from "../../services/notificationService";
+//import { usePermission } from "../../utils/permissions";
 
 // ─── Relative time (no external deps) ───────────────────────────────────────
 function formatRelativeTime(dateStr) {
@@ -71,6 +72,14 @@ function getModulLabel(module = "default") {
   return MODULE_CHIP[module.toLowerCase()] ?? MODULE_COLORS.default;
 }
 
+const notificationRoutes = {
+  justifications: "/justifications",
+  attendances: "/myattendance",
+  schedules: "/profile",
+  USER_CREATED: "/users",
+  USER_UPDATED: "/profile",
+};
+
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function NotificationItem({
   notification,
@@ -85,9 +94,16 @@ export default function NotificationItem({
   const handleClick = async () => {
     try {
       if (!notification.read) await markAsRead(notification._id);
+
       refreshCount();
       reload();
-      navigate(`/${notification.module}`);
+
+      const route =
+        notificationRoutes[notification.type] ||
+        notificationRoutes[notification.module] ||
+        `/${notification.module}`;
+
+      navigate(route);
     } catch (error) {
       console.error(error);
     }
