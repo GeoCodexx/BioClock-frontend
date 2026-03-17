@@ -39,7 +39,7 @@ import ToggleStatusDialog from "../components/common/ToggleStatusDialog";
 
 export default function Schedules() {
   const { can } = usePermission();
-  const { mode } = useThemeMode();
+  const { themeMode } = useThemeMode();
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
@@ -320,23 +320,30 @@ export default function Schedules() {
       </Box>
     );
   }
-
+  console.log(themeMode);
   return (
     <Box sx={{ width: "100%" }}>
       {/* HEADER CARD - Título y Breadcrumbs */}
       <Card
         sx={{
-          borderRadius: isMobile ? 2 : 3,
+          borderRadius: 3,
           mb: 2,
           boxShadow: theme.shadows[1],
-          borderLeft: mode === "dark" ? "none" : "6px solid",
-          borderColor: "primary.main",
+          position: "sticky",
+          top: "57px",
+          zIndex: 10,
+          //borderLeft: themeMode === "dark" ? "none" : "6px solid",
+          //borderColor: "primary.main",
+          ...(isMobile && {
+            mx: -2, // compensa padding del Container (16px)
+            borderRadius: 0,
+          }),
         }}
       >
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 2.5 : 3,
+            py: isMobile ? 1 : 3,
           }}
         >
           {isMobile ? (

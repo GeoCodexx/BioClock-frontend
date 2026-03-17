@@ -310,8 +310,7 @@ export default function Attendances() {
       setDeleteState({ id: null, error: "" });
       await refreshAttendances();
     } catch (err) {
-      const errorMessage =
-        err?.message|| "Error al eliminar el rol";
+      const errorMessage = err?.message || "Error al eliminar el rol";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);
@@ -435,7 +434,7 @@ export default function Attendances() {
   return (
     <Box sx={{ width: "100%" }}>
       {/* HEADER CARD - Título y Breadcrumbs */}
-      <Card
+      {/* <Card
         sx={{
           borderRadius: isMobile ? 2 : 3,
           mb: 2,
@@ -518,14 +517,18 @@ export default function Attendances() {
             </Stack>
           )}
         </Box>
-      </Card>
+      </Card> */}
 
       {/* TOOLBAR CARD - Búsqueda y Acciones */}
       <Card
         sx={{
-          borderRadius: isMobile ? 2 : 3,
+          borderRadius: 3,
           mb: 2,
           boxShadow: theme.shadows[1],
+          ...(isMobile && {
+            mx: -2,
+            borderRadius: 0,
+          }),
         }}
       >
         <Box

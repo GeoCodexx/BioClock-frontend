@@ -24,7 +24,7 @@ const MainLayout = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh" }}>
+    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       <Header handleDrawerToggle={handleDrawerToggle} />
       <Sidebar
         isOpen={isDrawerOpen}
@@ -42,7 +42,7 @@ const MainLayout = () => {
             : isDrawerOpen
               ? `calc(100% - ${drawerWidth}px)`
               : `calc(100% - ${collapsedWidth}px)`,
-          minHeight: "calc(100vh - 88px)",
+          // minHeight: "calc(100vh - 88px)",
           flexGrow: 1,
           marginTop: isMobile ? "56px" : "70px",
           marginRight: isMobile ? 0 : "20px",
@@ -50,6 +50,8 @@ const MainLayout = () => {
           padding: isMobile ? 0 : "20px",
           borderRadius: isMobile ? 0 : "8px 8px 0 0",
           transition: "all 0.5s ease-in-out",
+          //height: "100vh", // ⭐ importante
+          overflowY: "auto",
         }}
       >
         <Container maxWidth="lg">

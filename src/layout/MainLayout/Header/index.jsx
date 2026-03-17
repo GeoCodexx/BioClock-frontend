@@ -16,8 +16,26 @@ import MenuIcon from "@mui/icons-material/Menu";
 //import NotificationSection from "./NotificationSection";
 import ProfileSection from "./ProfileSection";
 import { useLogoContext } from "../../../contexts/LogoContext";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import NotificationBell from "../../../components/Notification/NotificationBell";
+
+//Mapa de rutas
+const routeTitles = {
+  "/dashboard": "Panel Estadístico",
+  "/users": "Usuarios",
+  "/fingerprints": "Huellas Dactilares",
+  "/users/roles": "Roles",
+  "/users/permissions": "Permisos",
+  "/devices": "Dispositivos",
+  "/departments": "Departamentos",
+  "/schedules": "Horarios",
+  "/attendances": "Asistencias",
+  "/myattendance": "Mi Asistencia",
+  "/general-report": "Reporte General",
+  "/justifications": "Justificaciones",
+  "/notifications": "Notificaciones",
+  "/profile": "Mi Perfil",
+};
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 const Logo = memo(({ src, alt = "Logo", size = "medium" }) => {
@@ -47,7 +65,7 @@ const Logo = memo(({ src, alt = "Logo", size = "medium" }) => {
 Logo.displayName = "Logo";
 
 // ─── MobileView ───────────────────────────────────────────────────────────────
-const MobileView = memo(({ handleDrawerToggle, logoUrl }) => (
+const MobileView = memo(({ handleDrawerToggle, logoUrl, title }) => (
   <>
     <IconButton
       color="primary"
@@ -72,7 +90,7 @@ const MobileView = memo(({ handleDrawerToggle, logoUrl }) => (
         px: 2,
       }}
     >
-      {logoUrl && (
+      {/* {logoUrl && (
         <Box
           component={Link}
           to="/"
@@ -91,8 +109,8 @@ const MobileView = memo(({ handleDrawerToggle, logoUrl }) => (
             }}
           />
         </Box>
-      )}
-      {/* <Typography
+      )} */}
+      <Typography
         variant="h6"
         fontWeight="bold"
         sx={{
@@ -103,8 +121,8 @@ const MobileView = memo(({ handleDrawerToggle, logoUrl }) => (
           backgroundClip: "text",
         }}
       >
-        BioClock Pro
-      </Typography> */}
+        {title}
+      </Typography>
     </Box>
 
     {/* <NotificationSection /> */}
@@ -216,7 +234,8 @@ const Header = memo(({ handleDrawerToggle }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { logoUrl } = useLogoContext(); // ← logo activo desde el contexto global
-
+  const location = useLocation();
+  const title = routeTitles[location.pathname] || "";
   const appBarStyles = useMemo(
     () => ({
       bgcolor: theme.palette.background.paper,
@@ -244,6 +263,7 @@ const Header = memo(({ handleDrawerToggle }) => {
           <MobileView
             handleDrawerToggle={handleDrawerToggle}
             logoUrl={logoUrl}
+            title={title}
           />
         ) : (
           <DesktopView

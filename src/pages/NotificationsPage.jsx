@@ -516,7 +516,7 @@ export default function NotificationsPage() {
           bgcolor: "background.paper",
           borderBottom: `1px solid ${theme.palette.divider}`,
           position: "sticky",
-          top: 0,
+          top: 57,
           zIndex: 10,
           backdropFilter: "blur(12px)",
           backgroundColor: alpha(theme.palette.background.paper, 0.92),
@@ -559,7 +559,7 @@ export default function NotificationsPage() {
                 </Typography>
                 {stats.unread > 0 && (
                   <Chip
-                    label={`${stats.unread} sin leer`}
+                    label={stats.unread}
                     size="small"
                     color="error"
                     sx={{

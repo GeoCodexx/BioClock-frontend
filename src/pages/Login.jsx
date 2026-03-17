@@ -50,7 +50,7 @@ export default function Login() {
       navigate("/", { replace: true });
     } catch (err) {
       setError(
-        err.response?.data?.message || err.message || "Error de autenticación"
+        err.response?.data?.message || err.message || "Error de autenticación",
       );
       console.log(err);
     } finally {
@@ -71,7 +71,7 @@ export default function Login() {
         justifyContent: "center",
         background: `linear-gradient(135deg, ${alpha(
           theme.palette.primary.main,
-          0.1
+          0.1,
         )} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
         position: "relative",
         overflow: "hidden",
@@ -85,7 +85,7 @@ export default function Login() {
           borderRadius: "50%",
           background: `radial-gradient(circle, ${alpha(
             theme.palette.primary.main,
-            0.08
+            0.08,
           )} 0%, transparent 70%)`,
         },
         "&::after": {
@@ -98,21 +98,21 @@ export default function Login() {
           borderRadius: "50%",
           background: `radial-gradient(circle, ${alpha(
             theme.palette.secondary.main,
-            0.06
+            0.06,
           )} 0%, transparent 70%)`,
         },
       }}
     >
-      <Container component="main" maxWidth="sm">
+      <Container component="main" maxWidth="sm" sx={{ px: { xs: 0, sm: 2 } }}>
         <Fade in timeout={600}>
           <Paper
             elevation={0}
             sx={{
-              borderRadius: 4,
+              borderRadius: { xs: 0, sm: 4 },
               overflow: "hidden",
               boxShadow: `0 20px 60px ${alpha(
                 theme.palette.common.black,
-                0.1
+                0.1,
               )}`,
               border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
               position: "relative",
@@ -139,7 +139,7 @@ export default function Login() {
                   height: "200%",
                   background: `radial-gradient(circle, ${alpha(
                     theme.palette.common.white,
-                    0.1
+                    0.1,
                   )} 0%, transparent 70%)`,
                   animation: "pulse 8s ease-in-out infinite",
                 },
@@ -158,7 +158,7 @@ export default function Login() {
                   border: `4px solid ${alpha(theme.palette.common.white, 0.3)}`,
                   boxShadow: `0 8px 24px ${alpha(
                     theme.palette.common.black,
-                    0.2
+                    0.2,
                   )}`,
                   mb: 2,
                   backdropFilter: "blur(10px)",
@@ -262,7 +262,7 @@ export default function Login() {
                       "&.Mui-focused": {
                         boxShadow: `0 0 0 3px ${alpha(
                           theme.palette.primary.main,
-                          0.1
+                          0.1,
                         )}`,
                       },
                       "& input:-webkit-autofill": {
@@ -319,7 +319,7 @@ export default function Login() {
                       "&.Mui-focused": {
                         boxShadow: `0 0 0 3px ${alpha(
                           theme.palette.primary.main,
-                          0.1
+                          0.1,
                         )}`,
                       },
                     },
@@ -336,7 +336,7 @@ export default function Login() {
                         backgroundColor: alpha(theme.palette.error.main, 0.1),
                         border: `1px solid ${alpha(
                           theme.palette.error.main,
-                          0.3
+                          0.3,
                         )}`,
                       }}
                     >
@@ -365,7 +365,7 @@ export default function Login() {
                       transform: "translateY(-2px)",
                       boxShadow: `0 5px 10px ${alpha(
                         theme.palette.primary.main,
-                        0.5
+                        0.5,
                       )}`,
                       background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
                     },
