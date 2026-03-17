@@ -28,9 +28,9 @@ export default function FingerprintSearchBar({
     >
       <TextField
         fullWidth
-        label={isMobile ? "Buscar" : "Buscar huellas dactilares"}
+        label={isMobile ? "" : "Buscar huellas dactilares"}
         size="small"
-        placeholder={isMobile ? "Nombre o Dni..." : "Buscar por nombre o dni"}
+        placeholder={isMobile ? "Buscar..." : "Buscar por nombre o dni"}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         slotProps={{

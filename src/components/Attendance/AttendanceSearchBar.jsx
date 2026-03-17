@@ -28,9 +28,9 @@ export default function AttendanceSearchBar({
     >
       <TextField
         fullWidth
-        label={isMobile ? "Buscar" : "Buscar asistencias"}
+        label={isMobile ? "" : "Buscar asistencias"}
         size="small"
-        placeholder={isMobile ? "Nombre..." : "Buscar por nombre, apellidos o DNI"}
+        placeholder={isMobile ? "Buscar..." : "Buscar por nombre, apellidos o DNI"}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         slotProps={{

@@ -11,7 +11,7 @@ import ReactApexChart from "react-apexcharts";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import { useThemeMode } from "../../contexts/ThemeContext";
 
-const AttendanceChart = ({ weeklyAttendances }) => {
+const AttendanceChart = ({ weeklyAttendances, isMobile }) => {
   const theme = useTheme();
   const { themeMode } = useThemeMode(); // 'light' o 'dark'
   const onTimeStatusData =
@@ -215,7 +215,7 @@ const AttendanceChart = ({ weeklyAttendances }) => {
               <AssignmentIcon sx={{ fontSize: 20 }} />
             </Box>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              Asistencia de la semana
+              Resumen Semanal
             </Typography>
           </Box>
 
@@ -291,7 +291,7 @@ const AttendanceChart = ({ weeklyAttendances }) => {
         </Box>
 
         {/* Estadísticas resumen */}
-        <Box
+        {isMobile || <Box
           sx={{
             display: "grid",
             gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
@@ -427,7 +427,7 @@ const AttendanceChart = ({ weeklyAttendances }) => {
               {punctualityRate}%
             </Typography>
           </Box>
-        </Box>
+        </Box>}
       </CardContent>
     </Card>
   );

@@ -39,209 +39,10 @@ import AttendanceWeekView from "../components/MyAttendace/AttendanceWeekView";
 import AttendanceMonthCalendar from "../components/MyAttendace/AttendanceMonthCalendar";
 import { useThemeMode } from "../contexts/ThemeContext";
 
-// Datos de ejemplo
-/*const mockData = [
-  {
-    date: "2025-12-05",
-    user: {
-      _id: "68a20ea06a2ebe9a708ce5d5",
-      name: "Paola Olsy",
-      firstSurname: "Ojeda",
-      secondSurname: "Moya",
-      dni: "21622126",
-    },
-    schedule: { _id: "68a4ff5be98482b0a584af56", name: "Horario Matutino" },
-    checkIn: {
-      timestamp: "2025-12-05T08:05:00.000Z",
-      status: "on_time",
-      device: { name: "PC-Oficina-1", location: "Oficina Principal" },
-      verificationMethod: "fingerprint",
-    },
-    checkOut: {
-      timestamp: "2025-12-05T13:00:00.000Z",
-      status: "on_time",
-      device: { name: "PC-Oficina-1", location: "Oficina Principal" },
-      verificationMethod: "fingerprint",
-    },
-    hoursWorked: "4h 55m",
-    minutesWorked: 295,
-    shiftStatus: "complete",
-  },
-  {
-    date: "2025-12-04",
-    user: {
-      _id: "68a20ea06a2ebe9a708ce5d5",
-      name: "Paola Olsy",
-      firstSurname: "Ojeda",
-      secondSurname: "Moya",
-      dni: "21622126",
-    },
-    schedule: { _id: "68a4ff5be98482b0a584af56", name: "Horario Vespertino" },
-    checkIn: {
-      timestamp: "2025-12-04T14:00:00.000Z",
-      status: "on_time",
-      device: { name: "PC-Oficina-1", location: "Oficina Principal" },
-      verificationMethod: "fingerprint",
-    },
-    checkOut: {
-      timestamp: "2025-12-04T19:30:00.000Z",
-      status: "on_time",
-      device: { name: "PC-Oficina-1", location: "Oficina Principal" },
-      verificationMethod: "fingerprint",
-    },
-    hoursWorked: "5h 30m",
-    minutesWorked: 330,
-    shiftStatus: "complete",
-  },
-  {
-    date: "2025-12-03",
-    user: {
-      _id: "68a20ea06a2ebe9a708ce5d5",
-      name: "Paola Olsy",
-      firstSurname: "Ojeda",
-      secondSurname: "Moya",
-      dni: "21622126",
-    },
-    schedule: { _id: "68a4ff5be98482b0a584af56", name: "Horario Matutino" },
-    checkIn: {
-      timestamp: "2025-12-03T08:15:00.000Z",
-      status: "late",
-      device: { name: "PC-Oficina-1", location: "Oficina Principal" },
-      verificationMethod: "fingerprint",
-    },
-    checkOut: {
-      timestamp: "2025-12-03T13:05:00.000Z",
-      status: "on_time",
-      device: { name: "PC-Oficina-1", location: "Oficina Principal" },
-      verificationMethod: "fingerprint",
-    },
-    hoursWorked: "5h 15m",
-    minutesWorked: 315,
-    shiftStatus: "late",
-  },
-  {
-    date: "2025-12-03",
-    user: {
-      _id: "68a20ea06a2ebe9a708ce5d5",
-      name: "Paola Olsy",
-      firstSurname: "Ojeda",
-      secondSurname: "Moya",
-      dni: "21622126",
-    },
-    schedule: { _id: "68a4ff5be98482b0a584af56", name: "Horario Vespertino" },
-    checkIn: {
-      timestamp: "2025-12-03T14:15:00.000Z",
-      status: "late",
-      device: { name: "PC-Oficina-1", location: "Oficina Principal" },
-      verificationMethod: "fingerprint",
-    },
-    checkOut: {
-      timestamp: "2025-12-03T19:30:00.000Z",
-      status: "on_time",
-      device: { name: "PC-Oficina-1", location: "Oficina Principal" },
-      verificationMethod: "fingerprint",
-    },
-    hoursWorked: "5h 15m",
-    minutesWorked: 315,
-    shiftStatus: "absent",
-  },
-  {
-    date: "2025-12-02",
-    user: {
-      _id: "68a20ea06a2ebe9a708ce5d5",
-      name: "Paola Olsy",
-      firstSurname: "Ojeda",
-      secondSurname: "Moya",
-      dni: "21622126",
-    },
-    schedule: { _id: "68a4ff5be98482b0a584af56", name: "Horario Matutino" },
-    checkIn: {
-      timestamp: "2025-12-02T08:00:00.000Z",
-      status: "on_time",
-      device: { name: "PC-Oficina-1", location: "Oficina Principal" },
-      verificationMethod: "fingerprint",
-    },
-    checkOut: null,
-    hoursWorked: null,
-    minutesWorked: null,
-    shiftStatus: "incomplete_no_exit",
-  },
-  {
-    date: "2025-12-02",
-    user: {
-      _id: "68a20ea06a2ebe9a708ce5g6",
-      name: "Paola Olsy",
-      firstSurname: "Ojeda",
-      secondSurname: "Moya",
-      dni: "21622126",
-    },
-    schedule: { _id: "68a4ff5be98482b0a584af56", name: "Horario Vespertino" },
-    checkIn: {
-      timestamp: "2025-12-02T13:00:00.000Z",
-      status: "late",
-      device: { name: "PC-Oficina-1", location: "Oficina Principal" },
-      verificationMethod: "fingerprint",
-    },
-    checkOut: {
-      timestamp: "2025-12-02T18:00:00.000Z",
-      status: "on_time",
-      device: { name: "PC-Oficina-1", location: "Oficina Principal" },
-      verificationMethod: "fingerprint",
-    },
-    hoursWorked: null,
-    minutesWorked: null,
-    shiftStatus: "complete",
-  },
-  {
-    date: "2025-12-01",
-    user: {
-      _id: "68a20ea06a2ebe9a708ce5d5",
-      name: "Paola Olsy",
-      firstSurname: "Ojeda",
-      secondSurname: "Moya",
-      dni: "21622126",
-    },
-    schedule: { _id: "68a4ff5be98482b0a584af56", name: "Horario Vespertino" },
-    checkIn: null,
-    checkOut: null,
-    hoursWorked: null,
-    minutesWorked: null,
-    shiftStatus: "absent",
-    justification: "Cita médica programada",
-  },
-];*/
-
-// --- COMPONENTES AUXILIARES ---
-
-// Chip de estado pequeño
-/*const StatusChip = ({ status, label, color }) => (
-  <Chip
-    label={label}
-    size="small"
-    icon={
-      status === "on_time" || status === "complete" ? (
-        <CheckCircle />
-      ) : (
-        <InfoIcon />
-      )
-    }
-    sx={{
-      height: 24,
-      bgcolor: `${color}20`, // Transparencia
-      color: color,
-      fontWeight: 600,
-      border: `1px solid ${color}40`,
-      "& .MuiChip-icon": { color: "inherit" },
-    }}
-  />
-);*/
-
 const MyAttendances = () => {
   const theme = useTheme();
   const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  /*const [selectedDay, setSelectedDay] = useState(null);
-  const [dialogOpen, setDialogOpen] = useState(false);*/
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [data, setData] = useState({});
@@ -268,7 +69,6 @@ const MyAttendances = () => {
 
   // Obtener el día de hoy
   const today = useMemo(() => new Date(), []);
-
 
   // Configuración de colores/etiquetas por estado
   const statusConfig = useMemo(
@@ -380,7 +180,6 @@ const MyAttendances = () => {
 
       dayRecords.forEach((record) => {
         const scheduleId = record.scheduleId?._id?.toString();
-        const scheduleName = record.scheduleId?.name || "Sin horario";
 
         if (!scheduleGroups[scheduleId]) {
           scheduleGroups[scheduleId] = {
@@ -469,11 +268,6 @@ const MyAttendances = () => {
     return format(parseISO(timestamp), "HH:mm", { locale: es });
   }, []);
 
-  /*const handleCloseDialog = useCallback(() => {
-    setDialogOpen(false);
-    setTimeout(() => setSelectedDay(null), 200);
-  }, []);*/
-
   // Componente Header memoizado
   const PageHeader = memo(({ date, isMobile }) => {
     const breadcrumbs = (
@@ -546,9 +340,6 @@ const MyAttendances = () => {
                   )}
                 </Box>
               </Stack>
-              {/* <Box sx={{ "& a, & p": { color: "rgba(255,255,255,0.9)" } }}>
-              {breadcrumbs}
-            </Box> */}
             </Stack>
           ) : (
             <Stack
@@ -606,7 +397,7 @@ const MyAttendances = () => {
   return (
     <Box sx={{ width: "100%", p: { xs: 2, sm: 3 } }}>
       {/* Header */}
-      <PageHeader date={""} isMobile={isMobile} />
+      {isMobile || <PageHeader date={""} isMobile={isMobile} />}
 
       {/* Mensaje de error global */}
       {error && (
@@ -823,80 +614,8 @@ const MyAttendances = () => {
         {/* Calendario */}
         <Grid size={{ xs: 12 }}>
           <AttendanceMonthCalendar data={data} fetchData={fetchData} />
-          {/* <Paper
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              p: { xs: 2, sm: 3 },
-              border: `1px solid ${theme.palette.divider}`,
-              transition: "box-shadow 0.3s",
-              "&:hover": {
-                boxShadow: theme.shadows[4],
-              },
-            }}
-          >
-            <Stack direction="row" alignItems="center" spacing={1.5} mb={3}>
-              <Avatar sx={{ bgcolor: "info.main", width: 40, height: 40 }}>
-                <CalendarMonth />
-              </Avatar>
-              <Typography variant="h6" fontWeight={700}>
-                Calendario de Asistencias
-              </Typography>
-            </Stack>
-
-            <Box
-              sx={{
-                "& .fc": {
-                  fontFamily: "inherit",
-                  fontSize: isMobile ? "0.85rem" : "1rem",
-                },
-                "& .fc-button": {
-                  textTransform: "capitalize",
-                  borderRadius: 2,
-                },
-                "& .fc-daygrid-day": {
-                  cursor: "pointer",
-                },
-                "& .fc-day-today": {
-                  bgcolor: `${alpha(
-                    theme.palette.primary.main,
-                    0.05
-                  )} !important`,
-                },
-                "& .fc-event": {
-                  borderRadius: 1,
-                  cursor: "pointer",
-                  transition: "transform 0.2s",
-                  "&:hover": {
-                    transform: "scale(1.05)",
-                  },
-                },
-              }}
-            >
-              <FullCalendar
-                plugins={[dayGridPlugin, interactionPlugin]}
-                initialView="dayGridMonth"
-                locale={esLocale}
-                events={calendarEvents}
-                eventClick={handleEventClick}
-                headerToolbar={{
-                  left: "prev,next today",
-                  center: "title",
-                  right: isMobile ? "" : "dayGridMonth,dayGridWeek",
-                }}
-                height="auto"
-                buttonText={{
-                  today: "Hoy",
-                  month: "Mes",
-                  week: "Semana",
-                }}
-              />
-            </Box>
-          </Paper> */}
         </Grid>
       </Grid>
-
-      {/* Dialog Detalles - Guardado en archivo desktop (dialog_detail_backup.txt)*/}
     </Box>
   );
 };

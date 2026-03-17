@@ -13,7 +13,7 @@ import PieChartIcon from "@mui/icons-material/PieChart";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import { useThemeMode } from "../../contexts/ThemeContext";
 
-const DepartmentDistribution = ({ attendanceByStatus }) => {
+const DepartmentDistribution = ({ attendanceByStatus, isMobile }) => {
   const theme = useTheme();
   const { themeMode } = useThemeMode(); // 'light' o 'dark'
   // Mapeo de estados y sus configuraciones
@@ -274,7 +274,7 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
                 variant="h6"
                 sx={{ fontWeight: 700, lineHeight: 1.2 }}
               >
-                Resumen de Asistencias
+                Resumen Mensual
               </Typography>
               <Typography
                 variant="caption"
@@ -337,58 +337,59 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
         )}
 
         {/* Leyenda personalizada con estadísticas */}
-        {chartData.length > 0 && (
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, 1fr)",
-                md: "repeat(3, 1fr)",
-              },
-              gap: 2,
-              mt: 3,
-              pt: 3,
-              borderTop: "1px solid rgba(0, 0, 0, 0.08)",
-            }}
-          >
-            {chartData.map((item, index) => (
-              <Box
-                key={item.status}
-                sx={{
-                  p: 2,
-                  background: `${item.color}08`,
-                  borderRadius: 2,
-                  //border: `1px solid ${item.color}20`,
-                  transition: "all 0.3s ease",
-                  cursor: "pointer",
-                  "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: `0 8px 16px ${item.color}30`,
-                    background: `${item.color}15`,
-                  },
-                  animation: `fadeInUp 0.5s ease ${index * 0.1}s both`,
-                  "@keyframes fadeInUp": {
-                    from: {
-                      opacity: 0,
-                      transform: "translateY(20px)",
-                    },
-                    to: {
-                      opacity: 1,
-                      transform: "translateY(0)",
-                    },
-                  },
-                }}
-              >
+        {isMobile ||
+          (chartData.length > 0 && (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(2, 1fr)",
+                  md: "repeat(3, 1fr)",
+                },
+                gap: 2,
+                mt: 3,
+                pt: 3,
+                borderTop: "1px solid rgba(0, 0, 0, 0.08)",
+              }}
+            >
+              {chartData.map((item, index) => (
                 <Box
+                  key={item.status}
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
-                    mb: 1,
+                    p: 2,
+                    background: `${item.color}08`,
+                    borderRadius: 2,
+                    //border: `1px solid ${item.color}20`,
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      boxShadow: `0 8px 16px ${item.color}30`,
+                      background: `${item.color}15`,
+                    },
+                    animation: `fadeInUp 0.5s ease ${index * 0.1}s both`,
+                    "@keyframes fadeInUp": {
+                      from: {
+                        opacity: 0,
+                        transform: "translateY(20px)",
+                      },
+                      to: {
+                        opacity: 1,
+                        transform: "translateY(0)",
+                      },
+                    },
                   }}
                 >
-                  {/* <Box
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1.5,
+                      mb: 1,
+                    }}
+                  >
+                    {/* <Box
                     sx={{
                       width: 32,
                       height: 32,
@@ -405,75 +406,76 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
                   >
                     {statusConfig[item.status]?.icon}
                   </Box> */}
-                  <Typography
-                    variant="caption"
-                    sx={{ fontWeight: 600, /*color: "#666",*/ flex: 1 }}
-                  >
-                    {item.label}
-                  </Typography>
-                </Box>
+                    <Typography
+                      variant="caption"
+                      sx={{ fontWeight: 600, /*color: "#666",*/ flex: 1 }}
+                    >
+                      {item.label}
+                    </Typography>
+                  </Box>
 
-                <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 800,
-                      color: item.color,
-                    }}
-                  >
-                    {item.count}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ /*color: "#999",*/ fontWeight: 600 }}
-                  >
-                    ({item.percentage}%)
-                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: 800,
+                        color: item.color,
+                      }}
+                    >
+                      {item.count}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ /*color: "#999",*/ fontWeight: 600 }}
+                    >
+                      ({item.percentage}%)
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
-            ))}
-          </Box>
-        )}
+              ))}
+            </Box>
+          ))}
 
         {/* Resumen total */}
-        {totalRecords > 0 && (
-          <Box
-            sx={{
-              mt: 3,
-              p: 2.5,
-              background:
-                "linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(103, 58, 183, 0.05) 100%)",
-              borderRadius: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: 2,
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <TrendingUpIcon
-                sx={{ color: theme.palette.primary.main, fontSize: 28 }}
-              />
-              <Box>
-                <Typography variant="caption" sx={{ display: "block" }}>
-                  Total de registros
-                </Typography>
-                <Typography variant="h4">
-                  {totalRecords.toLocaleString()}
-                </Typography>
+        {isMobile ||
+          (totalRecords > 0 && (
+            <Box
+              sx={{
+                mt: 3,
+                p: 2.5,
+                background:
+                  "linear-gradient(135deg, rgba(33, 150, 243, 0.05) 0%, rgba(103, 58, 183, 0.05) 100%)",
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 2,
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                <TrendingUpIcon
+                  sx={{ color: theme.palette.primary.main, fontSize: 28 }}
+                />
+                <Box>
+                  <Typography variant="caption" sx={{ display: "block" }}>
+                    Total de registros
+                  </Typography>
+                  <Typography variant="h4">
+                    {totalRecords.toLocaleString()}
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
 
-            {statusCounts.on_time > 0 && totalRecords > 0 && (
-              <Box sx={{ textAlign: "right" }}>
-                <Typography variant="caption" sx={{ display: "block" }}>
-                  Tasa de puntualidad
-                </Typography>
-                <Typography
-                  variant="h5"
-                  color={theme.palette.success.main}
-                  /*sx={{
+              {statusCounts.on_time > 0 && totalRecords > 0 && (
+                <Box sx={{ textAlign: "right" }}>
+                  <Typography variant="caption" sx={{ display: "block" }}>
+                    Tasa de puntualidad
+                  </Typography>
+                  <Typography
+                    variant="h5"
+                    color={theme.palette.success.main}
+                    /*sx={{
                     fontWeight: 800,
                     background:
                       "linear-gradient(135deg, #00E676 0%, #00C853 100%)",
@@ -481,13 +483,13 @@ const DepartmentDistribution = ({ attendanceByStatus }) => {
                     WebkitTextFillColor: "transparent",
                     backgroundClip: "text",
                   }}*/
-                >
-                  {((statusCounts.on_time / totalRecords) * 100).toFixed(1)}%
-                </Typography>
-              </Box>
-            )}
-          </Box>
-        )}
+                  >
+                    {((statusCounts.on_time / totalRecords) * 100).toFixed(1)}%
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          ))}
       </CardContent>
     </Card>
   );

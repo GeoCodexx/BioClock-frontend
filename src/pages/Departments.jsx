@@ -469,6 +469,7 @@ export default function Departments() {
           borderRadius: isMobile ? 2 : 3,
           boxShadow: theme.shadows[1],
           overflow: "hidden",
+          ...(isMobile && { mb: 1 }),
         }}
       >
         <Box sx={{ position: "relative" }}>

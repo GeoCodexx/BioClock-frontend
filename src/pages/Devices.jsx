@@ -400,12 +400,15 @@ export default function Devices() {
       {/* TOOLBAR CARD - Búsqueda y Acciones */}
       <Card
         sx={{
-          borderRadius: isMobile ? 2 : 3,
+          borderRadius: 3,
           mb: 2,
           boxShadow: theme.shadows[1],
           ...(isMobile && {
             mx: -2,
             borderRadius: 0,
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
           }),
         }}
       >
@@ -482,6 +485,7 @@ export default function Devices() {
           borderRadius: isMobile ? 2 : 3,
           boxShadow: theme.shadows[1],
           overflow: "hidden",
+          ...(isMobile && { mb: 1 }),
         }}
       >
         <Box sx={{ position: "relative" }}>

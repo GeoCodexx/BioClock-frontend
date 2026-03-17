@@ -29,7 +29,7 @@ export default function UserSearchBar({
     >
       <TextField
         fullWidth
-        label={isMobile ? "Buscar" : "Buscar usuarios"}
+        label={isMobile ? "" : "Buscar usuarios"}
         size="small"
         placeholder={isMobile ? "Buscar..." : "Buscar por DNI,Email,Nombre o Apellidos"}
         value={searchInput}

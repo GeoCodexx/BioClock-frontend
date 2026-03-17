@@ -40,11 +40,9 @@ export default function UserExportButtons({ users }) {
 
   // Función para formatear el nombre completo del usuario
   const formatFullName = (user) => {
-    const parts = [
-      user.name,
-      user.firstSurname,
-      user.secondSurname,
-    ].filter(Boolean);
+    const parts = [user.name, user.firstSurname, user.secondSurname].filter(
+      Boolean,
+    );
     return parts.join(" ") || "—";
   };
 
@@ -209,27 +207,34 @@ export default function UserExportButtons({ users }) {
       worksheet.getCell(`A${lastRow}`).value = "Total de usuarios:";
       worksheet.getCell(`A${lastRow}`).font = { bold: true };
       worksheet.getCell(`B${lastRow}`).value = users.length;
-      worksheet.getCell(`B${lastRow}`).font = { bold: true, color: { argb: "FF1976D2" } };
+      worksheet.getCell(`B${lastRow}`).font = {
+        bold: true,
+        color: { argb: "FF1976D2" },
+      };
 
       // Estadísticas adicionales
       const activeUsers = users.filter((u) => u.status === "active").length;
       const inactiveUsers = users.length - activeUsers;
-      
+
       worksheet.getCell(`A${lastRow + 1}`).value = "Usuarios activos:";
       worksheet.getCell(`A${lastRow + 1}`).font = { bold: true };
       worksheet.getCell(`B${lastRow + 1}`).value = activeUsers;
-      worksheet.getCell(`B${lastRow + 1}`).font = { color: { argb: "FF2E7D32" } };
-      
+      worksheet.getCell(`B${lastRow + 1}`).font = {
+        color: { argb: "FF2E7D32" },
+      };
+
       worksheet.getCell(`A${lastRow + 2}`).value = "Usuarios inactivos:";
       worksheet.getCell(`A${lastRow + 2}`).font = { bold: true };
       worksheet.getCell(`B${lastRow + 2}`).value = inactiveUsers;
-      worksheet.getCell(`B${lastRow + 2}`).font = { color: { argb: "FFD32F2F" } };
+      worksheet.getCell(`B${lastRow + 2}`).font = {
+        color: { argb: "FFD32F2F" },
+      };
 
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      
+
       const fileName = `usuarios_${new Date().toISOString().split("T")[0]}.xlsx`;
       saveAs(blob, fileName);
       handleClose();
@@ -269,11 +274,15 @@ export default function UserExportButtons({ users }) {
           minute: "2-digit",
         })}`,
         14,
-        32
+        32,
       );
-      
+
       const activeUsers = users.filter((u) => u.status === "active").length;
-      doc.text(`Total de usuarios: ${users.length} | Activos: ${activeUsers} | Inactivos: ${users.length - activeUsers}`, 14, 37);
+      doc.text(
+        `Total de usuarios: ${users.length} | Activos: ${activeUsers} | Inactivos: ${users.length - activeUsers}`,
+        14,
+        37,
+      );
 
       // Preparar datos de la tabla
       const tableData = users.map((user) => [
@@ -292,7 +301,20 @@ export default function UserExportButtons({ users }) {
       // Tabla principal
       doc.autoTable({
         startY: 42,
-        head: [["DNI", "Usuario", "Email", "Teléfono", "Rol", "Dpto.", "Horarios", "Dispositivo", "Creación", "Estado"]],
+        head: [
+          [
+            "DNI",
+            "Usuario",
+            "Email",
+            "Teléfono",
+            "Rol",
+            "Dpto.",
+            "Horarios",
+            "Dispositivo",
+            "Creación",
+            "Estado",
+          ],
+        ],
         body: tableData,
         styles: {
           fontSize: 7,
@@ -309,14 +331,24 @@ export default function UserExportButtons({ users }) {
           fontSize: 8,
         },
         columnStyles: {
-          0: { cellWidth: 20, halign: "center", fontStyle: "bold", textColor: [66, 66, 66] }, // DNI
+          0: {
+            cellWidth: 20,
+            halign: "center",
+            fontStyle: "bold",
+            textColor: [66, 66, 66],
+          }, // DNI
           1: { cellWidth: 40, fontStyle: "bold" }, // Usuario
           2: { cellWidth: 45, textColor: [21, 101, 192] }, // Email
           3: { cellWidth: 20, halign: "center" }, // Teléfono
           4: { cellWidth: 25 }, // Rol
           5: { cellWidth: 25 }, // Departamento
           6: { cellWidth: 35, fontSize: 6.5 }, // Horarios
-          7: { cellWidth: 22, halign: "center", textColor: [117, 117, 117], fontSize: 6 }, // Dispositivo
+          7: {
+            cellWidth: 22,
+            halign: "center",
+            textColor: [117, 117, 117],
+            fontSize: 6,
+          }, // Dispositivo
           8: { cellWidth: 20, halign: "center", textColor: [117, 117, 117] }, // Creación
           9: { cellWidth: 18, halign: "center" }, // Estado
         },
@@ -334,7 +366,7 @@ export default function UserExportButtons({ users }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(46, 125, 50);
               doc.setFontSize(7);
@@ -343,7 +375,7 @@ export default function UserExportButtons({ users }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             } else if (status === "Inactivo") {
               doc.setFillColor(255, 235, 238);
@@ -352,7 +384,7 @@ export default function UserExportButtons({ users }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(211, 47, 47);
               doc.setFontSize(7);
@@ -361,7 +393,7 @@ export default function UserExportButtons({ users }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             }
           }
@@ -376,18 +408,23 @@ export default function UserExportButtons({ users }) {
         doc.setFontSize(8);
         doc.setTextColor(150);
         doc.setFont(undefined, "normal");
-        
+
         // Línea superior del footer
         doc.setDrawColor(200, 200, 200);
         doc.setLineWidth(0.1);
-        doc.line(14, doc.internal.pageSize.getHeight() - 15, pageWidth - 14, doc.internal.pageSize.getHeight() - 15);
-        
+        doc.line(
+          14,
+          doc.internal.pageSize.getHeight() - 15,
+          pageWidth - 14,
+          doc.internal.pageSize.getHeight() - 15,
+        );
+
         // Número de página
         doc.text(
           `Página ${i} de ${pageCount}`,
           pageWidth / 2,
           doc.internal.pageSize.getHeight() - 10,
-          { align: "center" }
+          { align: "center" },
         );
       }
 
@@ -407,12 +444,16 @@ export default function UserExportButtons({ users }) {
   if (isMobile) {
     return (
       <>
-        <Tooltip title={isDisabled ? "No hay usuarios para exportar" : "Exportar"}>
+        <Tooltip
+          title={isDisabled ? "No hay usuarios para exportar" : "Exportar"}
+        >
           <span>
             <IconButton
               onClick={handleClick}
               disabled={isDisabled}
               sx={{
+                color: theme.palette.text.secondary,
+                borderRadius: 2,
                 bgcolor: theme.palette.background.paper,
                 "&:hover": {
                   bgcolor: theme.palette.action.hover,
@@ -444,13 +485,19 @@ export default function UserExportButtons({ users }) {
         >
           <MenuItem onClick={handleExportExcel}>
             <ListItemIcon>
-              <DescriptionIcon fontSize="small" sx={{ color: theme.palette.success.main }} />
+              <DescriptionIcon
+                fontSize="small"
+                sx={{ color: theme.palette.success.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a Excel</ListItemText>
           </MenuItem>
           <MenuItem onClick={handleExportPDF}>
             <ListItemIcon>
-              <PictureAsPdfIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
+              <PictureAsPdfIcon
+                fontSize="small"
+                sx={{ color: theme.palette.error.main }}
+              />
             </ListItemIcon>
             <ListItemText>Exportar a PDF</ListItemText>
           </MenuItem>
@@ -463,14 +510,19 @@ export default function UserExportButtons({ users }) {
   if (isTablet) {
     return (
       <Stack direction="row" spacing={1}>
-        <Tooltip title={isDisabled ? "No hay usuarios" : "Exportar a Excel"} arrow>
+        <Tooltip
+          title={isDisabled ? "No hay usuarios" : "Exportar a Excel"}
+          arrow
+        >
           <span>
             <IconButton
               onClick={handleExportExcel}
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
                 color: theme.palette.success.main,
                 border: `1px solid ${theme.palette.success.light}`,
                 "&:hover": {
@@ -486,14 +538,19 @@ export default function UserExportButtons({ users }) {
             </IconButton>
           </span>
         </Tooltip>
-        <Tooltip title={isDisabled ? "No hay usuarios" : "Exportar a PDF"} arrow>
+        <Tooltip
+          title={isDisabled ? "No hay usuarios" : "Exportar a PDF"}
+          arrow
+        >
           <span>
             <IconButton
               onClick={handleExportPDF}
               disabled={isDisabled}
               size="medium"
               sx={{
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
                 color: theme.palette.error.main,
                 border: `1px solid ${theme.palette.error.light}`,
                 "&:hover": {
@@ -516,7 +573,14 @@ export default function UserExportButtons({ users }) {
   // =============== VERSIÓN DESKTOP ===============
   return (
     <Stack direction="row" spacing={1.5}>
-      <Tooltip title={isDisabled ? "No hay usuarios para exportar" : "Descargar lista en formato Excel"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay usuarios para exportar"
+            : "Descargar lista en formato Excel"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -530,7 +594,9 @@ export default function UserExportButtons({ users }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.success.lighter || theme.palette.success.light + "20",
+                bgcolor:
+                  theme.palette.success.lighter ||
+                  theme.palette.success.light + "20",
               },
             }}
           >
@@ -538,7 +604,14 @@ export default function UserExportButtons({ users }) {
           </Button>
         </span>
       </Tooltip>
-      <Tooltip title={isDisabled ? "No hay usuarios para exportar" : "Descargar lista en formato PDF"} arrow>
+      <Tooltip
+        title={
+          isDisabled
+            ? "No hay usuarios para exportar"
+            : "Descargar lista en formato PDF"
+        }
+        arrow
+      >
         <span>
           <Button
             variant="outlined"
@@ -552,7 +625,9 @@ export default function UserExportButtons({ users }) {
               borderWidth: 1.5,
               "&:hover": {
                 borderWidth: 1.5,
-                bgcolor: theme.palette.error.lighter || theme.palette.error.light + "20",
+                bgcolor:
+                  theme.palette.error.lighter ||
+                  theme.palette.error.light + "20",
               },
             }}
           >

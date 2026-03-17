@@ -48,6 +48,14 @@ import { es } from "date-fns/locale";
 import useSnackbarStore from "../../store/useSnackbarStore";
 import { createJustification } from "../../services/justificationService";
 
+const obtenerIniciales = (texto) => {
+  return texto
+    .trim() // Quita espacios inicio/fin
+    .split(/\s+/) // Divide por uno o más espacios
+    .map((palabra) => palabra[0].toUpperCase()) // Toma la primera letra en Mayús
+    .join(""); // Une todo
+};
+
 const AttendanceMonthCalendar = ({ data, fetchData }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -114,14 +122,16 @@ const AttendanceMonthCalendar = ({ data, fetchData }) => {
       // Los datos ya vienen agrupados y procesados desde el backend
       scheduleGroups.forEach((group) => {
         const config = statusConfig[group.shiftStatus] || statusConfig.absent;
-        const isMatutino = group.scheduleName
+        /*const isMatutino = group.scheduleName
           .toLowerCase()
           .includes("matutino");
-        const abbreviation = isMatutino ? "HM" : "HV";
+        const abbreviation = isMatutino ? "HM" : "HV";*/
 
         events.push({
           id: `${dateStr}-${group.scheduleId}`,
-          title: isMobile ? abbreviation : group.scheduleName,
+          title: isMobile
+            ? obtenerIniciales(group.scheduleName)
+            : group.scheduleName,
           start: dateStr,
           allDay: true,
           backgroundColor: config.color + "14",
@@ -135,7 +145,7 @@ const AttendanceMonthCalendar = ({ data, fetchData }) => {
             scheduleName: group.scheduleName,
             scheduleInfo: group.scheduleInfo,
             shiftStatus: group.shiftStatus,
-            isMatutino,
+            //isMatutino,
             checkIn: group.checkIn,
             checkOut: group.checkOut,
             isVirtual: group.isVirtual,
@@ -285,7 +295,7 @@ const AttendanceMonthCalendar = ({ data, fetchData }) => {
                 ),
             )}
           </Stack>
-          {isMobile && (
+          {/* {isMobile && data?.periods?.month?.records.length > 0 && (
             <Typography
               variant="caption"
               color="text.secondary"
@@ -295,7 +305,7 @@ const AttendanceMonthCalendar = ({ data, fetchData }) => {
               <strong>HM:</strong> Horario Matutino | <strong>HV:</strong>{" "}
               Horario Vespertino
             </Typography>
-          )}
+          )} */}
         </Box>
       </Paper>
 

@@ -28,9 +28,9 @@ export default function DepartmentSearchBar({
     >
       <TextField
         fullWidth
-        label={isMobile ? "Buscar" : "Buscar departamentos"}
+        label={isMobile ? "" : "Buscar departamentos"}
         size="small"
-        placeholder={isMobile ? "Nombre..." : "Buscar por nombre"}
+        placeholder={isMobile ? "Buscar..." : "Buscar por nombre"}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         slotProps={{

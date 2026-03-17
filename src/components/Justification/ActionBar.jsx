@@ -6,6 +6,7 @@ import { TextField, InputAdornment, Collapse } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useState } from "react";
 import JustificationSearchBar from "./JustificationSearchBar";
+import { Theme } from "@fullcalendar/core/internal";
 
 export default function ActionBar({
   searchInput,
@@ -27,8 +28,14 @@ export default function ActionBar({
       sx={{
         px: 2,
         py: 1,
-        borderRadius: 3,
+        //borderRadius: 3,
+        borderRadius: 0,
         mb: 1,
+        mx: -2,
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
+        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
       }}
     >
       <Collapse in={searchOpen} timeout="auto" unmountOnExit>

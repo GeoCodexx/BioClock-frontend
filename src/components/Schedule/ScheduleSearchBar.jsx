@@ -61,9 +61,9 @@ export default function ScheduleSearchBar({
     >
       <TextField
         fullWidth
-        label={isMobile ? "Buscar" : "Buscar horarios"}
+        label={isMobile ? "" : "Buscar horarios"}
         size="small"
-        placeholder={isMobile ? "Nombre..." : "Buscar por nombre"}
+        placeholder={isMobile ? "Buscar..." : "Buscar por nombre"}
         value={searchInput}
         //type="search"
         onChange={(e) => setSearchInput(e.target.value)}

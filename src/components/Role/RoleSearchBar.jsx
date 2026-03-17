@@ -29,9 +29,9 @@ export default function RoleSearchBar({
     >
       <TextField
         fullWidth
-        label={isMobile ? "Buscar" : "Buscar roles"}
+        label={isMobile ? "" : "Buscar roles"}
         size="small"
-        placeholder={isMobile ? "Nombre..." : "Buscar por nombre"}
+        placeholder={isMobile ? "Buscar..." : "Buscar por nombre"}
         value={searchInput}
         //type="search"
         onChange={(e) => setSearchInput(e.target.value)}

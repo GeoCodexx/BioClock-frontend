@@ -28,9 +28,9 @@ export default function DeviceSearchBar({
     >
       <TextField
         fullWidth
-        label={isMobile ? "Buscar" : "Buscar dispositivos"}
+        label={isMobile ? "" : "Buscar dispositivos"}
         size="small"
-        placeholder={isMobile ? "Nombre..." : "Buscar por nombre"}
+        placeholder={isMobile ? "Buscar..." : "Buscar por nombre"}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         slotProps={{

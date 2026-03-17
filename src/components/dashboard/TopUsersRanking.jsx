@@ -437,7 +437,9 @@ export default function TopUsersRanking({
             alignItems: "center",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: 1.5, width: "100%" }}
+          >
             <Box
               sx={{
                 width: 40,
@@ -455,7 +457,7 @@ export default function TopUsersRanking({
             </Box>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                Top de usuarios
+                Ranking de Asistencias
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {data?.period

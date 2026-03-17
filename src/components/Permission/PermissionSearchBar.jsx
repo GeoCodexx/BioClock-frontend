@@ -28,9 +28,9 @@ export default function PermissionSearchBar({
     >
       <TextField
         fullWidth
-        label={isMobile ? "Buscar" : "Buscar permisos"}
+        label={isMobile ? "" : "Buscar permisos"}
         size="small"
-        placeholder={isMobile ? "Nombre..." : "Buscar por nombre"}
+        placeholder={isMobile ? "Buscar..." : "Buscar por nombre"}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         slotProps={{

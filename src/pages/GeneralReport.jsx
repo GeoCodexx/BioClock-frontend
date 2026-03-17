@@ -50,19 +50,20 @@ import { getSchedules } from "../services/scheduleService";
 import SummaryCards from "../components/Reports/GeneralReport/SummaryCards";
 import "jspdf-autotable";
 import GeneralReportTable from "../components/Reports/GeneralReport/GeneralReportTable";
-import { SafeSelect } from "../components/common/SafeSelect";
+//import { SafeSelect } from "../components/common/SafeSelect";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
 import { useThemeMode } from "../contexts/ThemeContext";
 import AttendanceDrawer from "../components/Reports/GeneralReport/AttendanceDrawer";
 import TimelineMatrix from "../components/Reports/GeneralReport/TimeLineMatrix";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
-import AttendanceExportButtons from "../components/Reports/GeneralReport/AttendanceExportButtons";
+//import AttendanceExportButtons from "../components/Reports/GeneralReport/AttendanceExportButtons";
 import ScrollToTopButton from "../components/common/ScrolltoTopButton";
 import { createJustification } from "../services/justificationService";
+import FiltersCard from "../components/Reports/GeneralReport/FiltersCard";
 
 // Constantes
-const STATUS_OPTIONS = [
+/*const STATUS_OPTIONS = [
   //{ value: "", label: "Todos los estados" },
   { value: "on_time", label: "A tiempo" },
   { value: "late", label: "Tardanza" },
@@ -71,13 +72,13 @@ const STATUS_OPTIONS = [
   { value: "incomplete", label: "Incompleto" },
   { value: "absent", label: "Ausente" },
   { value: "justified", label: "Justificado" },
-];
+];*/
 
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25, 50, 100];
 
 // Componente Header memoizado
 const PageHeader = memo(({ date, isMobile }) => {
-  const { mode } = useThemeMode();
+  //const { mode } = useThemeMode();
   const breadcrumbs = (
     <Breadcrumbs
       aria-label="breadcrumb"
@@ -114,8 +115,6 @@ const PageHeader = memo(({ date, isMobile }) => {
       sx={{
         borderRadius: 3,
         mb: 3,
-        borderLeft: mode === "dark" ? "none" : "6px solid",
-        borderColor: "primary.main",
       }}
     >
       <CardContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>
@@ -187,349 +186,349 @@ const PageHeader = memo(({ date, isMobile }) => {
 PageHeader.displayName = "PageHeader";
 
 // Componente de Filtros memoizado
-const FiltersCard = memo(
-  ({
-    search,
-    searchValue,
-    scheduleId,
-    status,
-    dateFrom,
-    dateTo,
-    schedules,
-    onSearchChange,
-    onHandleClearSearch,
-    searchInputRef,
-    onScheduleChange,
-    onStatusChange,
-    onDateFromChange,
-    onDateToChange,
-    onClearFilters,
-    onChangeViewMode,
-    onChangeCheckboxUser,
-    viewMode,
-    totalRecords,
-    error,
-    page,
-    currentMonth,
-  }) => {
-    const handleViewModeChange = useCallback((event, newMode) => {
-      // Si el usuario hace click en el modo ya seleccionado, newMode sera null, entonces no cambiar el modo de vista
-      if (newMode !== null) {
-        //setViewMode(newMode);
-        onChangeViewMode(newMode);
-      }
-    }, []);
+// const FiltersCard = memo(
+//   ({
+//     search,
+//     searchValue,
+//     scheduleId,
+//     status,
+//     dateFrom,
+//     dateTo,
+//     schedules,
+//     onSearchChange,
+//     onHandleClearSearch,
+//     searchInputRef,
+//     onScheduleChange,
+//     onStatusChange,
+//     onDateFromChange,
+//     onDateToChange,
+//     onClearFilters,
+//     onChangeViewMode,
+//     onChangeCheckboxUser,
+//     viewMode,
+//     totalRecords,
+//     error,
+//     page,
+//     currentMonth,
+//   }) => {
+//     const handleViewModeChange = useCallback((event, newMode) => {
+//       // Si el usuario hace click en el modo ya seleccionado, newMode sera null, entonces no cambiar el modo de vista
+//       if (newMode !== null) {
+//         //setViewMode(newMode);
+//         onChangeViewMode(newMode);
+//       }
+//     }, []);
 
-    const handleCheckboxUserChange = useCallback((event) => {
-      onChangeCheckboxUser(event.target.checked);
-    }, []);
+//     const handleCheckboxUserChange = useCallback((event) => {
+//       onChangeCheckboxUser(event.target.checked);
+//     }, []);
 
-    return (
-      <Card
-        elevation={0}
-        sx={{
-          mb: 3,
-          borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
-        }}
-      >
-        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-          <Stack
-            direction="row"
-            alignItems="center"
-            spacing={1}
-            sx={{ mb: 2.5 }}
-          >
-            <FilterListIcon color="primary" />
-            <Typography variant="h6" fontWeight={600}>
-              Filtros
-            </Typography>
-          </Stack>
+//     return (
+//       <Card
+//         elevation={0}
+//         sx={{
+//           mb: 3,
+//           borderRadius: 2,
+//           border: "1px solid",
+//           borderColor: "divider",
+//         }}
+//       >
+//         <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+//           <Stack
+//             direction="row"
+//             alignItems="center"
+//             spacing={1}
+//             sx={{ mb: 2.5 }}
+//           >
+//             <FilterListIcon color="primary" />
+//             <Typography variant="h6" fontWeight={600}>
+//               Filtros
+//             </Typography>
+//           </Stack>
 
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-            <Grid container spacing={2}>
-              {/* Búsqueda */}
-              <Grid size={{ xs: 12, md: viewMode === "table" ? 3.5 : 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Buscar"
-                  placeholder="Nombres, Apellidos o DNI"
-                  value={searchValue}
-                  onChange={onSearchChange}
-                  inputRef={searchInputRef}
-                  error={searchValue.length > 0 && searchValue.length < 3}
-                  slotProps={{
-                    input: {
-                      style: { fontSize: "0.9rem" },
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon
-                            color={
-                              searchValue.length >= 3
-                                ? "primary"
-                                : searchValue.length > 0
-                                  ? "action"
-                                  : "action"
-                            }
-                          />
-                        </InputAdornment>
-                      ),
-                      endAdornment: searchValue && (
-                        <Fade in={Boolean(searchValue)}>
-                          <InputAdornment position="end">
-                            <IconButton
-                              aria-label="limpiar búsqueda"
-                              onClick={onHandleClearSearch}
-                              edge="end"
-                              size="small"
-                              sx={{
-                                padding: 0.5,
-                                "&:hover": {
-                                  bgcolor: "action.hover",
-                                },
-                              }}
-                            >
-                              <ClearIcon fontSize="small" />
-                            </IconButton>
-                          </InputAdornment>
-                        </Fade>
-                      ),
-                    },
-                  }}
-                  helperText={
-                    searchValue.length > 0 && searchValue.length < 3
-                      ? "Mínimo 3 caracteres para buscar"
-                      : searchValue.length >= 3
-                        ? `Buscando: "${searchValue}"`
-                        : ""
-                  }
-                />
-              </Grid>
+//           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+//             <Grid container spacing={2}>
+//               {/* Búsqueda */}
+//               <Grid size={{ xs: 12, md: viewMode === "table" ? 3.5 : 6 }}>
+//                 <TextField
+//                   fullWidth
+//                   size="small"
+//                   label="Buscar"
+//                   placeholder="Nombres, Apellidos o DNI"
+//                   value={searchValue}
+//                   onChange={onSearchChange}
+//                   inputRef={searchInputRef}
+//                   error={searchValue.length > 0 && searchValue.length < 3}
+//                   slotProps={{
+//                     input: {
+//                       style: { fontSize: "0.9rem" },
+//                       startAdornment: (
+//                         <InputAdornment position="start">
+//                           <SearchIcon
+//                             color={
+//                               searchValue.length >= 3
+//                                 ? "primary"
+//                                 : searchValue.length > 0
+//                                   ? "action"
+//                                   : "action"
+//                             }
+//                           />
+//                         </InputAdornment>
+//                       ),
+//                       endAdornment: searchValue && (
+//                         <Fade in={Boolean(searchValue)}>
+//                           <InputAdornment position="end">
+//                             <IconButton
+//                               aria-label="limpiar búsqueda"
+//                               onClick={onHandleClearSearch}
+//                               edge="end"
+//                               size="small"
+//                               sx={{
+//                                 padding: 0.5,
+//                                 "&:hover": {
+//                                   bgcolor: "action.hover",
+//                                 },
+//                               }}
+//                             >
+//                               <ClearIcon fontSize="small" />
+//                             </IconButton>
+//                           </InputAdornment>
+//                         </Fade>
+//                       ),
+//                     },
+//                   }}
+//                   helperText={
+//                     searchValue.length > 0 && searchValue.length < 3
+//                       ? "Mínimo 3 caracteres para buscar"
+//                       : searchValue.length >= 3
+//                         ? `Buscando: "${searchValue}"`
+//                         : ""
+//                   }
+//                 />
+//               </Grid>
 
-              {/* Filtro por turno */}
-              <Grid
-                size={{ xs: 12, sm: 6, md: viewMode === "table" ? 2.25 : 3 }}
-              >
-                <FormControl fullWidth size="small">
-                  <InputLabel sx={{ fontSize: "0.9rem" }}>Turno</InputLabel>
-                  <SafeSelect
-                    value={scheduleId}
-                    label="Turno"
-                    disabled={schedules.length === 0}
-                    onChange={onScheduleChange}
-                    MenuProps={{
-                      disableScrollLock: true, // Previene que MUI bloquee el scroll
-                    }}
-                    sx={{ fontSize: "0.9rem" }}
-                  >
-                    <MenuItem value="" sx={{ fontSize: "0.9rem" }}>
-                      <em>Todos los turnos</em>
-                    </MenuItem>
-                    {schedules.map((schedule) => (
-                      <MenuItem
-                        key={schedule._id}
-                        value={schedule._id}
-                        sx={{ fontSize: "0.9rem" }}
-                      >
-                        {schedule.name}
-                      </MenuItem>
-                    ))}
-                  </SafeSelect>
-                </FormControl>
-              </Grid>
+//               {/* Filtro por turno */}
+//               <Grid
+//                 size={{ xs: 12, sm: 6, md: viewMode === "table" ? 2.25 : 3 }}
+//               >
+//                 <FormControl fullWidth size="small">
+//                   <InputLabel sx={{ fontSize: "0.9rem" }}>Turno</InputLabel>
+//                   <SafeSelect
+//                     value={scheduleId}
+//                     label="Turno"
+//                     disabled={schedules.length === 0}
+//                     onChange={onScheduleChange}
+//                     MenuProps={{
+//                       disableScrollLock: true, // Previene que MUI bloquee el scroll
+//                     }}
+//                     sx={{ fontSize: "0.9rem" }}
+//                   >
+//                     <MenuItem value="" sx={{ fontSize: "0.9rem" }}>
+//                       <em>Todos los turnos</em>
+//                     </MenuItem>
+//                     {schedules.map((schedule) => (
+//                       <MenuItem
+//                         key={schedule._id}
+//                         value={schedule._id}
+//                         sx={{ fontSize: "0.9rem" }}
+//                       >
+//                         {schedule.name}
+//                       </MenuItem>
+//                     ))}
+//                   </SafeSelect>
+//                 </FormControl>
+//               </Grid>
 
-              {/* Filtro por estado */}
-              <Grid
-                size={{ xs: 12, sm: 6, md: viewMode === "table" ? 2.25 : 3 }}
-              >
-                <FormControl fullWidth size="small">
-                  <InputLabel sx={{ fontSize: "0.9rem" }}>Estado</InputLabel>
-                  <SafeSelect
-                    value={status}
-                    label="Estado"
-                    onChange={onStatusChange}
-                    sx={{ fontSize: "0.9rem" }}
-                  >
-                    <MenuItem value="" sx={{ fontSize: "0.9rem" }}>
-                      <em>Todos los estados</em>
-                    </MenuItem>
-                    {STATUS_OPTIONS.map((option) => (
-                      <MenuItem
-                        key={option.value}
-                        value={option.value}
-                        sx={{ fontSize: "0.9rem" }}
-                      >
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </SafeSelect>
-                </FormControl>
-              </Grid>
+//               {/* Filtro por estado */}
+//               <Grid
+//                 size={{ xs: 12, sm: 6, md: viewMode === "table" ? 2.25 : 3 }}
+//               >
+//                 <FormControl fullWidth size="small">
+//                   <InputLabel sx={{ fontSize: "0.9rem" }}>Estado</InputLabel>
+//                   <SafeSelect
+//                     value={status}
+//                     label="Estado"
+//                     onChange={onStatusChange}
+//                     sx={{ fontSize: "0.9rem" }}
+//                   >
+//                     <MenuItem value="" sx={{ fontSize: "0.9rem" }}>
+//                       <em>Todos los estados</em>
+//                     </MenuItem>
+//                     {STATUS_OPTIONS.map((option) => (
+//                       <MenuItem
+//                         key={option.value}
+//                         value={option.value}
+//                         sx={{ fontSize: "0.9rem" }}
+//                       >
+//                         {option.label}
+//                       </MenuItem>
+//                     ))}
+//                   </SafeSelect>
+//                 </FormControl>
+//               </Grid>
 
-              {viewMode !== "matrix" && (
-                <>
-                  {/* Fecha Desde */}
-                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                    <DatePicker
-                      label="Desde"
-                      value={dateFrom}
-                      onChange={onDateFromChange}
-                      slotProps={{
-                        textField: {
-                          size: "small",
-                          fullWidth: true,
-                          InputLabelProps: {
-                            sx: { fontSize: "0.9rem" },
-                          },
-                          sx: {
-                            "& .MuiPickersOutlinedInput-root": {
-                              fontSize: "0.9rem",
-                            }, // Texto de la fecha
-                          },
-                          error: error, // Se pone rojo si el rango está mal
-                          helperText: error ? "Rango inválido" : "",
-                        },
-                      }}
-                      format="dd/MM/yyyy"
-                    />
-                  </Grid>
+//               {viewMode !== "matrix" && (
+//                 <>
+//                   {/* Fecha Desde */}
+//                   <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+//                     <DatePicker
+//                       label="Desde"
+//                       value={dateFrom}
+//                       onChange={onDateFromChange}
+//                       slotProps={{
+//                         textField: {
+//                           size: "small",
+//                           fullWidth: true,
+//                           InputLabelProps: {
+//                             sx: { fontSize: "0.9rem" },
+//                           },
+//                           sx: {
+//                             "& .MuiPickersOutlinedInput-root": {
+//                               fontSize: "0.9rem",
+//                             }, // Texto de la fecha
+//                           },
+//                           error: error, // Se pone rojo si el rango está mal
+//                           helperText: error ? "Rango inválido" : "",
+//                         },
+//                       }}
+//                       format="dd/MM/yyyy"
+//                     />
+//                   </Grid>
 
-                  {/* Fecha Hasta */}
-                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                    <DatePicker
-                      label="Hasta"
-                      value={dateTo}
-                      onChange={onDateToChange}
-                      minDate={dateFrom}
-                      disableFuture
-                      slotProps={{
-                        textField: {
-                          size: "small",
-                          fullWidth: true,
-                          InputLabelProps: {
-                            sx: { fontSize: "0.9rem" },
-                          },
-                          sx: {
-                            "& .MuiPickersOutlinedInput-root": {
-                              fontSize: "0.9rem",
-                            }, // Texto de la fecha
-                          },
-                          // Se pone rojo si falta o si el rango está mal
-                          error: error || (dateFrom && !dateTo),
-                          helperText: error
-                            ? "Debe ser posterior al inicio"
-                            : dateFrom && !dateTo
-                              ? "Completa el rango"
-                              : "",
-                        },
-                      }}
-                      format="dd/MM/yyyy"
-                    />
-                  </Grid>
-                </>
-              )}
-            </Grid>
-          </LocalizationProvider>
+//                   {/* Fecha Hasta */}
+//                   <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+//                     <DatePicker
+//                       label="Hasta"
+//                       value={dateTo}
+//                       onChange={onDateToChange}
+//                       minDate={dateFrom}
+//                       disableFuture
+//                       slotProps={{
+//                         textField: {
+//                           size: "small",
+//                           fullWidth: true,
+//                           InputLabelProps: {
+//                             sx: { fontSize: "0.9rem" },
+//                           },
+//                           sx: {
+//                             "& .MuiPickersOutlinedInput-root": {
+//                               fontSize: "0.9rem",
+//                             }, // Texto de la fecha
+//                           },
+//                           // Se pone rojo si falta o si el rango está mal
+//                           error: error || (dateFrom && !dateTo),
+//                           helperText: error
+//                             ? "Debe ser posterior al inicio"
+//                             : dateFrom && !dateTo
+//                               ? "Completa el rango"
+//                               : "",
+//                         },
+//                       }}
+//                       format="dd/MM/yyyy"
+//                     />
+//                   </Grid>
+//                 </>
+//               )}
+//             </Grid>
+//           </LocalizationProvider>
 
-          {/* Información de registros y botones de exportación */}
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            justifyContent={"space-between"}
-            alignItems={{ xs: "flex-start", sm: "center" }}
-            spacing={2}
-            sx={{
-              mt: 2.5,
-              pt: 2.5,
-              borderTop: "1px solid",
-              borderColor: "divider",
-            }}
-          >
-            <Stack spacing={1} direction="row">
-              <ToggleButtonGroup
-                color="primary"
-                value={viewMode}
-                exclusive
-                onChange={handleViewModeChange}
-                size="small"
-                sx={{
-                  display: { xs: "none", sm: "inline-flex" },
-                  "& .MuiToggleButton-root": {
-                    px: 2,
-                    //py: 1,
-                    textTransform: "none",
-                    fontWeight: 500,
-                  },
-                }}
-              >
-                <ToggleButton value="matrix" aria-label="vista diaria">
-                  <ViewModuleIcon sx={{ mr: 1, fontSize: 20 }} />
-                  Matriz
-                </ToggleButton>
-                <ToggleButton value="table" aria-label="vista semanal">
-                  <ViewDayIcon sx={{ mr: 1, fontSize: 20 }} />
-                  Tabla
-                </ToggleButton>
-              </ToggleButtonGroup>
-              <FormControlLabel
-                control={<Checkbox onChange={handleCheckboxUserChange} />}
-                label="Incluir usuarios inactivos"
-                sx={{
-                  // Cambiar color de la etiqueta
-                  "& .MuiFormControlLabel-label": {
-                    color: "text.secondary", // O usa un color CSS como 'red', '#ff0000'
-                    fontSize: "0.9rem"
-                  },
-                }}
-              />
-            </Stack>
+//           {/* Información de registros y botones de exportación */}
+//           <Stack
+//             direction={{ xs: "column", sm: "row" }}
+//             justifyContent={"space-between"}
+//             alignItems={{ xs: "flex-start", sm: "center" }}
+//             spacing={2}
+//             sx={{
+//               mt: 2.5,
+//               pt: 2.5,
+//               borderTop: "1px solid",
+//               borderColor: "divider",
+//             }}
+//           >
+//             <Stack spacing={1} direction="row">
+//               <ToggleButtonGroup
+//                 color="primary"
+//                 value={viewMode}
+//                 exclusive
+//                 onChange={handleViewModeChange}
+//                 size="small"
+//                 sx={{
+//                   display: { xs: "none", sm: "inline-flex" },
+//                   "& .MuiToggleButton-root": {
+//                     px: 2,
+//                     //py: 1,
+//                     textTransform: "none",
+//                     fontWeight: 500,
+//                   },
+//                 }}
+//               >
+//                 <ToggleButton value="matrix" aria-label="vista diaria">
+//                   <ViewModuleIcon sx={{ mr: 1, fontSize: 20 }} />
+//                   Matriz
+//                 </ToggleButton>
+//                 <ToggleButton value="table" aria-label="vista semanal">
+//                   <ViewDayIcon sx={{ mr: 1, fontSize: 20 }} />
+//                   Tabla
+//                 </ToggleButton>
+//               </ToggleButtonGroup>
+//               <FormControlLabel
+//                 control={<Checkbox onChange={handleCheckboxUserChange} />}
+//                 label="Incluir usuarios inactivos"
+//                 sx={{
+//                   // Cambiar color de la etiqueta
+//                   "& .MuiFormControlLabel-label": {
+//                     color: "text.secondary", // O usa un color CSS como 'red', '#ff0000'
+//                     fontSize: "0.9rem",
+//                   },
+//                 }}
+//               />
+//             </Stack>
 
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={1}
-              sx={{ width: { xs: "100%", sm: "auto" } }}
-            >
-              <Button
-                variant="outlined"
-                //size="small"
-                startIcon={<ClearIcon />}
-                onClick={onClearFilters}
-                disabled={
-                  !search && !scheduleId && !status && !dateFrom && !dateTo
-                }
-              >
-                Limpiar filtros
-              </Button>
+//             <Stack
+//               direction={{ xs: "column", sm: "row" }}
+//               spacing={1}
+//               sx={{ width: { xs: "100%", sm: "auto" } }}
+//             >
+//               <Button
+//                 variant="outlined"
+//                 //size="small"
+//                 startIcon={<ClearIcon />}
+//                 onClick={onClearFilters}
+//                 disabled={
+//                   !search && !scheduleId && !status && !dateFrom && !dateTo
+//                 }
+//               >
+//                 Limpiar filtros
+//               </Button>
 
-              {viewMode === "matrix" ? (
-                <AttendanceExportButtons
-                  viewType="matrix"
-                  dateRange={{
-                    dateFrom: format(startOfMonth(currentMonth), "yyyy-MM-dd"),
-                    dateTo: format(endOfMonth(currentMonth), "yyyy-MM-dd"),
-                  }}
-                  filters={{ search, scheduleId, status }}
-                  totalRecords={totalRecords || 0}
-                />
-              ) : (
-                <AttendanceExportButtons
-                  viewType="table"
-                  filters={{ search, scheduleId, status }}
-                  dateRange={{ dateFrom, dateTo }}
-                  currentPage={page}
-                  totalRecords={totalRecords}
-                />
-              )}
-            </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
-    );
-  },
-);
+//               {viewMode === "matrix" ? (
+//                 <AttendanceExportButtons
+//                   viewType="matrix"
+//                   dateRange={{
+//                     dateFrom: format(startOfMonth(currentMonth), "yyyy-MM-dd"),
+//                     dateTo: format(endOfMonth(currentMonth), "yyyy-MM-dd"),
+//                   }}
+//                   filters={{ search, scheduleId, status }}
+//                   totalRecords={totalRecords || 0}
+//                 />
+//               ) : (
+//                 <AttendanceExportButtons
+//                   viewType="table"
+//                   filters={{ search, scheduleId, status }}
+//                   dateRange={{ dateFrom, dateTo }}
+//                   currentPage={page}
+//                   totalRecords={totalRecords}
+//                 />
+//               )}
+//             </Stack>
+//           </Stack>
+//         </CardContent>
+//       </Card>
+//     );
+//   },
+// );
 
-FiltersCard.displayName = "FiltersCard";
+//FiltersCard.displayName = "FiltersCard";
 
 // Componente Principal
 export default function GeneralReportPage() {
@@ -614,7 +613,7 @@ export default function GeneralReportPage() {
 
   // Esta variable es la que se usa para renderizar componentes
   // Si es móvil, forzamos "table", si no, usamos lo que diga el estado
-  const effectiveViewMode = isMobile ? "table" : viewMode;
+  const effectiveViewMode = /*isMobile ? "table" :*/ viewMode;
 
   // Función para filtrar la matriz localmente
   const filterMatrixData = useCallback((matrixData, filters) => {
@@ -1143,10 +1142,10 @@ export default function GeneralReportPage() {
   return (
     <Box sx={{ width: "100%" }}>
       {/* Header */}
-      <PageHeader date={data.date} isMobile={isMobile} />
-      {/* Resumen - Oculto en mobile */}
+      {isMobile || <PageHeader date={data.date} isMobile={isMobile} />}
 
-      <Box>
+      {/* Resumen */}
+      <Box sx={{ mt: { xs: 1, md: 0 } }}>
         <Box
           sx={{
             display: "flex",
@@ -1162,7 +1161,7 @@ export default function GeneralReportPage() {
           }}
           onClick={() => setShowSummary(!showSummary)}
         >
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" color="text.secondary" sx={{ flexGrow: 1 }}>
             Resumen Estadístico
           </Typography>
           <IconButton size="small">
@@ -1180,7 +1179,7 @@ export default function GeneralReportPage() {
       </Box>
 
       {/* Filtros */}
-      <FiltersCard
+      {/* <FiltersCard
         search={search}
         searchValue={searchValue}
         scheduleId={scheduleId}
@@ -1212,6 +1211,34 @@ export default function GeneralReportPage() {
         error={!isRangeValid && isDateRangeComplete}
         page={page}
         currentMonth={currentMonth}
+      /> */}
+      <FiltersCard
+        search={search}
+        searchValue={searchValue}
+        scheduleId={scheduleId}
+        status={status}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        schedules={schedules}
+        onSearchChange={handleSearchChange}
+        onHandleClearSearch={handleClearSearch}
+        searchInputRef={searchInputRef}
+        onScheduleChange={handleScheduleChange}
+        onStatusChange={handleStatusChange}
+        onDateFromChange={handleDateFromChange}
+        onDateToChange={handleDateToChange}
+        onClearFilters={handleClearFilters}
+        onChangeViewMode={handleChangeViewMode}
+        onChangeCheckboxUser={handleChangeCheckboxUser}
+        viewMode={effectiveViewMode}
+        totalRecords={
+          viewMode === "matrix"
+            ? dataMatrix.stats.totalRecords
+            : data.pagination.totalRecords
+        }
+        error={!isRangeValid && isDateRangeComplete}
+        page={page}
+        currentMonth={currentMonth}
       />
       {/* Error */}
       {error && (
@@ -1229,6 +1256,7 @@ export default function GeneralReportPage() {
           borderRadius: isMobile ? 2 : 3,
           boxShadow: theme.shadows[1],
           overflow: "hidden",
+          mb: { xs: 1, md: 0 },
         }}
       >
         {/* Renderizado de Tabla o Matriz segun */}
@@ -1256,6 +1284,7 @@ export default function GeneralReportPage() {
             isFromCache={isMatrixCached}
             fadeKey={fadeKey}
             error={error}
+            isMobile={isMobile}
           />
         )}
 

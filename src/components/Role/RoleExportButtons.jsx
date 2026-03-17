@@ -350,6 +350,8 @@ export default function RoleExportButtons({ roles }) {
               onClick={handleClick}
               disabled={isDisabled}
               sx={{
+                color: theme.palette.text.secondary,
+                borderRadius: 2,
                 bgcolor: theme.palette.background.paper,
                 //border: `1px solid ${theme.palette.divider}`,
                 "&:hover": {

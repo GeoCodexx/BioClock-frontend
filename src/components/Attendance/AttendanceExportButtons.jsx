@@ -615,6 +615,8 @@ export default function AttendanceExportButtons({ attendances }) {
               onClick={handleClick}
               disabled={isDisabled}
               sx={{
+                color: theme.palette.text.secondary,
+                borderRadius: 2,
                 bgcolor: theme.palette.background.paper,
                 "&:hover": {
                   bgcolor: theme.palette.action.hover,

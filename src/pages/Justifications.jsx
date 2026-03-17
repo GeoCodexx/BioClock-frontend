@@ -10,7 +10,6 @@ import {
   CircularProgress,
   Divider,
   Grid,
-  IconButton,
   Link,
   Paper,
   Stack,
@@ -56,7 +55,7 @@ import useAuthStore from "../store/useAuthStore";
 }*/
 
 const Justifications = () => {
-  const user = useAuthStore(state=>state.user);
+  const user = useAuthStore((state) => state.user);
   const { can } = usePermission();
   const { showError } = useSnackbarStore();
   const theme = useTheme();
@@ -145,9 +144,7 @@ const Justifications = () => {
         setTotal(data.pagination.total);
       } catch (err) {
         console.log(err);
-        setError(
-          err?.message || "Error al cargar justificaciones",
-        );
+        setError(err?.message || "Error al cargar justificaciones");
       } finally {
         setLoading(false);
       }
@@ -218,9 +215,7 @@ const Justifications = () => {
       setJustifications(data.justifications);
       setTotal(data.pagination.total);
     } catch (err) {
-      setError(
-        err?.message || "Error al cargar justificaciones",
-      );
+      setError(err?.message || "Error al cargar justificaciones");
     } finally {
       setLoading(false);
     }
@@ -494,51 +489,51 @@ const Justifications = () => {
   return (
     <Box sx={{ width: "100%" }}>
       {/* HEADER CARD - Título y Breadcrumbs */}
-      <Card
-        sx={{
-          borderRadius: isMobile ? 2 : 3,
-          mb: 2,
-          boxShadow: theme.shadows[1],
-          borderLeft: mode === "dark" ? "none" : "6px solid",
-          borderColor: "primary.main",
-        }}
-      >
-        <Box
+      {isMobile || (
+        <Card
           sx={{
-            px: isMobile ? 2 : 3,
-            py: isMobile ? 2.5 : 3,
+            borderRadius: isMobile ? 2 : 3,
+            mb: 2,
+            boxShadow: theme.shadows[1],
           }}
         >
-          {isMobile ? (
-            <Stack spacing={1.5}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
+          <Box
+            sx={{
+              px: isMobile ? 2 : 3,
+              py: isMobile ? 2.5 : 3,
+            }}
+          >
+            {isMobile ? (
+              <Stack spacing={1.5}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    Gestión de Justificaciones
+                  </Typography>
+                </Box>
+              </Stack>
+            ) : (
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
               >
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                  Gestión de Justificaciones
-                </Typography>
-              </Box>
-            </Stack>
-          ) : (
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                  Gestión de Justificaciones
-                </Typography>
-              </Box>
-              {breadcrumbItems}
-            </Stack>
-          )}
-        </Box>
-      </Card>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                    Gestión de Justificaciones
+                  </Typography>
+                </Box>
+                {breadcrumbItems}
+              </Stack>
+            )}
+          </Box>
+        </Card>
+      )}
 
       {/* TOOLBAR CARD - Búsqueda y Acciones */}
 
@@ -569,11 +564,13 @@ const Justifications = () => {
             <Grid container alignItems="center" spacing={2}>
               {/* Buscador */}
               <Grid size={{ xs: 6 }}>
-                {["Administrador", "RRHH"].includes(user?.role ?? "") && <JustificationSearchBar
-                  searchInput={searchInput}
-                  setSearchInput={setSearchInput}
-                  onSearch={handleSearch}
-                />}
+                {["Administrador", "RRHH"].includes(user?.role ?? "") && (
+                  <JustificationSearchBar
+                    searchInput={searchInput}
+                    setSearchInput={setSearchInput}
+                    onSearch={handleSearch}
+                  />
+                )}
               </Grid>
 
               {/* Acciones */}
@@ -772,6 +769,7 @@ const Justifications = () => {
           borderRadius: isMobile ? 2 : 3,
           boxShadow: theme.shadows[1],
           overflow: "hidden",
+          ...(isMobile && { mb: 1 }),
         }}
       >
         <Box sx={{ position: "relative" }}>

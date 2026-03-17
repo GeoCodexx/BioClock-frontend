@@ -36,9 +36,9 @@ export default function JustificationSearchBar({
     <Box component="form" onSubmit={onSearch} sx={{ width: "100%" }}>
       <TextField
         fullWidth
-        label="Buscar por usuario"
+        label={isMobile ? "" : "Buscar por usuario"}
         size="small"
-        placeholder={isMobile ? "Usuario..." : "Buscar por nombres o apellidos"}
+        placeholder={isMobile ? "Buscar..." : "Buscar por nombres o apellidos"}
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         onKeyDown={handleKeyDown}

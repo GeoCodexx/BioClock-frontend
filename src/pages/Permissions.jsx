@@ -332,95 +332,107 @@ export default function Permissions() {
   return (
     <Box sx={{ width: "100%" }}>
       {/* HEADER CARD - Título y Breadcrumbs */}
-      <Card
-        sx={{
-          borderRadius: isMobile ? 2 : 3,
-          mb: 2,
-          boxShadow: theme.shadows[1],
-          borderLeft: mode === "dark" ? "none" : "6px solid",
-          borderColor: "primary.main",
-        }}
-      >
-        <Box
+      {isMobile || (
+        <Card
           sx={{
-            px: isMobile ? 2 : 3,
-            py: isMobile ? 2.5 : 4,
+            borderRadius: isMobile ? 2 : 3,
+            mb: 2,
+            boxShadow: theme.shadows[1],
           }}
         >
-          {isMobile ? (
-            <Stack spacing={1.5}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
+          <Box
+            sx={{
+              px: isMobile ? 2 : 3,
+              py: isMobile ? 2.5 : 4,
+            }}
+          >
+            {isMobile ? (
+              <Stack spacing={1.5}>
                 <Box
                   sx={{
                     display: "flex",
-                    justifyContent: "center",
+                    justifyContent: "space-between",
                     alignItems: "center",
+                    gap: 1,
                   }}
                 >
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      Gestión de Permisos
+                    </Typography>
+                  </Box>
+                  {can("permissions:export") && (
+                    <PermissionExportButtons permissions={permissions} />
+                  )}
+                </Box>
+              </Stack>
+            ) : (
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     Gestión de Permisos
                   </Typography>
                 </Box>
-                {can("permissions:export") && (
-                  <PermissionExportButtons permissions={permissions} />
-                )}
-              </Box>
-            </Stack>
-          ) : (
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                  Gestión de Permisos
-                </Typography>
-              </Box>
-              {breadcrumbItems}
-            </Stack>
-          )}
-        </Box>
-      </Card>
+                {breadcrumbItems}
+              </Stack>
+            )}
+          </Box>
+        </Card>
+      )}
 
       {/* TOOLBAR CARD - Búsqueda y Acciones */}
       <Card
         sx={{
-          borderRadius: isMobile ? 2 : 3,
+          borderRadius: 3,
           mb: 2,
           boxShadow: theme.shadows[1],
+          ...(isMobile && {
+            mx: -2,
+            borderRadius: 0,
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+          }),
         }}
       >
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            pt: isMobile ? 0 : 4,
+            pt: isMobile ? 1.5 : 4,
             pb: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (
-            <Stack spacing={2}>
-              <Stack
-                direction={isMobile ? "column" : "row"}
-                spacing={1}
-                sx={{ width: "100%" }}
-              >
-                {can("permissions:create") && (
-                  <FloatingAddButton onClick={handleOpenDialog} />
-                )}
-              </Stack>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              spacing={2}
+            >
               <PermissionSearchBar
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
                 onSearch={handleSearch}
               />
+              <Box>
+                {can("permissions:export") && (
+                  <PermissionExportButtons permissions={permissions} />
+                )}
+              </Box>
+
+              {can("permissions:create") && (
+                <FloatingAddButton onClick={handleOpenDialog} />
+              )}
             </Stack>
           ) : (
             <Stack
@@ -469,6 +481,7 @@ export default function Permissions() {
           borderRadius: isMobile ? 2 : 3,
           boxShadow: theme.shadows[1],
           overflow: "hidden",
+          ...(isMobile && { mb: 1 }),
         }}
       >
         <Box sx={{ position: "relative" }}>

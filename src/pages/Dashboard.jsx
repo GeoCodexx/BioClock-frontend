@@ -104,15 +104,14 @@ const Dashboard = () => {
         sx={{
           borderRadius: 3,
           mb: 3,
-          /* border: "1px solid",
-          borderColor: "divider",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          color: "white",*/
-          borderLeft: themeMode === "dark" ? "none" : "6px solid",
-          borderColor: "primary.main",
         }}
       >
-        <CardContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>
+        <CardContent
+          sx={{
+            px: { xs: 2, sm: 3 },
+            py: { xs: 2.5, sm: 3 },
+          }}
+        >
           {isMobile ? (
             <Stack spacing={2}>
               <Stack
@@ -184,10 +183,10 @@ const Dashboard = () => {
   return (
     <Box sx={{ width: "100%" }}>
       {/* Header */}
-      <PageHeader isMobile={isMobile} />
+      {isMobile || <PageHeader isMobile={isMobile} />}
 
       {/* Tarjetas de Estadísticas */}
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+      <Grid container spacing={2} sx={{ mb: 2, mt: { xs: 2, md: 0 } }}>
         {[
           {
             title: "Total Colaboradores",
@@ -227,11 +226,14 @@ const Dashboard = () => {
       {/* Gráficos y Tablas */}
       <Grid container spacing={2} alignItems={"stretch"}>
         <Grid size={{ xs: 12, md: 7 }}>
-          <AttendanceChart weeklyAttendances={weeklyAttendances} />
+          <AttendanceChart
+            weeklyAttendances={weeklyAttendances}
+            isMobile={isMobile}
+          />
         </Grid>
 
         <Grid size={{ xs: 12, md: 5 }}>
-          <DepartmentDistribution attendanceByStatus={attendanceByStatus} />
+          <DepartmentDistribution attendanceByStatus={attendanceByStatus} isMobile={isMobile}/>
         </Grid>
 
         <Grid size={12}>

@@ -441,8 +441,6 @@ export default function Attendances() {
             borderRadius: 3,
             mb: 2,
             boxShadow: theme.shadows[1],
-            /*borderLeft: mode === "dark" ? "none" : "6px solid",
-          borderColor: "primary.main",*/
           }}
         >
           <Box
@@ -535,32 +533,66 @@ export default function Attendances() {
           ...(isMobile && {
             mx: -2,
             borderRadius: 0,
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
           }),
         }}
       >
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            pt: isMobile ? 0 : 4,
+            pt: isMobile ? 1.5 : 4,
             pb: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (
             <Stack spacing={2}>
               <Stack
-                direction={isMobile ? "column" : "row"}
-                spacing={1}
-                sx={{ width: "100%" }}
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                spacing={0.5}
               >
+                <AttendanceSearchBar
+                  searchInput={searchInput}
+                  setSearchInput={setSearchInput}
+                  onSearch={handleSearch}
+                />
+                <Box>
+                  <IconButton
+                    onClick={() => setOpenFilters((prev) => !prev)}
+                    //disabled={!attendances || attendances.length === 0}
+                    sx={{
+                      color: theme.palette.text.secondary,
+                      borderRadius: 2,
+                      bgcolor: theme.palette.background.paper,
+                      "&:hover": {
+                        bgcolor: theme.palette.action.hover,
+                      },
+                      "&:disabled": {
+                        bgcolor: theme.palette.action.disabledBackground,
+                      },
+                    }}
+                  >
+                    {openFilters ? (
+                      <FilterListOffIcon fontSize="small" color="primary" />
+                    ) : (
+                      <FilterListIcon fontSize="small" />
+                    )}
+                  </IconButton>
+                </Box>
+                <Box>
+                  {can("attendances:export") && (
+                    <AttendanceExportButtons attendances={attendances} />
+                  )}
+                </Box>
+
                 {can("attendances:create") && (
                   <FloatingAddButton onClick={handleOpenDialog} />
                 )}
               </Stack>
-              <AttendanceSearchBar
-                searchInput={searchInput}
-                setSearchInput={setSearchInput}
-                onSearch={handleSearch}
-              />
+
               {openFilters && (
                 <>
                   <Stack spacing={2} sx={{ mt: 2 }}>
@@ -748,6 +780,7 @@ export default function Attendances() {
           borderRadius: isMobile ? 2 : 3,
           boxShadow: theme.shadows[1],
           overflow: "hidden",
+          ...(isMobile && { mb: 1 }),
         }}
       >
         <Box sx={{ position: "relative" }}>
@@ -807,23 +840,6 @@ export default function Attendances() {
         deleteError={deleteState.error}
         itemName="asistencia"
       />
-
-      {/* Dialog de justificación */}
-      {/* <JustifyAttendanceDialog
-        open={justifyDialogOpen}
-        onOpenChange={setJustifyDialogOpen}
-        attendance={selectedAttendance}
-        handleJustifyAttendance={handleJustifyAttendance}
-        onSuccess={handleJustifySuccess}
-      /> */}
-
-      {/* Dialog de confirmación de eliminar justificación */}
-      {/* <ConfirmDeleteJustificationDialog
-        open={deleteJustificationDialogOpen}
-        onOpenChange={setDeleteJustificationDialogOpen}
-        attendance={selectedAttendance}
-        onConfirm={handleDeleteJustification}
-      /> */}
     </Box>
   );
 }

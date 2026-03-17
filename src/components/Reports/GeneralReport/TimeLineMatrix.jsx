@@ -1,4 +1,11 @@
-import React, { useMemo, useRef, useState, useCallback, memo } from "react";
+import React, {
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+  memo,
+  useEffect,
+} from "react";
 import {
   Box,
   Typography,
@@ -15,9 +22,10 @@ import {
   Fade,
   Button,
   Popover,
-  Badge,
+  Drawer,
+  Divider,
 } from "@mui/material";
-import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import { ChevronLeft, ChevronRight, Close } from "@mui/icons-material";
 import {
   format,
   parseISO,
@@ -30,298 +38,931 @@ import {
 } from "date-fns";
 import { es } from "date-fns/locale";
 
-/* ---------------------------------------------
-   Configuration
---------------------------------------------- */
-const ROW_HEIGHT = 42;
-const COLUMN_WIDTH = 85;
-const NAME_COLUMN_WIDTH = 240;
-const HEADER_HEIGHT = 54;
+/* ─────────────────────────────────────────────
+   Layout constants
+───────────────────────────────────────────── */
+const D = { ROW_H: 42, COL_W: 85, NAME_W: 240, HEADER_H: 54 }; // desktop
+const M = { ROW_H: 36, COL_W: 36, NAME_W: 108, HEADER_H: 44 }; // mobile
+const OVERSCAN = 4; // extra rows rendered above/below viewport
+const CONTAINER_HEIGHT = 620;
 
-// Esquema de colores optimizado para light y dark mode
+/* ─────────────────────────────────────────────
+   STATUS CONFIG
+───────────────────────────────────────────── */
 const STATUS_CONFIG = {
   on_time: {
-    light: {
-      bg: alpha("#2E7D32", 0.12),
-      border: "#2E7D32",
-      text: "#1B5E20",
-    },
-    dark: {
-      bg: alpha("#66BB6A", 0.25),
-      border: "#66BB6A",
-      text: "#A5D6A7",
-    },
+    light: { bg: alpha("#2E7D32", 0.12), border: "#2E7D32", text: "#1B5E20" },
+    dark: { bg: alpha("#66BB6A", 0.25), border: "#66BB6A", text: "#A5D6A7" },
     label: "A Tiempo",
     icon: "✓",
     text: "AT",
   },
   late: {
-    light: {
-      bg: alpha("#ED6C02", 0.12),
-      border: "#ED6C02",
-      text: "#E65100",
-    },
-    dark: {
-      bg: alpha("#FF9800", 0.25),
-      border: "#FF9800",
-      text: "#FFB74D",
-    },
+    light: { bg: alpha("#ED6C02", 0.12), border: "#ED6C02", text: "#E65100" },
+    dark: { bg: alpha("#FF9800", 0.25), border: "#FF9800", text: "#FFB74D" },
     label: "Tardanza",
     icon: "⏱",
     text: "T",
   },
   early_exit: {
-    light: {
-      bg: alpha("#7B1FA2", 0.12),
-      border: "#7B1FA2",
-      text: "#6A1B9A",
-    },
-    dark: {
-      bg: alpha("#BA68C8", 0.25),
-      border: "#BA68C8",
-      text: "#CE93D8",
-    },
+    light: { bg: alpha("#7B1FA2", 0.12), border: "#7B1FA2", text: "#6A1B9A" },
+    dark: { bg: alpha("#BA68C8", 0.25), border: "#BA68C8", text: "#CE93D8" },
     label: "Salida Anticipada",
     icon: "⏰",
     text: "SA",
   },
   incomplete: {
-    light: {
-      bg: alpha("#757575", 0.08),
-      border: "#757575",
-      text: "#616161",
-    },
-    dark: {
-      bg: alpha("#BDBDBD", 0.15),
-      border: "#BDBDBD",
-      text: "#E0E0E0",
-    },
+    light: { bg: alpha("#757575", 0.08), border: "#757575", text: "#616161" },
+    dark: { bg: alpha("#BDBDBD", 0.15), border: "#BDBDBD", text: "#E0E0E0" },
     label: "Incompleto",
     icon: "◐",
     text: "I",
   },
   absent: {
-    light: {
-      bg: alpha("#D32F2F", 0.12),
-      border: "#D32F2F",
-      text: "#C62828",
-    },
-    dark: {
-      bg: alpha("#EF5350", 0.25),
-      border: "#EF5350",
-      text: "#E57373",
-    },
+    light: { bg: alpha("#D32F2F", 0.12), border: "#D32F2F", text: "#C62828" },
+    dark: { bg: alpha("#EF5350", 0.25), border: "#EF5350", text: "#E57373" },
     label: "Ausente",
     icon: "✕",
     text: "A",
   },
   justified: {
-    light: {
-      bg: alpha("#0288D1", 0.12),
-      border: "#0288D1",
-      text: "#01579B",
-    },
-    dark: {
-      bg: alpha("#29B6F6", 0.25),
-      border: "#29B6F6",
-      text: "#4FC3F7",
-    },
+    light: { bg: alpha("#0288D1", 0.12), border: "#0288D1", text: "#01579B" },
+    dark: { bg: alpha("#29B6F6", 0.25), border: "#29B6F6", text: "#4FC3F7" },
     label: "Justificado",
     icon: "📋",
     text: "J",
   },
 };
 
-/* ---------------------------------------------
-   Matrix Cell Component (Optimizado)
---------------------------------------------- */
-const MatrixCell = memo(
-  ({ shifts, isDark, onClick, rowIdx, colIdx, isWeekendDay }) => {
-    const theme = useTheme();
+/* ─────────────────────────────────────────────
+   Pre-computed style maps
+   Built ONCE at module load — zero work per render
+───────────────────────────────────────────── */
+const BADGE_STYLES = { light: {}, dark: {} };
+const DOT_COLORS = { light: {}, dark: {} }; // for mobile dots
 
-    const getCellStyle = (status) => {
-      const config = STATUS_CONFIG[status];
-      if (!config) return {};
+Object.entries(STATUS_CONFIG).forEach(([key, cfg]) => {
+  BADGE_STYLES.light[key] = {
+    wrapper: {
+      backgroundColor: cfg.light.bg,
+      border: `1.5px solid ${cfg.light.border}`,
+    },
+    text: { color: cfg.light.text },
+  };
+  BADGE_STYLES.dark[key] = {
+    wrapper: {
+      backgroundColor: cfg.dark.bg,
+      border: `1.5px solid ${cfg.dark.border}`,
+    },
+    text: { color: cfg.dark.text },
+  };
+  DOT_COLORS.light[key] = cfg.light.border;
+  DOT_COLORS.dark[key] = cfg.dark.border;
+});
 
-      const mode = isDark ? config.dark : config.light;
-      return {
-        bg: mode.bg,
-        border: mode.border,
-        text: mode.text,
-      };
-    };
+/* ─────────────────────────────────────────────
+   Static cell styles (plain objects, not sx)
+───────────────────────────────────────────── */
+const CELL_BASE = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  gap: 3,
+  padding: "0 4px",
+  cursor: "pointer",
+  transition: "background-color 0.15s",
+};
 
-    const hasMultipleShifts = shifts.length > 1;
+/* ─────────────────────────────────────────────
+   useVirtualRows — custom virtualization hook
+───────────────────────────────────────────── */
+function useVirtualRows({ count, rowHeight, containerHeight, overscan = 4 }) {
+  const [scrollTop, setScrollTop] = useState(0);
 
-    return (
-      <Box
-        className={`matrix-cell row-${rowIdx} col-${colIdx}`}
-        sx={{
-          borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}`,
-          borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}`,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 0.5,
-          p: 0.75,
-          cursor: shifts.length > 0 ? "pointer" : "default",
-          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-          bgcolor: isWeekendDay
-            ? alpha(theme.palette.primary.main, 0.02)
-            : "transparent",
-          "&:hover": {
-            bgcolor:
-              shifts.length > 0
-                ? alpha(theme.palette.primary.main, 0.08)
-                : isWeekendDay
-                  ? alpha(theme.palette.primary.main, 0.04)
-                  : "transparent",
-            transform: shifts.length > 0 ? "scale(1.02)" : "none",
-          },
+  const range = useMemo(() => {
+    const start = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
+    const end = Math.min(
+      count - 1,
+      Math.ceil((scrollTop + containerHeight) / rowHeight) + overscan,
+    );
+    return { start, end };
+  }, [scrollTop, count, rowHeight, containerHeight, overscan]);
+
+  const onScroll = useCallback((e) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  const totalHeight = count * rowHeight;
+  const paddingTop = range.start * rowHeight;
+  const paddingBot = Math.max(0, totalHeight - (range.end + 1) * rowHeight);
+
+  return { range, onScroll, paddingTop, paddingBot, totalHeight };
+}
+
+/* ─────────────────────────────────────────────
+   Desktop Badge Cell (no Tooltip — moved to click)
+   Uses plain div + pre-computed styles → zero MUI overhead
+───────────────────────────────────────────── */
+const DesktopBadge = memo(({ shift, isDark, onInfo }) => {
+  const styles = isDark ? BADGE_STYLES.dark : BADGE_STYLES.light;
+  const s = styles[shift.shiftStatus];
+  const cfg = STATUS_CONFIG[shift.shiftStatus];
+  if (!s) return null;
+
+  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        onInfo(shift);
+      }}
+      style={{
+        ...s.wrapper,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flex: 1,
+        minWidth: 24,
+        height: 20,
+        borderRadius: 4,
+        cursor: "pointer",
+        transition: "transform 0.15s",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "scale(1.12)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "scale(1)";
+      }}
+    >
+      <span
+        style={{
+          ...s.text,
+          fontSize: "0.72rem",
+          fontWeight: 700,
+          lineHeight: 1,
         }}
       >
-        {shifts.length === 0 ? (
-          <Box
-            sx={{
-              width: "100%",
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: 0.2,
-            }}
-          >
-            <Typography
-              variant="caption"
-              sx={{
-                color: "text.disabled",
-                fontSize: "0.7rem",
-                fontWeight: 300,
-              }}
-            >
-              —
-            </Typography>
-          </Box>
-        ) : (
-          <Box
-            sx={{
-              display: "flex",
-              gap: 0.5,
-              width: "100%",
-              position: "relative",
-            }}
-          >
-            {shifts.map((shift, idx) => {
-              const style = getCellStyle(shift.shiftStatus);
-              const config = STATUS_CONFIG[shift.shiftStatus];
+        {cfg?.text ?? "?"}
+      </span>
+    </div>
+  );
+});
+DesktopBadge.displayName = "DesktopBadge";
 
-              return (
-                <Tooltip
-                  key={idx}
-                  title={
-                    <Box sx={{ p: 0.5 }}>
-                      <Typography variant="caption" fontWeight={600}>
-                        {shift.scheduleName}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        display="block"
-                        sx={{ mt: 0.5 }}
-                      >
-                        {config?.label || shift.shiftStatus}
-                      </Typography>
-                    </Box>
-                  }
-                  placement="top"
-                  arrow
-                  enterDelay={300}
-                >
-                  <Box
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onClick(shift);
-                    }}
-                    sx={{
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      flex: 1,
-                      height: hasMultipleShifts ? 16 : 20,
-                      minWidth: hasMultipleShifts ? 20 : 28,
-                      borderRadius: 1,
-                      bgcolor: style.bg,
-                      border: `1.5px solid ${style.border}`,
-                      position: "relative",
-                      overflow: "hidden",
-                      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                      "&:hover": {
-                        transform: "scale(1.15)",
-                        //boxShadow: `0 4px 12px ${alpha(style.border, 0.3)}`,
-                        zIndex: 2,
-                        //bgcolor: alpha(style.border, 0.2),
-                      },
-                      // Shine effect
-                      /* "&::before": {
-                        content: '""',
-                        position: "absolute",
-                        top: 0,
-                        left: "-100%",
-                        width: "100%",
-                        height: "100%",
-                        background: `linear-gradient(90deg, transparent, ${alpha("#fff", 0.3)}, transparent)`,
-                        transition: "left 0.5s",
-                      },
-                      "&:hover::before": {
-                        left: "100%",
-                      },*/
-                    }}
-                  >
-                    <Typography
-                      //align="center"
-                      variant="caption"
-                      fontWeight={600}
-                      sx={{ color: style.text, fontSize: "0.75rem" }}
-                    >
-                      {config?.text || "?"}
-                    </Typography>
-                  </Box>
-                </Tooltip>
-              );
-            })}
-            {/*hasMultipleShifts && (
+/* ─────────────────────────────────────────────
+   Mobile Dot Cell — ultra-lightweight
+   Renders colored circles only, no text
+───────────────────────────────────────────── */
+const MobileDot = memo(({ shift, isDark, onInfo }) => {
+  const color = isDark
+    ? DOT_COLORS.dark[shift.shiftStatus]
+    : DOT_COLORS.light[shift.shiftStatus];
+
+  return (
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        onInfo(shift);
+      }}
+      style={{
+        width: 10,
+        height: 10,
+        borderRadius: "50%",
+        backgroundColor: color || "#999",
+        flexShrink: 0,
+        cursor: "pointer",
+      }}
+    />
+  );
+});
+MobileDot.displayName = "MobileDot";
+
+/* ─────────────────────────────────────────────
+   MatrixCell — pure div, no MUI, no Tooltip
+───────────────────────────────────────────── */
+const MatrixCell = memo(
+  ({
+    shifts,
+    isDark,
+    onInfo,
+    isWeekendDay,
+    isMobile,
+    borderColor,
+    weekendBg,
+    hoverBg,
+  }) => {
+    const [hovered, setHovered] = useState(false);
+
+    const bgStyle = isWeekendDay ? weekendBg : "transparent";
+
+    return (
+      <div
+        style={{
+          ...CELL_BASE,
+          borderRight: `1px solid ${borderColor}`,
+          borderBottom: `1px solid ${borderColor}`,
+          cursor: shifts.length > 0 ? "pointer" : "default",
+          backgroundColor: hovered && shifts.length > 0 ? hoverBg : bgStyle,
+          flexWrap: "wrap",
+          gap: isMobile ? 2 : 3,
+          padding: isMobile ? "0 3px" : "0 5px",
+        }}
+        onMouseEnter={() => shifts.length > 0 && setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        {shifts.length === 0 ? (
+          <span style={{ color: "#bbb", fontSize: "0.65rem", fontWeight: 300 }}>
+            —
+          </span>
+        ) : isMobile ? (
+          shifts.map((shift, i) => (
+            <MobileDot key={i} shift={shift} isDark={isDark} onInfo={onInfo} />
+          ))
+        ) : (
+          shifts.map((shift, i) => (
+            <DesktopBadge
+              key={i}
+              shift={shift}
+              isDark={isDark}
+              onInfo={onInfo}
+            />
+          ))
+        )}
+      </div>
+    );
+  },
+  (prev, next) =>
+    prev.shifts === next.shifts &&
+    prev.isDark === next.isDark &&
+    prev.isWeekendDay === next.isWeekendDay,
+);
+MatrixCell.displayName = "MatrixCell";
+
+/* ─────────────────────────────────────────────
+   ShiftInfoPanel — shown on click (replaces Tooltip)
+   Desktop: Popover  |  Mobile: bottom Drawer
+───────────────────────────────────────────── */
+// const ShiftInfoPanel = memo(({ info, onClose, isMobile, isDark }) => {
+//   if (!info) return null;
+
+//   const { shift, anchorEl } = info;
+//   const cfg = STATUS_CONFIG[shift?.shiftStatus];
+//   const styles = isDark ? BADGE_STYLES.dark : BADGE_STYLES.light;
+//   const s = styles[shift?.shiftStatus];
+
+//   const content = shift ? (
+//     <Box sx={{ p: 2, minWidth: 200 }}>
+//       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+//         <Typography variant="subtitle2" fontWeight={700}>{shift.scheduleName}</Typography>
+//         <IconButton size="small" onClick={onClose} sx={{ p: 0.5 }}><Close fontSize="small" /></IconButton>
+//       </Stack>
+//       <Divider sx={{ mb: 1.5 }} />
+//       <Stack spacing={0.75}>
+//         <Stack direction="row" alignItems="center" spacing={1}>
+//           <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: s?.wrapper?.border ?? "grey.400" }} />
+//           <Typography variant="body2" fontWeight={600}>{cfg?.label ?? shift.shiftStatus}</Typography>
+//         </Stack>
+//         {shift.checkIn  && <Typography variant="caption" color="text.secondary">Entrada: <strong>{shift.checkIn}</strong></Typography>}
+//         {shift.checkOut && <Typography variant="caption" color="text.secondary">Salida: <strong>{shift.checkOut}</strong></Typography>}
+//         {shift.date     && <Typography variant="caption" color="text.secondary">Fecha: <strong>{shift.date}</strong></Typography>}
+//       </Stack>
+//     </Box>
+//   ) : null;
+
+//   if (isMobile) {
+//     return (
+//       <Drawer
+//         anchor="bottom"
+//         open={Boolean(info)}
+//         onClose={onClose}
+//         PaperProps={{ sx: { borderTopLeftRadius: 16, borderTopRightRadius: 16, pb: "env(safe-area-inset-bottom)" } }}
+//       >
+//         {content}
+//       </Drawer>
+//     );
+//   }
+
+//   return (
+//     <Popover
+//       open={Boolean(info)}
+//       anchorEl={anchorEl}
+//       onClose={onClose}
+//       anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+//       transformOrigin={{ vertical: "top", horizontal: "center" }}
+//       disableScrollLock
+//       slotProps={{ paper: { elevation: 4, sx: { borderRadius: 2 } } }}
+//     >
+//       {content}
+//     </Popover>
+//   );
+// });
+// ShiftInfoPanel.displayName = "ShiftInfoPanel";
+
+/* ─────────────────────────────────────────────
+   Mobile Legend Drawer — on-demand only
+───────────────────────────────────────────── */
+const MobileLegendDrawer = memo(({ open, onClose, isDark }) => (
+  <Drawer
+    anchor="bottom"
+    open={open}
+    onClose={onClose}
+    PaperProps={{
+      sx: {
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        pb: "env(safe-area-inset-bottom)",
+      },
+    }}
+  >
+    <Box sx={{ p: 2.5 }}>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 2 }}
+      >
+        <Typography variant="subtitle1" fontWeight={700}>
+          Leyenda
+        </Typography>
+        <IconButton size="small" onClick={onClose}>
+          <Close fontSize="small" />
+        </IconButton>
+      </Stack>
+      <Divider sx={{ mb: 2 }} />
+      <Stack spacing={1.25}>
+        {Object.entries(STATUS_CONFIG).map(([key, cfg]) => {
+          const mode = isDark ? cfg.dark : cfg.light;
+          return (
+            <Stack key={key} direction="row" alignItems="center" spacing={1.5}>
               <Box
                 sx={{
-                  position: "absolute",
-                  top: -4,
-                  right: -4,
-                  width: 14,
-                  height: 14,
-                  borderRadius: "50%",
-                  bgcolor: "primary.main",
-                  color: "primary.contrastText",
+                  width: 28,
+                  height: 20,
+                  borderRadius: 1,
+                  bgcolor: mode.bg,
+                  border: `1.5px solid ${mode.border}`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "0.6rem",
-                  fontWeight: 700,
-                  boxShadow: 1,
                 }}
               >
-                {shifts.length}
+                <Typography
+                  sx={{ fontSize: "0.7rem", fontWeight: 700, color: mode.text }}
+                >
+                  {cfg.text}
+                </Typography>
               </Box>
-            )*/}
-          </Box>
-        )}
+              <Box
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  bgcolor: mode.border,
+                  flexShrink: 0,
+                }}
+              />
+              <Typography variant="body2">{cfg.label}</Typography>
+            </Stack>
+          );
+        })}
+      </Stack>
+    </Box>
+  </Drawer>
+));
+MobileLegendDrawer.displayName = "MobileLegendDrawer";
+
+/* ─────────────────────────────────────────────
+   MonthSelector
+───────────────────────────────────────────── */
+const MonthSelector = memo(({ currentMonth, onMonthChange, error }) => {
+  const theme = useTheme();
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const buttonRef = useRef(null);
+
+  const today = new Date();
+  const isCurrentMonth = isSameMonth(currentMonth, today);
+  const formattedDate = format(currentMonth, "MMMM yyyy", { locale: es });
+
+  const months = [
+    "Ene",
+    "Feb",
+    "Mar",
+    "Abr",
+    "May",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dic",
+  ];
+  const years = [
+    today.getFullYear() - 2,
+    today.getFullYear() - 1,
+    today.getFullYear(),
+  ];
+
+  return (
+    <>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+        <Tooltip title="Mes anterior">
+          <IconButton
+            onClick={() => !error && onMonthChange(subMonths(currentMonth, 1))}
+            size="small"
+            sx={{
+              width: 32,
+              height: 32,
+              bgcolor: "action.hover",
+              "&:hover": { bgcolor: "action.selected" },
+            }}
+          >
+            <ChevronLeft fontSize="small" />
+          </IconButton>
+        </Tooltip>
+
+        <Button
+          ref={buttonRef}
+          onClick={() => setPopoverOpen(true)}
+          size="small"
+          variant="outlined"
+          sx={{
+            fontWeight: 600,
+            minWidth: "auto",
+            px: 2,
+            py: 0.5,
+            textTransform: "capitalize",
+            borderColor: "divider",
+            color: "text.primary",
+            fontSize: "0.8rem",
+            "&:hover": { bgcolor: "action.hover", borderColor: "primary.main" },
+          }}
+        >
+          {formattedDate}
+        </Button>
+
+        <Tooltip
+          title={isCurrentMonth ? "Ya estás en el mes actual" : "Mes siguiente"}
+        >
+          <span>
+            <IconButton
+              onClick={() =>
+                !isCurrentMonth &&
+                !error &&
+                onMonthChange(addMonths(currentMonth, 1))
+              }
+              disabled={isCurrentMonth}
+              size="small"
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: isCurrentMonth
+                  ? "action.disabledBackground"
+                  : "action.hover",
+                "&:hover": { bgcolor: "action.selected" },
+                "&.Mui-disabled": { bgcolor: "action.disabledBackground" },
+              }}
+            >
+              <ChevronRight fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Box>
+
+      <Popover
+        open={popoverOpen}
+        anchorEl={buttonRef.current}
+        onClose={() => setPopoverOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        transformOrigin={{ vertical: "top", horizontal: "center" }}
+        disableScrollLock
+        slotProps={{
+          paper: { sx: { borderRadius: 2, boxShadow: theme.shadows[8] } },
+        }}
+      >
+        <Box sx={{ width: 340, maxHeight: 480, overflow: "auto" }}>
+          {years.map((year, yi) => (
+            <Box
+              key={year}
+              sx={{
+                borderBottom: yi < years.length - 1 ? 1 : 0,
+                borderColor: "divider",
+              }}
+            >
+              <Box
+                sx={{
+                  bgcolor: alpha(theme.palette.primary.main, 0.08),
+                  py: 1.5,
+                  px: 2,
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 1,
+                }}
+              >
+                <Typography
+                  variant="subtitle2"
+                  fontWeight={700}
+                  color="primary"
+                  textAlign="center"
+                >
+                  {year}
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gap: 1,
+                  p: 2,
+                }}
+              >
+                {months.map((m, idx) => {
+                  const disabled = new Date(year, idx, 1) > today;
+                  const selected = isSameMonth(
+                    new Date(year, idx, 1),
+                    currentMonth,
+                  );
+                  return (
+                    <Button
+                      key={idx}
+                      onClick={() => {
+                        if (!disabled) {
+                          onMonthChange(
+                            setYear(setMonth(currentMonth, idx), year),
+                          );
+                          setPopoverOpen(false);
+                        }
+                      }}
+                      disabled={disabled}
+                      size="small"
+                      sx={{
+                        py: 1,
+                        px: 1.5,
+                        borderRadius: 1.5,
+                        fontSize: "0.813rem",
+                        fontWeight: selected ? 700 : 500,
+                        color: selected
+                          ? "primary.contrastText"
+                          : disabled
+                            ? "text.disabled"
+                            : "text.primary",
+                        bgcolor: selected ? "primary.main" : "transparent",
+                        "&:hover": {
+                          bgcolor: selected
+                            ? "primary.dark"
+                            : alpha(theme.palette.primary.main, 0.1),
+                          transform: !disabled ? "translateY(-1px)" : "none",
+                        },
+                        "&.Mui-disabled": { opacity: 0.4 },
+                      }}
+                    >
+                      {m}
+                    </Button>
+                  );
+                })}
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      </Popover>
+    </>
+  );
+});
+MonthSelector.displayName = "MonthSelector";
+
+/* ─────────────────────────────────────────────
+   MatrixSkeleton
+───────────────────────────────────────────── */
+const MatrixSkeleton = memo(({ isMobile }) => {
+  const cols = isMobile ? 8 : 10;
+  const nameW = isMobile ? M.NAME_W : D.NAME_W;
+  const rowH = isMobile ? M.ROW_H : D.ROW_H;
+  const colW = isMobile ? M.COL_W : D.COL_W;
+
+  return (
+    <Card elevation={0} sx={{ borderRadius: 2, width: "100%" }}>
+      <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+        <Stack spacing={1}>
+          {Array.from({ length: 7 }).map((_, i) => (
+            <Box key={i} sx={{ display: "flex", gap: 1 }}>
+              <Skeleton
+                variant="rectangular"
+                width={nameW}
+                height={rowH}
+                sx={{ borderRadius: 1, flexShrink: 0 }}
+              />
+              {Array.from({ length: cols }).map((_, j) => (
+                <Skeleton
+                  key={j}
+                  variant="rectangular"
+                  width={colW}
+                  height={rowH}
+                  sx={{ borderRadius: 1, flexShrink: 0 }}
+                />
+              ))}
+            </Box>
+          ))}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+});
+MatrixSkeleton.displayName = "MatrixSkeleton";
+
+/* ─────────────────────────────────────────────
+   VirtualMatrix — the main virtualized grid
+───────────────────────────────────────────── */
+const VirtualMatrix = memo(
+  ({ users, visibleDates, matrix, isDark, isMobile, onShiftInfo }) => {
+    const theme = useTheme();
+    const C = isMobile ? M : D;
+    const rowH = C.ROW_H;
+    const colW = C.COL_W;
+    const nameW = C.NAME_W;
+    const headerH = C.HEADER_H;
+
+    // Pre-compute static colors (only re-derived when theme changes)
+    const colors = useMemo(
+      () => ({
+        divider: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+        dividerStrong: theme.palette.divider,
+        headerBg: alpha(theme.palette.primary.main, 0.08),
+        weekendHBg: alpha(theme.palette.warning.main, 0.08),
+        stickyBg: isDark
+          ? alpha(theme.palette.background.paper, 0.96)
+          : theme.palette.background.paper,
+        primaryHover: alpha(theme.palette.primary.main, 0.08),
+        weekendRowBg: alpha(theme.palette.primary.main, 0.025),
+      }),
+      [isDark, theme],
+    );
+
+    // Row virtualization
+    const { range, onScroll, paddingTop, paddingBot } = useVirtualRows({
+      count: users.length,
+      rowHeight: rowH,
+      containerHeight: CONTAINER_HEIGHT,
+      overscan: OVERSCAN,
+    });
+
+    const totalWidth = nameW + visibleDates.length * colW;
+    const colTemplate = `${nameW}px repeat(${visibleDates.length}, ${colW}px)`;
+
+    // Row style — shared object template per row (avoids object creation in loop)
+    const rowStyle = useMemo(
+      () => ({
+        display: "grid",
+        gridTemplateColumns: colTemplate,
+        height: rowH,
+        minWidth: totalWidth,
+      }),
+      [colTemplate, rowH, totalWidth],
+    );
+
+    const headerStyle = useMemo(
+      () => ({
+        display: "grid",
+        gridTemplateColumns: colTemplate,
+        height: headerH,
+        minWidth: totalWidth,
+        position: "sticky",
+        top: 0,
+        zIndex: 20,
+      }),
+      [colTemplate, headerH, totalWidth],
+    );
+
+    return (
+      <Box
+        onScroll={onScroll}
+        sx={{
+          maxHeight: CONTAINER_HEIGHT,
+          overflow: "auto",
+          position: "relative",
+          transform: "translateZ(0)", // GPU compositing layer
+          willChange: "scroll-position",
+          // Custom scrollbar
+          "&::-webkit-scrollbar": { width: 10, height: 10 },
+          "&::-webkit-scrollbar-track": {
+            bgcolor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+            borderRadius: 2,
+          },
+          "&::-webkit-scrollbar-thumb": {
+            bgcolor: isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.14)",
+            borderRadius: 2,
+            border: `2px solid ${isDark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.8)"}`,
+            "&:hover": {
+              bgcolor: isDark ? "rgba(255,255,255,0.24)" : "rgba(0,0,0,0.24)",
+            },
+          },
+          "&::-webkit-scrollbar-corner": { bgcolor: "transparent" },
+        }}
+      >
+        {/* ── Header row ── */}
+        <div style={headerStyle}>
+          {/* Corner */}
+          <div
+            style={{
+              position: "sticky",
+              left: 0,
+              zIndex: 30,
+              backgroundColor: colors.stickyBg,
+              borderRight: `2px solid ${colors.dividerStrong}`,
+              borderBottom: `2px solid ${colors.dividerStrong}`,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              padding: "4px 8px",
+            }}
+          >
+            <span
+              style={{
+                alignSelf: "flex-end",
+                fontWeight: 700,
+                fontSize: "0.72rem",
+                color: theme.palette.text.secondary,
+              }}
+            >
+              Día
+            </span>
+            <span
+              style={{
+                alignSelf: "flex-start",
+                fontWeight: 700,
+                fontSize: "0.72rem",
+                color: theme.palette.text.secondary,
+                marginBottom: 6,
+                marginLeft: 4,
+              }}
+            >
+              Usuario
+            </span>
+          </div>
+
+          {/* Date headers */}
+          {visibleDates.map((dateInfo, ci) => {
+            const isDay = dateInfo.type === "day";
+            const dateObj = isDay ? parseISO(dateInfo.key) : null;
+            const isWknd = isDay && isWeekend(dateObj);
+            const dateStr = isDay
+              ? format(dateObj, isMobile ? "dd" : "dd MMM", { locale: es })
+              : dateInfo.key;
+            const dayOfWeek = isDay
+              ? format(dateObj, "EEE", { locale: es })
+              : null;
+
+            return (
+              <div
+                key={ci}
+                style={{
+                  backgroundColor: isWknd ? colors.weekendHBg : colors.headerBg,
+                  borderRight: `1px solid ${colors.divider}`,
+                  borderBottom: `2px solid ${colors.dividerStrong}`,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {dayOfWeek && !isMobile && (
+                  <span
+                    style={{
+                      fontSize: "0.62rem",
+                      opacity: 0.65,
+                      textTransform: "capitalize",
+                      fontWeight: isWknd ? 600 : 400,
+                      color: isWknd
+                        ? theme.palette.warning.main
+                        : theme.palette.text.primary,
+                    }}
+                  >
+                    {dayOfWeek}
+                  </span>
+                )}
+                {dayOfWeek && isMobile && (
+                  <span
+                    style={{
+                      fontSize: "0.55rem",
+                      opacity: 0.65,
+                      textTransform: "capitalize",
+                      color: isWknd
+                        ? theme.palette.warning.main
+                        : theme.palette.text.secondary,
+                    }}
+                  >
+                    {format(dateObj, "EEEEE", { locale: es })}{" "}
+                    {/* single-letter day */}
+                  </span>
+                )}
+                <span
+                  style={{
+                    fontSize: isMobile ? "0.68rem" : "0.78rem",
+                    fontWeight: 600,
+                    textTransform: "capitalize",
+                    color: theme.palette.text.primary,
+                  }}
+                >
+                  {dateStr}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Body with row virtualization ── */}
+        <div style={{ minWidth: totalWidth }}>
+          {/* Spacer top */}
+          {paddingTop > 0 && <div style={{ height: paddingTop }} />}
+
+          {/* Visible rows only */}
+          {users.slice(range.start, range.end + 1).map((user, localIdx) => {
+            const rowIdx = range.start + localIdx;
+            return (
+              <div key={user.id} style={rowStyle}>
+                {/* Name cell */}
+                <div
+                  style={{
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 10,
+                    backgroundColor: colors.stickyBg,
+                    display: "flex",
+                    alignItems: "center",
+                    paddingLeft: isMobile ? 8 : 16,
+                    paddingRight: isMobile ? 4 : 12,
+                    borderRight: `2px solid ${colors.dividerStrong}`,
+                    borderBottom: `1px solid ${colors.divider}`,
+                    overflow: "hidden",
+                  }}
+                >
+                  <Tooltip
+                    title={user.fullName}
+                    placement="right"
+                    enterDelay={600}
+                    disableFocusListener
+                    disableTouchListener={isMobile}
+                  >
+                    <span
+                      style={{
+                        fontSize: isMobile ? "0.72rem" : "0.875rem",
+                        fontWeight: 500,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        color: theme.palette.text.primary,
+                        width: "100%",
+                      }}
+                    >
+                      {isMobile
+                        ? (user.shortName ?? user.fullName.split(" ")[0])
+                        : user.fullName}
+                    </span>
+                  </Tooltip>
+                </div>
+
+                {/* Data cells */}
+                {visibleDates.map((dateInfo, ci) => {
+                  const shifts =
+                    dateInfo.type === "day"
+                      ? (matrix[user.id]?.[dateInfo.key] ?? [])
+                      : dateInfo.values.flatMap(
+                          (d) => matrix[user.id]?.[d] ?? [],
+                        );
+
+                  const isWknd =
+                    dateInfo.type === "day" &&
+                    isWeekend(parseISO(dateInfo.key));
+
+                  return (
+                    <MatrixCell
+                      key={`${user.id}-${dateInfo.key}`}
+                      shifts={shifts}
+                      isDark={isDark}
+                      isWeekendDay={isWknd}
+                      isMobile={isMobile}
+                      onInfo={(shift) => onShiftInfo(shift)}
+                      borderColor={colors.divider}
+                      weekendBg={colors.weekendRowBg}
+                      hoverBg={colors.primaryHover}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })}
+
+          {/* Spacer bottom */}
+          {paddingBot > 0 && <div style={{ height: paddingBot }} />}
+        </div>
       </Box>
     );
   },
 );
+VirtualMatrix.displayName = "VirtualMatrix";
 
-MatrixCell.displayName = "MatrixCell";
-
-/* ---------------------------------------------
+/* ─────────────────────────────────────────────
    Main Component
---------------------------------------------- */
+───────────────────────────────────────────── */
 const TimelineMatrix = ({
   users = [],
   dates = [],
@@ -334,653 +975,181 @@ const TimelineMatrix = ({
   isFromCache,
   fadeKey,
   error,
+  isMobile,
 }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
-  const [viewMode, setViewMode] = useState(granularity);
+
+  const [shiftInfo, setShiftInfo] = useState(null); // { shift, anchorEl }
+  const [legendOpen, setLegendOpen] = useState(false);
 
   const showSkeleton = loadingMatrix && !isFromCache;
-  const showEmpty =
-    !loadingMatrix && (!users?.length || !dates?.length); /*|| error*/
+  const showEmpty = !loadingMatrix && (!users?.length || !dates?.length);
 
-  /* ---------------- Process Dates ---------------- */
+  /* Process visible dates */
   const visibleDates = useMemo(() => {
     if (!dates?.length) return [];
-    if (viewMode === "day") return dates.map((d) => ({ key: d, type: "day" }));
+    return dates.map((d) => ({ key: d, type: "day" }));
+    // Week grouping can be added here if granularity === "week"
+  }, [dates]);
 
-    const map = new Map();
-    dates.forEach((d) => {
-      const date = parseISO(d);
-      const key = `S${format(date, "w", { locale: es })} ${format(date, "MMM", { locale: es })}`;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key).push(d);
-    });
-    return Array.from(map.entries()).map(([key, values]) => ({
-      key,
-      values,
-      type: "week",
-    }));
-  }, [dates, viewMode]);
-
-  /* ---------------- Handlers ---------------- */
-  const handleShiftClick = useCallback(
+  /* Handle shift click — single entry point */
+  const handleShiftInfo = useCallback(
     (shift) => {
       if (shift?.record) {
         const { record, ...rest } = shift;
-        setSelectedShift({ ...record, ...rest });
+        setSelectedShift?.({ ...record, ...rest });
       }
+      setShiftInfo({ shift });
     },
     [setSelectedShift],
   );
 
-  /** MONTH SELECTOR */
-  const MonthSelector = ({ currentMonth, onMonthChange }) => {
-    const theme = useTheme();
-    const [popoverOpen, setPopoverOpen] = useState(false);
-    const buttonRef = useRef(null);
+  const handleCloseInfo = useCallback(() => setShiftInfo(null), []);
 
-    const today = new Date();
-    const isCurrentMonth = isSameMonth(currentMonth, today);
-    const formattedDate = format(currentMonth, "MMMM yyyy", { locale: es });
+  /* ── Skeleton ── */
+  if (showSkeleton) return <MatrixSkeleton isMobile={isMobile} />;
 
-    const handlePreviousMonth = () => {
-      if (!error) onMonthChange(subMonths(currentMonth, 1));
-    };
-
-    const handleNextMonth = () => {
-      if (!isCurrentMonth && !error) {
-        onMonthChange(addMonths(currentMonth, 1));
-      }
-    };
-
-    const handleMonthSelect = (month, year) => {
-      const newDate = setYear(setMonth(currentMonth, month), year);
-      onMonthChange(newDate);
-      setPopoverOpen(false);
-    };
-
-    const currentYear = today.getFullYear();
-    const years = [currentYear - 2, currentYear - 1, currentYear];
-
-    const months = [
-      "Ene",
-      "Feb",
-      "Mar",
-      "Abr",
-      "May",
-      "Jun",
-      "Jul",
-      "Ago",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dic",
-    ];
-
-    const isMonthDisabled = (monthIndex, year) => {
-      const monthDate = new Date(year, monthIndex, 1);
-      return monthDate > today;
-    };
-
-    const isMonthSelected = (monthIndex, year) => {
-      return isSameMonth(new Date(year, monthIndex, 1), currentMonth);
-    };
-
+  /* ── Error ── */
+  if (error) {
     return (
-      <>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          <Tooltip title="Mes anterior">
-            <IconButton
-              onClick={handlePreviousMonth}
-              size="small"
-              sx={{
-                width: 32,
-                height: 32,
-                bgcolor: "action.hover",
-                "&:hover": { bgcolor: "action.selected" },
-              }}
-            >
-              <ChevronLeft fontSize="small" />
-            </IconButton>
-          </Tooltip>
-
-          <Button
-            ref={buttonRef}
-            onClick={() => setPopoverOpen(true)}
-            size="small"
-            variant="outlined"
-            sx={{
-              color: "text.primary",
-              fontWeight: 600,
-              minWidth: "auto",
-              px: 2,
-              py: 0.5,
-              textTransform: "capitalize",
-              borderColor: "divider",
-              fontSize: "0.875rem",
-              "&:hover": {
-                bgcolor: "action.hover",
-                borderColor: "primary.main",
-              },
-            }}
-          >
-            {formattedDate}
-          </Button>
-
-          <Tooltip
-            title={
-              isCurrentMonth ? "Ya estás en el mes actual" : "Mes siguiente"
-            }
-          >
-            <span>
-              <IconButton
-                onClick={handleNextMonth}
-                disabled={isCurrentMonth}
-                size="small"
-                sx={{
-                  width: 32,
-                  height: 32,
-                  bgcolor: isCurrentMonth
-                    ? "action.disabledBackground"
-                    : "action.hover",
-                  "&:hover": { bgcolor: "action.selected" },
-                  "&.Mui-disabled": {
-                    bgcolor: "action.disabledBackground",
-                  },
-                }}
-              >
-                <ChevronRight fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
-        </Box>
-
-        <Popover
-          open={popoverOpen}
-          anchorEl={buttonRef.current}
-          onClose={() => setPopoverOpen(false)}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          transformOrigin={{ vertical: "top", horizontal: "center" }}
-          slotProps={{
-            paper: {
-              sx: {
-                borderRadius: 2,
-                boxShadow: theme.shadows[8],
-                overflow: "hidden",
-              },
-            },
-          }}
-        >
-          <Box sx={{ width: 360, maxHeight: 500, overflow: "auto" }}>
-            {years.map((year) => (
-              <Box
-                key={year}
-                sx={{
-                  borderBottom: year !== years[years.length - 1] ? 1 : 0,
-                  borderColor: "divider",
-                }}
-              >
-                <Box
-                  sx={{
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                    py: 1.5,
-                    px: 2,
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 1,
-                    backdropFilter: "blur(8px)",
-                  }}
-                >
-                  <Typography
-                    variant="subtitle2"
-                    fontWeight={700}
-                    sx={{
-                      color: "primary.main",
-                      textAlign: "center",
-                      fontSize: "0.95rem",
-                      letterSpacing: 0.5,
-                    }}
-                  >
-                    {year}
-                  </Typography>
-                </Box>
-
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(4, 1fr)",
-                    gap: 1,
-                    p: 2,
-                  }}
-                >
-                  {months.map((monthName, index) => {
-                    const disabled = isMonthDisabled(index, year);
-                    const selected = isMonthSelected(index, year);
-
-                    return (
-                      <Button
-                        key={`${year}-${index}`}
-                        onClick={() =>
-                          !disabled && handleMonthSelect(index, year)
-                        }
-                        disabled={disabled}
-                        size="small"
-                        sx={{
-                          minWidth: "auto",
-                          py: 1,
-                          px: 1.5,
-                          borderRadius: 1.5,
-                          fontSize: "0.813rem",
-                          fontWeight: selected ? 700 : 500,
-                          color: selected
-                            ? "primary.contrastText"
-                            : disabled
-                              ? "text.disabled"
-                              : "text.primary",
-                          bgcolor: selected ? "primary.main" : "transparent",
-                          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                          "&:hover": {
-                            bgcolor: selected
-                              ? "primary.dark"
-                              : alpha(theme.palette.primary.main, 0.12),
-                            transform: !disabled ? "translateY(-2px)" : "none",
-                            boxShadow:
-                              !disabled && !selected
-                                ? `0 4px 8px ${alpha(theme.palette.primary.main, 0.15)}`
-                                : selected
-                                  ? theme.shadows[4]
-                                  : "none",
-                          },
-                          "&.Mui-disabled": {
-                            bgcolor: "transparent",
-                            color: "text.disabled",
-                            opacity: 0.4,
-                          },
-                        }}
-                      >
-                        {monthName}
-                      </Button>
-                    );
-                  })}
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        </Popover>
-      </>
+      <Paper sx={{ p: 6, textAlign: "center", borderRadius: 2 }}>
+        <Typography color="error">Error al cargar datos</Typography>
+      </Paper>
     );
-  };
+  }
 
-  MonthSelector.displayName = "MonthSelector";
-
-  /* --------------- Skeleton Loader ---------------- */
-  const MatrixSkeleton = () => (
-    <Card elevation={0} sx={{ borderRadius: 2, width: "100%" }}>
-      <CardContent>
-        <Stack spacing={1.5}>
-          {[...Array(7)].map((_, i) => (
-            <Box key={i} sx={{ display: "flex", gap: 1 }}>
-              <Skeleton
-                variant="rectangular"
-                width={NAME_COLUMN_WIDTH}
-                height={ROW_HEIGHT}
-                sx={{ borderRadius: 1 }}
-              />
-              {[...Array(10)].map((_, j) => (
-                <Skeleton
-                  key={j}
-                  variant="rectangular"
-                  width={COLUMN_WIDTH}
-                  height={ROW_HEIGHT}
-                  sx={{ borderRadius: 1 }}
-                />
-              ))}
-            </Box>
-          ))}
-        </Stack>
-      </CardContent>
-    </Card>
-  );
-
-  /* ---------------- Empty State ---------------- */
-  const EmptyState = () => (
-    <Paper
-      sx={{
-        p: 6,
-        textAlign: "center",
-        borderRadius: 2,
-        bgcolor: alpha(theme.palette.primary.main, 0.02),
-      }}
-    >
-      <Typography variant="h6" color="text.secondary" gutterBottom>
-        No hay datos disponibles
-      </Typography>
-      <Typography variant="body2" color="text.disabled">
-        Selecciona otro mes o ajusta los filtros
-      </Typography>
-    </Paper>
-  );
-
-  /* ---------------- Render ---------------- */
-  return (
-    <>
-      {/* Controls Header */}
+  /* ── Empty ── */
+  if (showEmpty) {
+    return (
       <Paper
         sx={{
-          p: 2,
+          p: 6,
+          textAlign: "center",
           borderRadius: 2,
+          bgcolor: alpha(theme.palette.primary.main, 0.02),
+        }}
+      >
+        <Typography variant="h6" color="text.secondary" gutterBottom>
+          No hay datos disponibles
+        </Typography>
+        <Typography variant="body2" color="text.disabled">
+          Selecciona otro mes o ajusta los filtros
+        </Typography>
+      </Paper>
+    );
+  }
+
+  /* ── Main render ── */
+  return (
+    <>
+      {/* Controls header */}
+      <Paper
+        sx={{
+          p: { xs: 1.5, sm: 2 },
+          mb: 0,
+          borderRadius: 2,
+          borderBottomLeftRadius: 0,
+          borderBottomRightRadius: 0,
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
-          gap: 2,
+          //justifyContent: { xs: "center", sm: "space-between" },
+          gap: 1,
           flexWrap: "wrap",
           bgcolor: isDark
             ? alpha(theme.palette.background.paper, 0.6)
             : theme.palette.background.paper,
-          backdropFilter: "blur(10px)",
         }}
       >
-        {/* Legend */}
-        <Box>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {Object.entries(STATUS_CONFIG).map(([key, config]) => {
-              const mode = isDark ? config.dark : config.light;
+        {/* Desktop: inline legend chips */}
+        {!isMobile && (
+          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => {
+              const mode = isDark ? cfg.dark : cfg.light;
               return (
                 <Chip
                   key={key}
-                  label={`${config.text}: ${config.label}`}
                   size="small"
+                  label={`${cfg.text}: ${cfg.label}`}
                   sx={{
                     bgcolor: mode.bg,
                     color: mode.text,
                     border: `1px solid ${mode.border}`,
                     fontWeight: 500,
-                    fontSize: "0.75rem",
-                    "& .MuiChip-label": {
-                      px: 1.5,
-                    },
+                    fontSize: "0.72rem",
+                    "& .MuiChip-label": { px: 1.25 },
                   }}
                 />
               );
             })}
           </Stack>
-        </Box>
+        )}
 
-        {/* Selector del mes */}
+        {/* Mobile: compact legend trigger */}
+        {isMobile && (
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setLegendOpen(true)}
+            sx={{
+              fontSize: "0.75rem",
+              textTransform: "none",
+              borderRadius: 1.5,
+              px: 1,
+              py: 0.5,
+            }}
+          >
+            Ver leyenda
+          </Button>
+        )}
+
         <MonthSelector
           currentMonth={currentMonth}
           onMonthChange={onMonthChange}
+          error={error}
         />
       </Paper>
 
-      {/* Matrix Container */}
-      {/* Skeleton solo si NO hay cache */}
-      {showSkeleton ? (
-        <MatrixSkeleton />
-      ) : error ? (
-        <Paper sx={{ p: 6, textAlign: "center" }}>
-          <Typography>Error al cargar datos</Typography>
+      {/* Matrix */}
+      <Fade in key={fadeKey} timeout={400}>
+        <Paper
+          sx={{
+            borderRadius: 2,
+            borderTopLeftRadius: 0,
+            borderTopRightRadius: 0,
+            overflow: "hidden",
+            boxShadow: isDark ? 4 : 2,
+            bgcolor: isDark
+              ? alpha(theme.palette.background.paper, 0.8)
+              : theme.palette.background.paper,
+          }}
+        >
+          <VirtualMatrix
+            users={users}
+            visibleDates={visibleDates}
+            matrix={matrix}
+            isDark={isDark}
+            isMobile={isMobile}
+            onShiftInfo={handleShiftInfo}
+          />
         </Paper>
-      ) : showEmpty ? (
-        <EmptyState />
-      ) : (
-        <Fade in key={fadeKey} timeout={600}>
-          <Paper
-            sx={{
-              borderRadius: 2,
-              overflow: "hidden",
-              boxShadow: isDark ? 4 : 2,
-              bgcolor: isDark
-                ? alpha(theme.palette.background.paper, 0.8)
-                : theme.palette.background.paper,
-            }}
-          >
-            <Box
-              className="matrix-container"
-              sx={{
-                maxHeight: 650,
-                overflow: "auto",
-                position: "relative",
-                display: "grid",
-                gridTemplateColumns: `${NAME_COLUMN_WIDTH}px repeat(${visibleDates.length}, ${COLUMN_WIDTH}px)`,
-                gridTemplateRows: `${HEADER_HEIGHT}px repeat(${users.length}, ${ROW_HEIGHT}px)`,
-                transform: "translateZ(0)",
+      </Fade>
 
-                // Custom scrollbar
-                "&::-webkit-scrollbar": {
-                  width: 12,
-                  height: 12,
-                },
-                "&::-webkit-scrollbar-track": {
-                  bgcolor: isDark
-                    ? "rgba(255,255,255,0.05)"
-                    : "rgba(0,0,0,0.05)",
-                  borderRadius: 2,
-                },
-                "&::-webkit-scrollbar-thumb": {
-                  bgcolor: isDark
-                    ? "rgba(255,255,255,0.15)"
-                    : "rgba(0,0,0,0.15)",
-                  borderRadius: 2,
-                  border: `3px solid ${isDark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.8)"}`,
-                  "&:hover": {
-                    bgcolor: isDark
-                      ? "rgba(255,255,255,0.25)"
-                      : "rgba(0,0,0,0.25)",
-                  },
-                },
-                "&::-webkit-scrollbar-corner": {
-                  bgcolor: "transparent",
-                },
+      {/* Shift info panel (replaces Tooltip) */}
+      {/* <ShiftInfoPanel
+        info={shiftInfo}
+        onClose={handleCloseInfo}
+        isMobile={isMobile}
+        isDark={isDark}
+      /> */}
 
-                // Hover effects
-                ...Object.fromEntries(
-                  visibleDates.map((_, colIdx) => [
-                    `&:has(.col-${colIdx}:hover) .header-col-${colIdx}`,
-                    {
-                      bgcolor: alpha(theme.palette.primary.main, 0.15),
-                      boxShadow: `inset 0 -3px 0 ${theme.palette.primary.main}`,
-                    },
-                  ]),
-                ),
-
-                ...Object.fromEntries(
-                  users.map((_, rowIdx) => [
-                    `&:has(.row-${rowIdx}:hover) .user-row-${rowIdx}`,
-                    {
-                      color: "primary.main",
-                      fontWeight: 600,
-                    },
-                  ]),
-                ),
-              }}
-            >
-              {/* Corner Cell */}
-              <Box
-                sx={{
-                  position: "sticky",
-                  top: 0,
-                  left: 0,
-                  zIndex: 40,
-                  bgcolor: isDark
-                    ? alpha(theme.palette.background.paper, 0.95)
-                    : theme.palette.background.paper,
-                  borderRight: `2px solid ${theme.palette.divider}`,
-                  borderBottom: `2px solid ${theme.palette.divider}`,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  p: 1,
-                  "&::before": {
-                    content: '""',
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    zIndex: -1,
-                    background: `linear-gradient(to top right, transparent calc(50% - 1px), ${theme.palette.divider}, transparent calc(50% + 1px))`,
-                  },
-                }}
-              >
-                <Typography
-                  sx={{
-                    alignSelf: "flex-end",
-                    fontWeight: 700,
-                    fontSize: "0.8rem",
-                    color: "text.secondary",
-                  }}
-                >
-                  Día
-                </Typography>
-                <Typography
-                  sx={{
-                    alignSelf: "flex-start",
-                    fontWeight: 700,
-                    fontSize: "0.8rem",
-                    mb: 1,
-                    ml: 1,
-                    lineHeight: 0,
-                    color: "text.secondary",
-                  }}
-                >
-                  Usuario
-                </Typography>
-              </Box>
-
-              {/* Date Headers */}
-              {visibleDates.map((dateInfo, colIdx) => {
-                const isDay = dateInfo.type === "day";
-                const dateObj = isDay ? parseISO(dateInfo.key) : null;
-                const isWeekendDay = isDay && isWeekend(dateObj);
-                const dateStr = isDay
-                  ? format(dateObj, "dd MMM", { locale: es })
-                  : dateInfo.key;
-                const dayOfWeek = isDay
-                  ? format(dateObj, "EEE", { locale: es })
-                  : null;
-
-                return (
-                  <Box
-                    key={colIdx}
-                    className={`header-col-${colIdx}`}
-                    sx={{
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 20,
-                      bgcolor: isWeekendDay
-                        ? alpha(theme.palette.warning.main, 0.08)
-                        : alpha(theme.palette.primary.main, 0.08),
-                      color: theme.palette.text.primary,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRight: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}`,
-                      borderBottom: `2px solid ${theme.palette.divider}`,
-                      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                      cursor: "default",
-                    }}
-                  >
-                    {dayOfWeek && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontSize: "0.65rem",
-                          opacity: 0.7,
-                          textTransform: "capitalize",
-                          fontWeight: isWeekendDay ? 600 : 400,
-                          color: isWeekendDay ? "warning.main" : "inherit",
-                        }}
-                      >
-                        {dayOfWeek}
-                      </Typography>
-                    )}
-                    <Typography
-                      variant="body2"
-                      fontWeight={600}
-                      sx={{
-                        fontSize: "0.8rem",
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      {dateStr}
-                    </Typography>
-                  </Box>
-                );
-              })}
-
-              {/* User Rows */}
-              {users.map((user, rowIdx) => (
-                <React.Fragment key={user.id}>
-                  {/* User Name Cell */}
-                  <Box
-                    className={`user-row-${rowIdx}`}
-                    sx={{
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 10,
-                      bgcolor: isDark
-                        ? alpha(theme.palette.background.paper, 0.95)
-                        : theme.palette.background.paper,
-                      px: 2,
-                      display: "flex",
-                      alignItems: "center",
-                      borderRight: `2px solid ${theme.palette.divider}`,
-                      borderBottom: `1px solid ${isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}`,
-                      transition: "all 0.2s ease",
-                      cursor: "default",
-                    }}
-                  >
-                    <Tooltip
-                      title={user.fullName}
-                      placement="right"
-                      enterDelay={500}
-                    >
-                      <Typography
-                        variant="body2"
-                        fontWeight={500}
-                        noWrap
-                        sx={{
-                          fontSize: "0.875rem",
-                          transition: "all 0.2s ease",
-                        }}
-                      >
-                        {user.fullName}
-                      </Typography>
-                    </Tooltip>
-                  </Box>
-
-                  {/* Data Cells */}
-                  {visibleDates.map((dateInfo, colIdx) => {
-                    const shifts =
-                      dateInfo.type === "day"
-                        ? matrix[user.id]?.[dateInfo.key] || []
-                        : dateInfo.values.flatMap(
-                            (d) => matrix[user.id]?.[d] || [],
-                          );
-
-                    const isWeekendDay =
-                      dateInfo.type === "day" &&
-                      isWeekend(parseISO(dateInfo.key));
-
-                    return (
-                      <MatrixCell
-                        key={`${user.id}-${dateInfo.key}`}
-                        shifts={shifts}
-                        isDark={isDark}
-                        onClick={handleShiftClick}
-                        rowIdx={rowIdx}
-                        colIdx={colIdx}
-                        isWeekendDay={isWeekendDay}
-                      />
-                    );
-                  })}
-                </React.Fragment>
-              ))}
-            </Box>
-          </Paper>
-        </Fade>
+      {/* Mobile legend drawer */}
+      {isMobile && (
+        <MobileLegendDrawer
+          open={legendOpen}
+          onClose={() => setLegendOpen(false)}
+          isDark={isDark}
+        />
       )}
     </>
   );
