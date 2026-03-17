@@ -33,7 +33,6 @@ import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
-import { useThemeMode } from "../contexts/ThemeContext";
 import { usePermission } from "../utils/permissions";
 import ToggleStatusDialog from "../components/common/ToggleStatusDialog";
 
@@ -42,7 +41,6 @@ export default function Departments() {
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
-  const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -89,9 +87,7 @@ export default function Departments() {
         setDepartments(data.departments);
         setTotal(data.total);
       } catch (err) {
-        setError(
-          err?.message || "Error al cargar departamentos"
-        );
+        setError(err?.message || "Error al cargar departamentos");
       } finally {
         setLoading(false);
       }
@@ -128,7 +124,7 @@ export default function Departments() {
       setDepartments(data.departments);
       setTotal(data.total);
     } catch (err) {
-      setError(err?.message|| "Error al cargar departamentos");
+      setError(err?.message || "Error al cargar departamentos");
     } finally {
       setLoading(false);
     }
@@ -164,7 +160,7 @@ export default function Departments() {
         throw err;
       }
     },
-    [dialog.editDepartment, showSuccess, showError, refreshDepartments]
+    [dialog.editDepartment, showSuccess, showError, refreshDepartments],
   );
 
   const handleEdit = useCallback((department) => {
@@ -213,8 +209,7 @@ export default function Departments() {
       setDeleteState({ id: null, error: "" });
       await refreshDepartments();
     } catch (err) {
-      const errorMessage =
-        err?.message || "Error al eliminar el departamento";
+      const errorMessage = err?.message || "Error al eliminar el departamento";
 
       setDeleteState((prev) => ({ ...prev, error: errorMessage }));
       showError(errorMessage);
@@ -247,7 +242,7 @@ export default function Departments() {
         page: 0,
       }));
     },
-    [searchInput]
+    [searchInput],
   );
 
   const handleOpenDialog = useCallback(() => {
@@ -289,7 +284,7 @@ export default function Departments() {
         </Typography>
       </Breadcrumbs>
     ),
-    [isMobile]
+    [isMobile],
   );
 
   // Memorizar tabla
@@ -302,7 +297,7 @@ export default function Departments() {
         onDelete={handleDelete}
       />
     ),
-    [departments, handleEdit, handleDelete]
+    [departments, handleEdit, handleDelete],
   );
 
   // Estado de carga inicial
@@ -329,95 +324,103 @@ export default function Departments() {
   return (
     <Box sx={{ width: "100%" }}>
       {/* HEADER CARD - Título y Breadcrumbs */}
-      <Card
-        sx={{
-          borderRadius: isMobile ? 2 : 3,
-          mb: 2,
-          boxShadow: theme.shadows[1],
-          borderLeft: mode === "dark" ? "none" : "6px solid",
-          borderColor: "primary.main",
-        }}
-      >
-        <Box
+      {isMobile || (
+        <Card
           sx={{
-            px: isMobile ? 2 : 3,
-            py: isMobile ? 2.5 : 3,
+            borderRadius: 3,
+            mb: 2,
+            boxShadow: theme.shadows[1],
           }}
         >
-          {isMobile ? (
-            <Stack spacing={1.5}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
+          <Box
+            sx={{
+              px: isMobile ? 2 : 3,
+              py: isMobile ? 2.5 : 3,
+            }}
+          >
+            {isMobile ? (
+              <Stack spacing={1.5}>
                 <Box
                   sx={{
                     display: "flex",
-                    justifyContent: "center",
+                    justifyContent: "space-between",
                     alignItems: "center",
+                    gap: 1,
                   }}
                 >
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      Gestión de Departamentos
+                    </Typography>
+                  </Box>
+                  {can("departments:export") && (
+                    <DepartmentExportButtons departments={departments} />
+                  )}
+                </Box>
+              </Stack>
+            ) : (
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     Gestión de Departamentos
                   </Typography>
                 </Box>
-                {can("departments:export") && (
-                  <DepartmentExportButtons departments={departments} />
-                )}
-              </Box>
-            </Stack>
-          ) : (
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                  Gestión de Departamentos
-                </Typography>
-              </Box>
-              {breadcrumbItems}
-            </Stack>
-          )}
-        </Box>
-      </Card>
+                {breadcrumbItems}
+              </Stack>
+            )}
+          </Box>
+        </Card>
+      )}
 
       {/* TOOLBAR CARD - Búsqueda y Acciones */}
       <Card
         sx={{
-          borderRadius: isMobile ? 2 : 3,
+          borderRadius: 3,
           mb: 2,
           boxShadow: theme.shadows[1],
+          ...(isMobile && {
+            mx: -2,
+            borderRadius: 0,
+          }),
         }}
       >
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            pt: isMobile ? 0 : 4,
+            pt: isMobile ? 1.5 : 4,
             pb: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (
-            <Stack spacing={2}>
-              <Stack
-                direction={isMobile ? "column" : "row"}
-                spacing={1}
-                sx={{ width: "100%" }}
-              >
-                {can("departments:create") && (
-                  <FloatingAddButton onClick={handleOpenDialog} />
-                )}
-              </Stack>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              spacing={2}
+            >
               <DepartmentSearchBar
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
                 onSearch={handleSearch}
               />
+              <Box>
+                {can("departments:export") && (
+                  <DepartmentExportButtons departments={departments} />
+                )}
+              </Box>
+              {can("departments:create") && (
+                <FloatingAddButton onClick={handleOpenDialog} />
+              )}
             </Stack>
           ) : (
             <Stack

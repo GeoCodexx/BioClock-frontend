@@ -69,6 +69,7 @@ export default function ScheduleSearchBar({
         onChange={(e) => setSearchInput(e.target.value)}
         slotProps={{
           input: {
+            
             startAdornment: (
               <InputAdornment position="start">
                 <Search color="action" fontSize="small" />

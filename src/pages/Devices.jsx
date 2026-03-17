@@ -34,8 +34,8 @@ import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import useAuthStore from "../store/useAuthStore";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
-import { useThemeMode } from "../contexts/ThemeContext";
 import ToggleStatusDialog from "../components/common/ToggleStatusDialog";
+import { usePermission } from "../utils/permissions";
 
 const generateDeviceId = () => {
   const now = new Date();
@@ -45,11 +45,11 @@ const generateDeviceId = () => {
 };
 
 export default function Devices() {
+  const { can } = usePermission();
   const { user } = useAuthStore();
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
-  const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -341,61 +341,61 @@ export default function Devices() {
   return (
     <Box sx={{ width: "100%" }}>
       {/* HEADER CARD - Título y Breadcrumbs */}
-      <Card
-        sx={{
-          borderRadius: isMobile ? 2 : 3,
-          mb: 2,
-          boxShadow: theme.shadows[1],
-          borderLeft: mode === "dark" ? "none" : "6px solid",
-          borderColor: "primary.main",
-        }}
-      >
-        <Box
+      {isMobile || (
+        <Card
           sx={{
-            px: isMobile ? 2 : 3,
-            py: isMobile ? 2.5 : 3,
+            borderRadius: isMobile ? 2 : 3,
+            mb: 2,
+            boxShadow: theme.shadows[1],
           }}
         >
-          {isMobile ? (
-            <Stack spacing={1.5}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
+          <Box
+            sx={{
+              px: isMobile ? 2 : 3,
+              py: isMobile ? 2.5 : 3,
+            }}
+          >
+            {isMobile ? (
+              <Stack spacing={1.5}>
                 <Box
                   sx={{
                     display: "flex",
-                    justifyContent: "center",
+                    justifyContent: "space-between",
                     alignItems: "center",
+                    gap: 1,
                   }}
                 >
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      Gestión de Dispositivos
+                    </Typography>
+                  </Box>
+                  <DeviceExportButtons devices={devices} />
+                </Box>
+              </Stack>
+            ) : (
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     Gestión de Dispositivos
                   </Typography>
                 </Box>
-                <DeviceExportButtons devices={devices} />
-              </Box>
-            </Stack>
-          ) : (
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                  Gestión de Dispositivos
-                </Typography>
-              </Box>
-              {breadcrumbItems}
-            </Stack>
-          )}
-        </Box>
-      </Card>
+                {breadcrumbItems}
+              </Stack>
+            )}
+          </Box>
+        </Card>
+      )}
 
       {/* TOOLBAR CARD - Búsqueda y Acciones */}
       <Card
@@ -403,29 +403,39 @@ export default function Devices() {
           borderRadius: isMobile ? 2 : 3,
           mb: 2,
           boxShadow: theme.shadows[1],
+          ...(isMobile && {
+            mx: -2,
+            borderRadius: 0,
+          }),
         }}
       >
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            pt: isMobile ? 0 : 4,
+            pt: isMobile ? 1.5 : 4,
             pb: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (
-            <Stack spacing={2}>
-              <Stack
-                direction={isMobile ? "column" : "row"}
-                spacing={1}
-                sx={{ width: "100%" }}
-              >
-                <FloatingAddButton onClick={handleOpenDialog} />
-              </Stack>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              spacing={2}
+            >
               <DeviceSearchBar
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
                 onSearch={handleSearch}
               />
+              <Box>
+                {can("devices:export") && (
+                  <DeviceExportButtons devices={devices} />
+                )}
+              </Box>
+              {can("devices:create") && (
+                <FloatingAddButton onClick={handleOpenDialog} />
+              )}
             </Stack>
           ) : (
             <Stack
@@ -450,7 +460,9 @@ export default function Devices() {
                 >
                   Nuevo
                 </Button>
-                <DeviceExportButtons devices={devices} />
+                {can("devices:export") && (
+                  <DeviceExportButtons devices={devices} />
+                )}
               </Stack>
             </Stack>
           )}

@@ -13,7 +13,7 @@ import {
 import {
   PictureAsPdf as PictureAsPdfIcon,
   Description as DescriptionIcon,
-  FileDownload as FileDownloadIcon,
+  FileDownloadRounded as FileDownloadIcon,
 } from "@mui/icons-material";
 import { useState } from "react";
 import ExcelJS from "exceljs";
@@ -397,7 +397,7 @@ export default function ScheduleExportButtons({ schedules }) {
           minute: "2-digit",
         })}`,
         margins,
-        32
+        32,
       );
       doc.text(`Total de horarios: ${schedules.length}`, margins, 37);
 
@@ -474,7 +474,7 @@ export default function ScheduleExportButtons({ schedules }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(46, 125, 50);
               doc.setFontSize(8);
@@ -483,7 +483,7 @@ export default function ScheduleExportButtons({ schedules }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             } else if (status === "Inactivo") {
               doc.setFillColor(255, 235, 238);
@@ -492,7 +492,7 @@ export default function ScheduleExportButtons({ schedules }) {
                 data.cell.y,
                 data.cell.width,
                 data.cell.height,
-                "F"
+                "F",
               );
               doc.setTextColor(211, 47, 47);
               doc.setFontSize(8);
@@ -501,7 +501,7 @@ export default function ScheduleExportButtons({ schedules }) {
                 status,
                 data.cell.x + data.cell.width / 2,
                 data.cell.y + data.cell.height / 2,
-                { align: "center", baseline: "middle" }
+                { align: "center", baseline: "middle" },
               );
             }
           }
@@ -524,7 +524,7 @@ export default function ScheduleExportButtons({ schedules }) {
           margins,
           doc.internal.pageSize.getHeight() - 15,
           pageWidth - margins,
-          doc.internal.pageSize.getHeight() - 15
+          doc.internal.pageSize.getHeight() - 15,
         );
 
         // Número de página
@@ -532,7 +532,7 @@ export default function ScheduleExportButtons({ schedules }) {
           `Página ${i} de ${pageCount}`,
           pageWidth / 2,
           doc.internal.pageSize.getHeight() - 10,
-          { align: "center" }
+          { align: "center" },
         );
       }
 
@@ -560,6 +560,8 @@ export default function ScheduleExportButtons({ schedules }) {
               onClick={handleClick}
               disabled={isDisabled}
               sx={{
+                borderRadius: 2,
+                color: theme.palette.text.secondary,
                 bgcolor: theme.palette.background.paper,
                 "&:hover": {
                   bgcolor: theme.palette.action.hover,

@@ -362,6 +362,8 @@ export default function DeviceExportButtons({ devices }) {
               onClick={handleClick}
               disabled={isDisabled}
               sx={{
+                borderRadius: 2,
+                color: theme.palette.text.secondary,
                 bgcolor: theme.palette.background.paper,
                 "&:hover": {
                   bgcolor: theme.palette.action.hover,

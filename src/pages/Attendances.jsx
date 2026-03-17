@@ -434,90 +434,97 @@ export default function Attendances() {
   return (
     <Box sx={{ width: "100%" }}>
       {/* HEADER CARD - Título y Breadcrumbs */}
-      {/* <Card
-        sx={{
-          borderRadius: isMobile ? 2 : 3,
-          mb: 2,
-          boxShadow: theme.shadows[1],
-          borderLeft: mode === "dark" ? "none" : "6px solid",
-          borderColor: "primary.main",
-        }}
-      >
-        <Box
+      {isMobile || (
+        <Card
           sx={{
-            px: isMobile ? 2 : 3,
-            py: isMobile ? 2.5 : 3,
+            //borderRadius: isMobile ? 2 : 3,
+            borderRadius: 3,
+            mb: 2,
+            boxShadow: theme.shadows[1],
+            /*borderLeft: mode === "dark" ? "none" : "6px solid",
+          borderColor: "primary.main",*/
           }}
         >
-          {isMobile ? (
-            <Stack spacing={1.5}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
+          <Box
+            sx={{
+              px: isMobile ? 2 : 3,
+              py: isMobile ? 2.5 : 3,
+            }}
+          >
+            {isMobile ? (
+              <Stack spacing={1.5}>
                 <Box
                   sx={{
                     display: "flex",
-                    justifyContent: "center",
+                    justifyContent: "space-between",
                     alignItems: "center",
+                    gap: 1,
                   }}
                 >
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      Gestión de Asistencias
+                    </Typography>
+                  </Box>
+                  <Tooltip
+                    title={
+                      !attendances || attendances.length === 0
+                        ? "No hay asistencias para filtrar"
+                        : openFilters
+                          ? "Ocultar filtros"
+                          : "Mostrar filtros"
+                    }
+                  >
+                    <span>
+                      <IconButton
+                        onClick={() => setOpenFilters((prev) => !prev)}
+                        //disabled={!attendances || attendances.length === 0}
+                        sx={{
+                          bgcolor: theme.palette.background.paper,
+                          "&:hover": {
+                            bgcolor: theme.palette.action.hover,
+                          },
+                          "&:disabled": {
+                            bgcolor: theme.palette.action.disabledBackground,
+                          },
+                        }}
+                      >
+                        {openFilters ? (
+                          <FilterListOffIcon />
+                        ) : (
+                          <FilterListIcon />
+                        )}
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                  {can("attendances:export") && (
+                    <AttendanceExportButtons attendances={attendances} />
+                  )}
+                </Box>
+              </Stack>
+            ) : (
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     Gestión de Asistencias
                   </Typography>
                 </Box>
-                <Tooltip
-                  title={
-                    !attendances || attendances.length === 0
-                      ? "No hay asistencias para filtrar"
-                      : openFilters
-                        ? "Ocultar filtros"
-                        : "Mostrar filtros"
-                  }
-                >
-                  <span>
-                    <IconButton
-                      onClick={() => setOpenFilters((prev) => !prev)}
-                      //disabled={!attendances || attendances.length === 0}
-                      sx={{
-                        bgcolor: theme.palette.background.paper,
-                        "&:hover": {
-                          bgcolor: theme.palette.action.hover,
-                        },
-                        "&:disabled": {
-                          bgcolor: theme.palette.action.disabledBackground,
-                        },
-                      }}
-                    >
-                      {openFilters ? <FilterListOffIcon /> : <FilterListIcon />}
-                    </IconButton>
-                  </span>
-                </Tooltip>
-                {can("attendances:export") && (
-                  <AttendanceExportButtons attendances={attendances} />
-                )}
-              </Box>
-            </Stack>
-          ) : (
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                  Gestión de Asistencias
-                </Typography>
-              </Box>
-              {breadcrumbItems}
-            </Stack>
-          )}
-        </Box>
-      </Card> */}
+                {breadcrumbItems}
+              </Stack>
+            )}
+          </Box>
+        </Card>
+      )}
 
       {/* TOOLBAR CARD - Búsqueda y Acciones */}
       <Card

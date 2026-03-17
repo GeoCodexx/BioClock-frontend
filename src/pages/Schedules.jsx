@@ -33,13 +33,11 @@ import FloatingAddButton from "../components/common/FloatingAddButton";
 import useSnackbarStore from "../store/useSnackbarStore";
 import LoadingOverlay from "../components/common/LoadingOverlay";
 import { SafeTablePagination } from "../components/common/SafeTablePagination";
-import { useThemeMode } from "../contexts/ThemeContext";
 import { usePermission } from "../utils/permissions";
 import ToggleStatusDialog from "../components/common/ToggleStatusDialog";
 
 export default function Schedules() {
   const { can } = usePermission();
-  const { themeMode } = useThemeMode();
   const { showSuccess, showError } = useSnackbarStore();
 
   const theme = useTheme();
@@ -320,22 +318,80 @@ export default function Schedules() {
       </Box>
     );
   }
-  console.log(themeMode);
   return (
     <Box sx={{ width: "100%" }}>
       {/* HEADER CARD - Título y Breadcrumbs */}
+      {isMobile || (
+        <Card
+          sx={{
+            borderRadius: 3,
+            mb: 2,
+            boxShadow: theme.shadows[1],
+            /*position: "sticky",
+          top: "57px",
+          zIndex: 10,*/
+            //borderLeft: themeMode === "dark" ? "none" : "6px solid",
+            //borderColor: "primary.main",
+          }}
+        >
+          <Box
+            sx={{
+              px: isMobile ? 2 : 3,
+              py: isMobile ? 1 : 3,
+            }}
+          >
+            {isMobile ? (
+              <Stack spacing={1.5}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      Gestión de Horarios
+                    </Typography>
+                  </Box>
+                  {can("schedules:export") && (
+                    <ScheduleExportButtons schedules={schedules} />
+                  )}
+                </Box>
+              </Stack>
+            ) : (
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                    Gestión de Horarios
+                  </Typography>
+                </Box>
+                {breadcrumbItems}
+              </Stack>
+            )}
+          </Box>
+        </Card>
+      )}
+
+      {/* TOOLBAR CARD - Búsqueda y Acciones */}
       <Card
         sx={{
           borderRadius: 3,
           mb: 2,
           boxShadow: theme.shadows[1],
-          position: "sticky",
-          top: "57px",
-          zIndex: 10,
-          //borderLeft: themeMode === "dark" ? "none" : "6px solid",
-          //borderColor: "primary.main",
           ...(isMobile && {
-            mx: -2, // compensa padding del Container (16px)
+            mx: -2,
             borderRadius: 0,
           }),
         }}
@@ -343,83 +399,30 @@ export default function Schedules() {
         <Box
           sx={{
             px: isMobile ? 2 : 3,
-            py: isMobile ? 1 : 3,
-          }}
-        >
-          {isMobile ? (
-            <Stack spacing={1.5}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 1,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    Gestión de Horarios
-                  </Typography>
-                </Box>
-                {can("schedules:export") && (
-                  <ScheduleExportButtons schedules={schedules} />
-                )}
-              </Box>
-            </Stack>
-          ) : (
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                  Gestión de Horarios
-                </Typography>
-              </Box>
-              {breadcrumbItems}
-            </Stack>
-          )}
-        </Box>
-      </Card>
-
-      {/* TOOLBAR CARD - Búsqueda y Acciones */}
-      <Card
-        sx={{
-          borderRadius: isMobile ? 2 : 3,
-          mb: 2,
-          boxShadow: theme.shadows[1],
-        }}
-      >
-        <Box
-          sx={{
-            px: isMobile ? 2 : 3,
-            pt: isMobile ? 0 : 4,
+            pt: isMobile ? 1.5 : 4,
             pb: isMobile ? 1.5 : 4,
           }}
         >
           {isTablet ? (
-            <Stack spacing={2}>
-              <Stack
-                direction={isMobile ? "column" : "row"}
-                spacing={1}
-                sx={{ width: "100%" }}
-              >
-                {can("schedules:create") && (
-                  <FloatingAddButton onClick={handleOpenDialog} />
-                )}
-              </Stack>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              spacing={2}
+            >
               <ScheduleSearchBar
                 searchInput={searchInput}
                 setSearchInput={setSearchInput}
                 onSearch={handleSearch}
               />
+              <Box>
+                {can("schedules:export") && (
+                  <ScheduleExportButtons schedules={schedules} />
+                )}
+              </Box>
+              {can("schedules:create") && (
+                <FloatingAddButton onClick={handleOpenDialog} />
+              )}
             </Stack>
           ) : (
             <Stack
