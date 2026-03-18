@@ -37,11 +37,9 @@ import { Link as RouterLink } from "react-router-dom";
 import { getMyAttendance } from "../services/reportService";
 import AttendanceWeekView from "../components/MyAttendace/AttendanceWeekView";
 import AttendanceMonthCalendar from "../components/MyAttendace/AttendanceMonthCalendar";
-import { useThemeMode } from "../contexts/ThemeContext";
 
 const MyAttendances = () => {
   const theme = useTheme();
-  const { mode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -306,8 +304,6 @@ const MyAttendances = () => {
         sx={{
           borderRadius: 3,
           mb: 3,
-          borderLeft: mode === "dark" ? "none" : "6px solid",
-          borderColor: "primary.main",
         }}
       >
         <CardContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>

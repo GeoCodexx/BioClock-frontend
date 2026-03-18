@@ -562,11 +562,11 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
 
   const ShiftCard = ({ shift }) => {
     if (!shift) return null;
-
+    console.log(shift);
     const config = statusConfig[shift.shiftStatus];
     const hasCheckIn = shift.checkIn !== null;
     const hasCheckOut = shift.checkOut !== null;
-
+    console.log(config);
     return (
       <Paper
         elevation={0}
@@ -591,7 +591,9 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
             </Typography>
           </Stack>
           <Chip
-            icon={React.createElement(config.Icon, { sx: { fontSize: 18 } })}
+            icon={React.createElement(config.Icon, {
+              sx: { fontSize: 18 },
+            })}
             label={config.label}
             size="small"
             sx={{
@@ -599,6 +601,10 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
               color: config.colorHex,
               border: `1px solid ${config.colorHex}`,
               fontWeight: 600,
+              // Apuntamos directamente al icono interno
+              "& .MuiChip-icon": {
+                color: config.colorHex,
+              },
             }}
           />
         </Stack>
@@ -819,7 +825,7 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
                 Resumen del Día
               </Typography>
               <Grid container spacing={2}>
-                <Grid xs={6}>
+                <Grid size={6}>
                   <Typography variant="body2" color="text.secondary">
                     Total de turnos:
                   </Typography>
@@ -827,7 +833,7 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
                     2 turnos
                   </Typography>
                 </Grid>
-                <Grid xs={6}>
+                <Grid size={6}>
                   <Typography variant="body2" color="text.secondary">
                     Horas totales:
                   </Typography>

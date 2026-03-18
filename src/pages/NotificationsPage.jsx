@@ -19,7 +19,6 @@ import {
   Fade,
   ToggleButtonGroup,
   ToggleButton,
-  Stack,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 
@@ -47,6 +46,7 @@ const MODULE_META = {
   justifications: { label: "Justificaciones", color: "#0ea5e9" },
   usuarios: { label: "Usuarios", color: "#3b82f6" },
   //attendances: { label: "Usuarios", color: "#10b981" },
+  "my-attendance": { label: "Mi Asistencia", color: "#10b981" },
   schedules: { label: "Horarios", color: "#f59e0b" },
   attendances: { label: "Asistencias", color: "#8b5cf6" },
   devices: { label: "Dispositivos", color: "#ef4444" },
@@ -516,8 +516,10 @@ export default function NotificationsPage() {
           bgcolor: "background.paper",
           borderBottom: `1px solid ${theme.palette.divider}`,
           position: "sticky",
-          top: 57,
+          top: 0,
           zIndex: 10,
+          mx: { xs: -2, md: 3 },
+          borderRadius: { xs: 0, md: 2 },
           backdropFilter: "blur(12px)",
           backgroundColor: alpha(theme.palette.background.paper, 0.92),
         }}
@@ -547,7 +549,12 @@ export default function NotificationsPage() {
                 </IconButton>
               </Tooltip>
 
-              <Box display="flex" alignItems="center" gap={1}>
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={1}
+                sx={{ py: { xs: 0, sm: 3 } }}
+              >
                 <NotificationsNoneIcon
                   sx={{ color: "primary.main", fontSize: 22 }}
                 />

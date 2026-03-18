@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Drawer,
   Box,
@@ -35,6 +35,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { format, parse, parseISO } from "date-fns";
 import useSnackbarStore from "../../store/useSnackbarStore";
 import { es } from "date-fns/locale";
+import useAuthStore from "../../store/useAuthStore";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -464,6 +465,17 @@ export default function JustificationDrawer({
 
   const isValid = form.userId && form.scheduleId && form.date && form.reason;
 
+  const user = useAuthStore((state) => state.user);
+  const canSelectUser = ["Administrador", "RRHH"].includes(user?.role);
+
+  const filteredSchedules = useMemo(() => {
+    if (canSelectUser) return schedules;
+
+    const userScheduleIds = user?.schedules?.map((sch) => sch._id) || [];
+
+    return schedules.filter((sch) => userScheduleIds.includes(sch._id));
+  }, [canSelectUser, schedules, user]);
+
   // Populate form when editing
   useEffect(() => {
     if (!open) {
@@ -493,6 +505,24 @@ export default function JustificationDrawer({
       [name]: value,
     }));
   };
+
+  // Sincronizar userId si tiene permiso para seleccionar ususarios
+  useEffect(() => {
+    if (!canSelectUser && user?._id) {
+      handleChange("userId", user.id);
+    }
+  }, [canSelectUser, user, handleChange]);
+
+  // Auto-asignar horario si solo hay uno
+  useEffect(() => {
+  if (!canSelectUser && filteredSchedules.length === 1) {
+    const onlyScheduleId = filteredSchedules[0]._id;
+
+    if (form.scheduleId !== onlyScheduleId) {
+      handleChange("scheduleId", onlyScheduleId);
+    }
+  }
+}, [filteredSchedules, canSelectUser, form.scheduleId]);
 
   const handleAddFiles = (incoming) =>
     setNewFiles((prev) => [...prev, ...incoming]);
@@ -642,8 +672,8 @@ export default function JustificationDrawer({
         {/* CREATE / EDIT FORM */}
         {(mode === "create" || mode === "edit") && (
           <Stack spacing={2.5}>
-            {/* User — only on create */}
-            {mode === "create" && (
+            {/* USER FIELD */}
+            {mode === "create" && canSelectUser ? (
               <Autocomplete
                 options={users || []}
                 getOptionLabel={(option) =>
@@ -656,15 +686,16 @@ export default function JustificationDrawer({
                 isOptionEqualToValue={(option, value) =>
                   option._id === value._id
                 }
-                // 👇 1. Deshabilita la opción lógicamente
                 getOptionDisabled={(option) => option.status === "inactive"}
-                // 👇 2. Renderiza la opción con feedback visual
                 renderOption={(props, option) => {
+                  const { key, ...otherProps } = props;
                   const isInactive = option.status === "inactive";
+
                   return (
                     <Box
                       component="li"
-                      {...props}
+                      key={key}
+                      {...otherProps}
                       sx={
                         isInactive
                           ? (theme) => ({
@@ -698,9 +729,17 @@ export default function JustificationDrawer({
                   />
                 )}
               />
-            )}
-
-            {mode === "edit" && (
+            ) : mode === "create" ? (
+              // Usuario sin permisos: campo oculto pero con valor asignado
+              <TextField
+                label="Usuario"
+                size="small"
+                value={`${user?.name ?? ""} ${user?.firstSurname ?? ""}`}
+                disabled
+                fullWidth
+              />
+            ) : (
+              // Modo edición
               <TextField
                 label="Usuario"
                 size="small"
@@ -724,12 +763,13 @@ export default function JustificationDrawer({
               required
               disabled={mode === "edit"}
             >
-              {schedules.map((s) => (
+              {filteredSchedules.map((s) => (
                 <MenuItem
                   key={s._id}
                   value={s._id}
                   disabled={
-                    s.status === "inactive" && !schedules?.includes(s._id)
+                    s.status === "inactive" &&
+                    !filteredSchedules?.includes(s._id)
                   }
                   sx={s.status === "inactive" ? inactiveMenuItemSx : undefined}
                 >
@@ -920,9 +960,6 @@ export default function JustificationDrawer({
       )}
     </Box>
   );
-
-  console.log("form.userId:", form.userId);
-  console.log("users:", users);
 
   return (
     <Drawer
