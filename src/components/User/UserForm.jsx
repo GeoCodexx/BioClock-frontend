@@ -79,7 +79,7 @@ const UserForm = ({
   const [dataError, setDataError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Normalizar scheduleIds y deviceIds: si vienen como objetos, extraer solo los IDs
+  // Normalizar scheduleIds, deviceIds y supervisedDepartments: si vienen como objetos, extraer solo los IDs
   const normalizeIds = (items) => {
     if (!items || items.length === 0) return [];
     if (typeof items[0] === "object" && items[0]._id) {
@@ -114,6 +114,7 @@ const UserForm = ({
       departmentId: "",
       scheduleIds: [],
       deviceIds: [],
+      supervisedDepartments: [],
     },
   });
 
@@ -130,11 +131,6 @@ const UserForm = ({
             getSchedules(),
             getDevices(),
           ]);
-
-        // setRoles(rolesData.filter((r) => r.status === "active"));
-        // setDepartments(deptsData.filter((d) => d.status === "active"));
-        // setSchedules(schedulesData.filter((s) => s.status === "active"));
-        // setDevices(devicesData.filter((d) => d.status === "active"));
         setRoles(rolesData);
         setDepartments(deptsData);
         setSchedules(schedulesData);
@@ -176,6 +172,9 @@ const UserForm = ({
         departmentId: normalizeId(defaultValues.departmentId),
         scheduleIds: normalizeIds(defaultValues.scheduleIds),
         deviceIds: normalizeIds(defaultValues.deviceIds),
+        supervisedDepartments: normalizeIds(
+          defaultValues.supervisedDepartments,
+        ),
       });
     }
   }, [
@@ -951,6 +950,102 @@ const UserForm = ({
                         {dev.location && (
                           <Typography variant="caption" color="text.secondary">
                             {dev.location}
+                          </Typography>
+                        )}
+                      </Stack>
+                    </MenuItem>
+                  ))
+                )}
+              </TextField>
+            )}
+          />
+        </Grid>
+
+        {/* Departamentos a supervisar */}
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Controller
+            name="supervisedDepartments"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                select
+                label="Departamentos a supervisar"
+                fullWidth
+                size="small"
+                disabled={disabled || loadingDevices}
+                slotProps={{
+                  select: {
+                    multiple: true,
+                    renderValue: (selected) => (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {selected.length === 0 ? (
+                          <Typography variant="body2" color="text.secondary">
+                            Ningún departamento seleccionado
+                          </Typography>
+                        ) : (
+                          selected.map((id) => {
+                            const department = departments.find((d) => d._id === id);
+                            return (
+                              <Chip
+                                key={id}
+                                label={department?.name || id}
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                              />
+                            );
+                          })
+                        )}
+                      </Box>
+                    ),
+                  },
+                  input: {
+                    startAdornment: loadingDepartments ? (
+                      <CircularProgress size={20} sx={{ mr: 1 }} />
+                    ) : null,
+                  },
+                }}
+              >
+                {departments.length === 0 && !loadingDepartments ? (
+                  <MenuItem disabled>
+                    <Typography variant="body2" color="text.secondary">
+                      No hay departamentos disponibles
+                    </Typography>
+                  </MenuItem>
+                ) : (
+                  departments.map((dep) => (
+                    <MenuItem
+                      key={dep._id}
+                      value={dep._id}
+                      disabled={
+                        dep.status === "inactive" &&
+                        !field.value?.includes(dep._id)
+                      }
+                      sx={
+                        dep.status === "inactive"
+                          ? inactiveMenuItemSx
+                          : undefined
+                      }
+                    >
+                      <Stack spacing={0.5} width="100%">
+                        <Stack direction="row" alignItems="center">
+                          <Typography
+                            variant="body2"
+                            fontWeight="medium"
+                            color={
+                              dep.status === "inactive"
+                                ? "text.secondary"
+                                : "text.primary"
+                            }
+                          >
+                            {dep.name}
+                          </Typography>
+                          {dep.status === "inactive" && <InactiveBadge />}
+                        </Stack>
+                        {dep.description && (
+                          <Typography variant="caption" color="text.secondary">
+                            {dep.description}
                           </Typography>
                         )}
                       </Stack>
