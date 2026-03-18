@@ -419,7 +419,7 @@ export default function Fingerprints() {
       >
         <CircularProgress size={48} />
         <Typography variant="body1" color="text.secondary">
-          Cargando huellas dactilares...
+          Cargando...
         </Typography>
       </Box>
     );

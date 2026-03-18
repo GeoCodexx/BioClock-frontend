@@ -315,7 +315,7 @@ export default function Departments() {
       >
         <CircularProgress size={48} />
         <Typography variant="body1" color="text.secondary">
-          Cargando departamentos...
+          Cargando...
         </Typography>
       </Box>
     );

@@ -323,7 +323,7 @@ export default function Permissions() {
       >
         <CircularProgress size={48} />
         <Typography variant="body1" color="text.secondary">
-          Cargando permisos...
+          Cargando...
         </Typography>
       </Box>
     );

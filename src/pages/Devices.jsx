@@ -332,7 +332,7 @@ export default function Devices() {
       >
         <CircularProgress size={48} />
         <Typography variant="body1" color="text.secondary">
-          Cargando dispositivos...
+          Cargando...
         </Typography>
       </Box>
     );

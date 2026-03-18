@@ -425,7 +425,7 @@ export default function Attendances() {
       >
         <CircularProgress size={48} />
         <Typography variant="body1" color="text.secondary">
-          Cargando asistencias...
+          Cargando...
         </Typography>
       </Box>
     );

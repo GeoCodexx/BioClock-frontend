@@ -13,7 +13,7 @@ import { useThemeMode } from "../../contexts/ThemeContext";
 
 const AttendanceChart = ({ weeklyAttendances, isMobile }) => {
   const theme = useTheme();
-  const { themeMode } = useThemeMode(); // 'light' o 'dark'
+  const { resolvedMode } = useThemeMode(); // 'light' o 'dark'
   const onTimeStatusData =
     Array.isArray(weeklyAttendances) && weeklyAttendances.length === 7
       ? weeklyAttendances.map((c) => c.on_time)
@@ -58,7 +58,7 @@ const AttendanceChart = ({ weeklyAttendances, isMobile }) => {
     ],
     options: {
       theme: {
-        mode: themeMode,
+        mode: resolvedMode,
       },
       chart: {
         type: "area",

@@ -313,7 +313,7 @@ export default function Schedules() {
       >
         <CircularProgress size={48} />
         <Typography variant="body1" color="text.secondary">
-          Cargando horarios...
+          Cargando...
         </Typography>
       </Box>
     );

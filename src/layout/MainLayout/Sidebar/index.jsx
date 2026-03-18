@@ -10,7 +10,6 @@ import {
   useTheme,
   Tooltip,
   Collapse,
-  IconButton,
   useMediaQuery,
 } from "@mui/material";
 
@@ -19,7 +18,6 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import BusinessIcon from "@mui/icons-material/Business";
-//import EventNoteIcon from "@mui/icons-material/EventNote";
 import FingerprintIcon from "@mui/icons-material/Fingerprint";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import DevicesIcon from "@mui/icons-material/Devices";
@@ -28,14 +26,13 @@ import {
   CalendarMonth,
   ExpandLess,
   ExpandMore,
-  //ReadMore,
   Schedule,
 } from "@mui/icons-material";
-//import CloseIcon from "@mui/icons-material/Close";
+
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-//import LogoBitel from "../../../assets/images/bitel_logo.png";
+
 import { usePermission } from "../../../utils/permissions";
-//import { useLogoContext } from "../../../contexts/LogoContext";
+import { preload } from "../../../App";
 
 const drawerWidth = 260;
 const collapsedWidth = 80;
@@ -46,30 +43,35 @@ const menuItems = [
     path: "/dashboard",
     permission: "dashboard:read",
     icon: <DashboardIcon />,
+    preload: "dashboard",
   },
   {
     text: "Horarios",
     path: "/schedules",
     permission: "schedules:read",
     icon: <Schedule />,
+    preload: "schedules",
   },
   {
     text: "Departamentos",
     path: "/departments",
     permission: "departments:read",
     icon: <BusinessIcon />,
+    preload: "departments",
   },
   {
     text: "Dispositivos",
     path: "/devices",
     permission: "devices:read",
     icon: <DevicesIcon />,
+    preload: "devices",
   },
   {
     text: "Huellas Dactilares",
     path: "/fingerprints",
     permission: "fingerprints:read",
     icon: <FingerprintIcon />,
+    preload: "fingerprints",
   },
   // {
   //   text: "Asistencias",
@@ -82,6 +84,7 @@ const menuItems = [
     path: "/myattendance",
     permission: "my-attendance:read",
     icon: <CalendarMonth />,
+    preload: "myAttendance",
   },
   {
     text: "Gestión de Usuarios",
@@ -93,18 +96,21 @@ const menuItems = [
         path: "/users/permissions",
         permission: "permissions:read",
         icon: <VpnKeyIcon />,
+        preload: "permissions",
       },
       {
         text: "Roles",
         path: "/users/roles",
         permission: "roles:read",
         icon: <VpnKeyIcon />,
+        preload: "roles",
       },
       {
         text: "Usuarios",
         path: "/users",
         permission: "users:read",
         icon: <PeopleIcon />,
+        preload: "users",
       },
     ],
   },
@@ -122,18 +128,21 @@ const menuItems = [
         path: "/general-report",
         permission: "general-report:read",
         icon: <ChevronRightIcon />,
+        preload: "generalReport",
       },
       {
         text: "Historial de Asistencias",
         path: "/attendances",
         permission: "attendances:read",
         icon: <ChevronRightIcon />,
+        preload: "attendances",
       },
       {
         text: "Justificaciones",
         path: "/justifications",
         permission: "justifications:read",
         icon: <ChevronRightIcon />,
+        preload: "justifications",
       },
     ],
   },
@@ -165,6 +174,12 @@ const Sidebar = ({ isOpen, mobileOpen, setMobileOpen }) => {
     if (isMobile) {
       setMobileOpen(false);
     }
+  };
+
+  const handleMouseEnter = (item) => {
+    // Dispara el import() del chunk correspondiente ANTES de que el usuario haga clic.
+    // React ya habrá descargado el JS cuando la ruta se renderice → 0 delay visible.
+    preload[item.preload]?.();
   };
 
   const canRenderItem = (item) => {
@@ -205,6 +220,7 @@ const Sidebar = ({ isOpen, mobileOpen, setMobileOpen }) => {
               <ListItemButton
                 component={item.path ? Link : "button"}
                 to={item.path}
+                onMouseEnter={handleMouseEnter(item)} // Para precargar el ComponentPage antes que haga click
                 onClick={
                   item.children
                     ? () => handleToggle(item.text)
@@ -270,48 +286,9 @@ const Sidebar = ({ isOpen, mobileOpen, setMobileOpen }) => {
     });
 
   const drawerContent = (
-    <>
-      {/* <Box
-        sx={{
-          px: 2.5,
-          pt: isOpen ? 0.3 : 1.7,
-          pb: 1,
-          display: "flex",
-          justifyContent: isOpen || isMobile ? "space-between" : "center",
-          alignItems: "center",
-        }}
-      >
-        {isOpen && isMobile && (
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {logoUrl ? (
-              <Box
-                component="img"
-                src={logoUrl}
-                alt="Logo"
-                sx={{ height: 40, objectFit: "contain" }}
-              />
-            ) : (
-              <Typography variant="h6" fontWeight="bold">
-                BioClock Pro
-              </Typography>
-            )}
-          </Box>
-        )}
-
-        {isMobile && (
-          <IconButton
-            color="inherit"
-            aria-label="close drawer"
-            onClick={() => setMobileOpen(false)}
-          >
-            <CloseIcon />
-          </IconButton>
-        )}
-      </Box> */}
-      <List component="nav" sx={{ px: 2, pt: 2 }}>
-        {renderMenuItems(menuItems)}
-      </List>
-    </>
+    <List component="nav" sx={{ px: 2, pt: 2 }}>
+      {renderMenuItems(menuItems)}
+    </List>
   );
 
   return (

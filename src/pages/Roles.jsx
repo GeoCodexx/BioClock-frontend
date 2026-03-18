@@ -315,7 +315,7 @@ export default function Roles() {
       >
         <CircularProgress size={48} />
         <Typography variant="body1" color="text.secondary">
-          Cargando rols...
+          Cargando...
         </Typography>
       </Box>
     );
