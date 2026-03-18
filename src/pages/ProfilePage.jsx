@@ -11,7 +11,7 @@ import {
   Alert,
   CircularProgress,
   InputAdornment,
-  useMediaQuery,
+  //useMediaQuery,
   Paper,
   Chip,
   Accordion,
@@ -233,8 +233,8 @@ function InfoSection({ title, children }) {
    Componente principal: ProfilePage
 ───────────────────────────────────────────── */
 export default function ProfilePage() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  //const theme = useTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -533,7 +533,7 @@ export default function ProfilePage() {
                 label="Horarios"
                 value={
                   Array.isArray(user?.schedules)
-                    ? user.schedules.join(", ")
+                    ? user.schedules.map((s) => s.name).join(", ")
                     : user?.schedules
                 }
               />

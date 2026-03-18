@@ -962,7 +962,7 @@ const UserForm = ({
         </Grid>
 
         {/* Departamentos a supervisar */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={12}>
           <Controller
             name="supervisedDepartments"
             control={control}
@@ -985,7 +985,9 @@ const UserForm = ({
                           </Typography>
                         ) : (
                           selected.map((id) => {
-                            const department = departments.find((d) => d._id === id);
+                            const department = departments.find(
+                              (d) => d._id === id,
+                            );
                             return (
                               <Chip
                                 key={id}
