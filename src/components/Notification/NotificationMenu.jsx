@@ -107,7 +107,7 @@ export default function NotificationMenu({
           sx: {
             width: 380,
             maxHeight: 480,
-            overflow: "hidden",
+            //overflow: "hidden",
             display: "flex",
             flexDirection: "column",
             borderRadius: "14px",

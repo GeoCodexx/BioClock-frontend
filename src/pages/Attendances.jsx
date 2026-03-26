@@ -261,6 +261,7 @@ export default function Attendances() {
           showSuccess(res?.message || "Asistencia actualizada correctamente");
         } else {
           const res = await createAttendance(data);
+          console.log(data);
           showSuccess(res?.message || "Asistencia creada correctamente");
         }
 

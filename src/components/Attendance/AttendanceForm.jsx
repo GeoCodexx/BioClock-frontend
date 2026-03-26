@@ -34,6 +34,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import { getUsers } from "../../services/userService";
+import { fromZonedTime } from "date-fns-tz";
 //import debounce from "lodash/debounce";
 
 const AttendanceForm = ({
@@ -252,7 +253,17 @@ const AttendanceForm = ({
         component="form"
         id="attendance-form"
         onSubmit={handleSubmit((data) =>
-          onSubmit({ ...data, verificationMethod: "Manual" }),
+          onSubmit({
+            ...data,
+            verificationMethod: "Manual",
+            // Convertir explícitamente a UTC real antes de enviar
+            // data.timestamp es un Date local de Lima (ej: 08:32 Lima)
+            // .toISOString() lo serializa como UTC real (ej: 13:32Z)
+            timestamp:
+              data.timestamp instanceof Date
+                ? fromZonedTime(data.timestamp, "America/Lima").toISOString()
+                : data.timestamp,
+          }),
         )}
         noValidate
       >

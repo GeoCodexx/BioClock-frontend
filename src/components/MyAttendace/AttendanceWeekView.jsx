@@ -37,8 +37,21 @@ import {
 } from "@mui/icons-material";
 import { format, parseISO, startOfWeek, addDays, isToday } from "date-fns";
 import { es } from "date-fns/locale";
+import { formatInTimeZone } from "date-fns-tz";
+
+const isSameDayInTimezone = (
+  dateA,
+  dateB = new Date(),
+  timezone = "America/Lima",
+) => {
+  return (
+    formatInTimeZone(dateA, timezone, "yyyy-MM-dd") ===
+    formatInTimeZone(dateB, timezone, "yyyy-MM-dd")
+  );
+};
 
 const AttendanceWeekView = ({ data }) => {
+  const timezone = data?.timezone || "America/Lima";
   const theme = useTheme();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
@@ -86,113 +99,123 @@ const AttendanceWeekView = ({ data }) => {
       weekStartsOn: 1, // Lunes
     });
 
-    // Los registros vienen agrupados por fecha
     const records = data.periods.week.records || {};
+
+    const processShiftRecords = (scheduleRecords) => {
+      if (!scheduleRecords || scheduleRecords.length === 0) return null;
+
+      // Ordenar por timestamp por seguridad
+      const sortedRecords = [...scheduleRecords].sort(
+        (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
+      );
+
+      const checkIn = sortedRecords.find((r) => r.type === "IN");
+      const checkOut = sortedRecords.find((r) => r.type === "OUT");
+
+      // Caso ausencia virtual
+      if (checkIn?.isVirtual) {
+        return {
+          schedule: checkIn.scheduleId,
+          shiftStatus: "absent",
+          checkIn: null,
+          checkOut: null,
+          minutesWorked: 0,
+          hoursWorked: null,
+          justification: null,
+          isVirtual: true,
+        };
+      }
+
+      let shiftStatus = "absent";
+
+      if (checkIn && checkOut) {
+        if (checkIn.status === "late") {
+          shiftStatus = "late";
+        } else if (checkOut.status === "early_exit") {
+          shiftStatus = "early_exit";
+        } else if (checkIn.status === "early") {
+          shiftStatus = "early";
+        } else {
+          shiftStatus = "on_time";
+        }
+      } else if (checkIn && !checkOut) {
+        shiftStatus = checkIn.status || "on_time";
+      } else if (!checkIn && checkOut) {
+        shiftStatus = checkOut.status || "on_time";
+      }
+
+      let minutesWorked = 0;
+      if (checkIn && checkOut && !checkIn.isVirtual && !checkOut.isVirtual) {
+        const start = new Date(checkIn.timestamp);
+        const end = new Date(checkOut.timestamp);
+        minutesWorked = Math.max(0, Math.floor((end - start) / 60000));
+      }
+
+      return {
+        schedule: sortedRecords[0].scheduleId,
+        shiftStatus,
+        checkIn:
+          checkIn && !checkIn.isVirtual
+            ? {
+                timestamp: checkIn.timestamp,
+                status: checkIn.status,
+                device: checkIn.deviceId,
+                verificationMethod: checkIn.verificationMethod,
+              }
+            : null,
+        checkOut:
+          checkOut && !checkOut.isVirtual
+            ? {
+                timestamp: checkOut.timestamp,
+                status: checkOut.status,
+                device: checkOut.deviceId,
+                verificationMethod: checkOut.verificationMethod,
+              }
+            : null,
+        minutesWorked,
+        hoursWorked:
+          minutesWorked > 0
+            ? `${Math.floor(minutesWorked / 60)}h ${minutesWorked % 60}m`
+            : null,
+        justification: checkIn?.justification || checkOut?.justification,
+        isVirtual: false,
+      };
+    };
 
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(weekStart, i);
-      const dateStr = format(date, "yyyy-MM-dd");
-
-      // Obtener registros del día
+      const dateStr = formatInTimeZone(date, timezone, "yyyy-MM-dd");
       const dayRecords = records[dateStr] || [];
 
-      /**
-       * Función para procesar registros de un horario específico
-       */
-      const processScheduleRecords = (scheduleName) => {
-        const scheduleRecords = dayRecords.filter((r) =>
-          r.scheduleId?.name
-            ?.toLowerCase()
-            .includes(scheduleName.toLowerCase()),
-        );
+      // Agrupar por scheduleId._id
+      const groupedBySchedule = dayRecords.reduce((acc, record) => {
+        const scheduleKey = record.scheduleId?._id || "unknown";
+        if (!acc[scheduleKey]) acc[scheduleKey] = [];
+        acc[scheduleKey].push(record);
+        return acc;
+      }, {});
 
-        if (scheduleRecords.length === 0) return null;
-
-        const checkIn = scheduleRecords.find((r) => r.type === "IN");
-        const checkOut = scheduleRecords.find((r) => r.type === "OUT");
-
-        // Si checkIn es virtual (ausencia), retornar como ausente
-        if (checkIn?.isVirtual) {
-          return {
-            schedule: checkIn.scheduleId,
-            shiftStatus: "absent",
-            checkIn: null,
-            checkOut: null,
-            minutesWorked: 0,
-            hoursWorked: null,
-            justification: null,
-          };
-        }
-
-        // Determinar estado del turno
-        let shiftStatus = "absent";
-        if (checkIn && checkOut) {
-          // Tiene ambos registros
-          if (checkIn.status === "late") {
-            shiftStatus = "late";
-          } else if (checkOut.status === "early_exit") {
-            shiftStatus = "early_exit";
-          } else {
-            shiftStatus = "on_time";
-          }
-        } else if (checkIn) {
-          // Solo tiene entrada
-          shiftStatus = checkIn.status;
-        }
-
-        // Calcular minutos trabajados
-        let minutesWorked = 0;
-        if (checkIn && checkOut && !checkIn.isVirtual && !checkOut.isVirtual) {
-          const start = new Date(checkIn.timestamp);
-          const end = new Date(checkOut.timestamp);
-          minutesWorked = Math.floor((end - start) / 60000);
-        }
-
-        return {
-          schedule: scheduleRecords[0].scheduleId,
-          shiftStatus,
-          checkIn:
-            checkIn && !checkIn.isVirtual
-              ? {
-                  timestamp: checkIn.timestamp,
-                  status: checkIn.status,
-                  device: checkIn.deviceId,
-                  verificationMethod: checkIn.verificationMethod,
-                }
-              : null,
-          checkOut:
-            checkOut && !checkOut.isVirtual
-              ? {
-                  timestamp: checkOut.timestamp,
-                  status: checkOut.status,
-                  device: checkOut.deviceId,
-                  verificationMethod: checkOut.verificationMethod,
-                }
-              : null,
-          minutesWorked,
-          hoursWorked:
-            minutesWorked > 0
-              ? `${Math.floor(minutesWorked / 60)}h ${minutesWorked % 60}m`
-              : null,
-          justification: checkIn?.justification || checkOut?.justification,
-        };
-      };
-
-      const matutino = processScheduleRecords("matutino");
-      const vespertino = processScheduleRecords("vespertino");
+      // Procesar cada turno
+      const shifts = Object.values(groupedBySchedule)
+        .map((scheduleRecords) => processShiftRecords(scheduleRecords))
+        .filter(Boolean)
+        .sort((a, b) => {
+          const aStart = a.schedule?.startTime || "99:99";
+          const bStart = b.schedule?.startTime || "99:99";
+          return aStart.localeCompare(bStart);
+        });
 
       return {
         date,
         dateStr,
-        matutino,
-        vespertino,
-        hasRecords: dayRecords.some((r) => !r.isVirtual), // Solo registros reales
+        shifts,
+        hasRecords: dayRecords.some((r) => !r.isVirtual),
       };
     });
   }, [data]);
 
   const handleDayClick = (day) => {
-    if (day.matutino || day.vespertino) {
+    if (day.shifts?.length > 0) {
       setSelectedDay(day);
       setOpenDialog(true);
     }
@@ -203,17 +226,18 @@ const AttendanceWeekView = ({ data }) => {
     setSelectedDay(null);
   };
 
-  const DayCard = ({ day }) => {
-    const { date, matutino, vespertino, hasRecords } = day;
-    const isDayToday = isToday(date);
+  const DayCard = ({ day, timezone }) => {
+    const { date, shifts, hasRecords } = day;
+
+    const isDayToday = isSameDayInTimezone(date, new Date(), timezone);
     const dayName = format(date, "EEE", { locale: es }).toUpperCase();
     const dayNumber = format(date, "d");
 
-    const hasBothShifts = matutino && vespertino;
-    const singleShift = matutino || vespertino;
+    const shiftCount = shifts.length;
+    const firstShift = shifts[0];
+    const secondShift = shifts[1];
 
-    // Si no tiene ningún turno asignado
-    if (!singleShift) {
+    if (shiftCount === 0) {
       return (
         <Grid>
           <Stack alignItems="center" spacing={1}>
@@ -263,17 +287,21 @@ const AttendanceWeekView = ({ data }) => {
             {dayName}
           </Typography>
 
-          {hasBothShifts ? (
-            // Cuadro dividido diagonalmente
+          {shiftCount >= 2 ? (
             <Tooltip
               title={
                 <Box>
-                  <Typography variant="caption" display="block">
-                    Matutino: {statusConfig[matutino.shiftStatus]?.label}
-                  </Typography>
-                  <Typography variant="caption" display="block">
-                    Vespertino: {statusConfig[vespertino.shiftStatus]?.label}
-                  </Typography>
+                  {shifts.slice(0, 2).map((shift, idx) => (
+                    <Typography key={idx} variant="caption" display="block">
+                      {shift.schedule?.name}:{" "}
+                      {statusConfig[shift.shiftStatus]?.label}
+                    </Typography>
+                  ))}
+                  {shiftCount > 2 && (
+                    <Typography variant="caption" display="block">
+                      +{shiftCount - 2} turno(s) más
+                    </Typography>
+                  )}
                 </Box>
               }
               arrow
@@ -296,7 +324,7 @@ const AttendanceWeekView = ({ data }) => {
                   },
                 }}
               >
-                {/* Triángulo superior (Matutino) */}
+                {/* Triángulo superior */}
                 <Box
                   sx={{
                     position: "absolute",
@@ -306,10 +334,10 @@ const AttendanceWeekView = ({ data }) => {
                     height: 0,
                     borderStyle: "solid",
                     borderWidth: { xs: "44px 44px 0 0", sm: "56px 56px 0 0" },
-                    borderColor: `${statusConfig[matutino.shiftStatus]?.colorHex} transparent transparent transparent`,
+                    borderColor: `${statusConfig[firstShift.shiftStatus]?.colorHex} transparent transparent transparent`,
                   }}
                 />
-                {/* Triángulo inferior (Vespertino) */}
+                {/* Triángulo inferior */}
                 <Box
                   sx={{
                     position: "absolute",
@@ -319,10 +347,10 @@ const AttendanceWeekView = ({ data }) => {
                     height: 0,
                     borderStyle: "solid",
                     borderWidth: { xs: "0 0 44px 44px", sm: "0 0 56px 56px" },
-                    borderColor: `transparent transparent ${statusConfig[vespertino.shiftStatus]?.colorHex} transparent`,
+                    borderColor: `transparent transparent ${statusConfig[secondShift.shiftStatus]?.colorHex} transparent`,
                   }}
                 />
-                {/* Número del día */}
+                {/* Número */}
                 <Box
                   sx={{
                     position: "absolute",
@@ -347,11 +375,10 @@ const AttendanceWeekView = ({ data }) => {
               </Box>
             </Tooltip>
           ) : (
-            // Cuadro único
             <Tooltip
               title={
-                singleShift
-                  ? `${singleShift.schedule.name}: ${statusConfig[singleShift.shiftStatus]?.label}`
+                firstShift
+                  ? `${firstShift.schedule?.name}: ${statusConfig[firstShift.shiftStatus]?.label}`
                   : ""
               }
               arrow
@@ -368,11 +395,11 @@ const AttendanceWeekView = ({ data }) => {
                   justifyContent: "center",
                   cursor: "pointer",
                   bgcolor: alpha(
-                    statusConfig[singleShift.shiftStatus]?.colorHex,
+                    statusConfig[firstShift.shiftStatus]?.colorHex,
                     0.15,
                   ),
-                  border: `2px solid ${statusConfig[singleShift.shiftStatus]?.colorHex}`,
-                  color: statusConfig[singleShift.shiftStatus]?.colorHex,
+                  border: `2px solid ${statusConfig[firstShift.shiftStatus]?.colorHex}`,
+                  color: statusConfig[firstShift.shiftStatus]?.colorHex,
                   transition: "all 0.2s ease",
                   "&:hover": {
                     transform: "scale(1.08)",
@@ -387,44 +414,42 @@ const AttendanceWeekView = ({ data }) => {
             </Tooltip>
           )}
 
-          {/* Iconos de estado */}
-          {hasRecords && (
+          {hasRecords ? (
             <Box sx={{ height: 18 }}>
-              {hasBothShifts ? (
+              {shiftCount >= 2 ? (
                 <Stack direction="row" spacing={0.5}>
                   {React.createElement(
-                    statusConfig[matutino.shiftStatus]?.Icon,
+                    statusConfig[firstShift.shiftStatus]?.Icon,
                     {
                       sx: {
                         fontSize: 14,
-                        color: statusConfig[matutino.shiftStatus]?.colorHex,
+                        color: statusConfig[firstShift.shiftStatus]?.colorHex,
                       },
                     },
                   )}
                   {React.createElement(
-                    statusConfig[vespertino.shiftStatus]?.Icon,
+                    statusConfig[secondShift.shiftStatus]?.Icon,
                     {
                       sx: {
                         fontSize: 14,
-                        color: statusConfig[vespertino.shiftStatus]?.colorHex,
+                        color: statusConfig[secondShift.shiftStatus]?.colorHex,
                       },
                     },
                   )}
                 </Stack>
               ) : (
                 React.createElement(
-                  statusConfig[singleShift.shiftStatus]?.Icon,
+                  statusConfig[firstShift.shiftStatus]?.Icon,
                   {
                     sx: {
                       fontSize: 18,
-                      color: statusConfig[singleShift.shiftStatus]?.colorHex,
+                      color: statusConfig[firstShift.shiftStatus]?.colorHex,
                     },
                   },
                 )
               )}
             </Box>
-          )}
-          {!hasRecords && (
+          ) : (
             <Cancel
               sx={{ fontSize: 18, color: statusConfig.absent.colorHex }}
             />
@@ -479,10 +504,22 @@ const AttendanceWeekView = ({ data }) => {
         </Grid>
 
         {/* Estadísticas */}
-        {/* <Divider sx={{ my: 2 }} />
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 2.4 }}>
-            <Box textAlign="center">
+        <Divider sx={{ my: 2 }} />
+        <Stack spacing={1.5}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.5}
+            sx={{ width: "100%" }}
+          >
+            <Box
+              sx={{
+                flex: 1,
+                p: 1.5,
+                borderRadius: 1.5,
+                bgcolor: alpha(theme.palette.success.main, 0.08),
+                textAlign: "center",
+              }}
+            >
               <Typography variant="h5" fontWeight={700} color="success.main">
                 {data?.periods?.week?.stats?.present || 0}
               </Typography>
@@ -490,9 +527,15 @@ const AttendanceWeekView = ({ data }) => {
                 A Tiempo
               </Typography>
             </Box>
-          </Grid>
-          <Grid size={{ xs: 2.4 }}>
-            <Box textAlign="center">
+            <Box
+              sx={{
+                flex: 1,
+                p: 1.5,
+                borderRadius: 1.5,
+                bgcolor: alpha(theme.palette.warning.main, 0.08),
+                textAlign: "center",
+              }}
+            >
               <Typography variant="h5" fontWeight={700} color="warning.main">
                 {data?.periods?.week?.stats?.late || 0}
               </Typography>
@@ -500,9 +543,15 @@ const AttendanceWeekView = ({ data }) => {
                 Tardanza
               </Typography>
             </Box>
-          </Grid>
-          <Grid size={{ xs: 2.4 }}>
-            <Box textAlign="center">
+            <Box
+              sx={{
+                flex: 1,
+                p: 1.5,
+                borderRadius: 1.5,
+                bgcolor: alpha(theme.palette.primary.main, 0.08),
+                textAlign: "center",
+              }}
+            >
               <Typography variant="h5" fontWeight={700} color="primary.main">
                 {data?.periods?.week?.stats?.early || 0}
               </Typography>
@@ -510,9 +559,21 @@ const AttendanceWeekView = ({ data }) => {
                 Temprano
               </Typography>
             </Box>
-          </Grid>
-          <Grid size={{ xs: 2.4 }}>
-            <Box textAlign="center">
+          </Stack>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.5}
+            sx={{ width: "100%" }}
+          >
+            <Box
+              sx={{
+                flex: 1,
+                p: 1.5,
+                borderRadius: 1.5,
+                bgcolor: alpha(theme.palette.error.main, 0.08),
+                textAlign: "center",
+              }}
+            >
               <Typography variant="h5" fontWeight={700} color="error.main">
                 {data?.periods?.week?.stats?.earlyExit || 0}
               </Typography>
@@ -520,9 +581,15 @@ const AttendanceWeekView = ({ data }) => {
                 Salida Temprana
               </Typography>
             </Box>
-          </Grid>
-          <Grid size={{ xs: 2.4 }}>
-            <Box textAlign="center">
+            <Box
+              sx={{
+                flex: 1,
+                p: 1.5,
+                borderRadius: 1.5,
+                bgcolor: alpha(theme.palette.text.disabled, 0.08),
+                textAlign: "center",
+              }}
+            >
               <Typography variant="h5" fontWeight={700} color="text.disabled">
                 {data?.periods?.week?.stats?.absent || 0}
               </Typography>
@@ -530,8 +597,9 @@ const AttendanceWeekView = ({ data }) => {
                 Ausencias
               </Typography>
             </Box>
-          </Grid>
-        </Grid> */}
+            <Box sx={{ flex: 1 }} />
+          </Stack>
+        </Stack>
       </Paper>
 
       <AttendanceDetailsDialog
@@ -804,10 +872,11 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
 
       <DialogContent dividers>
         <Stack spacing={2}>
-          {day.matutino && <ShiftCard shift={day.matutino} />}
-          {day.vespertino && <ShiftCard shift={day.vespertino} />}
+          {day.shifts?.map((shift, idx) => (
+            <ShiftCard key={shift.schedule?._id || idx} shift={shift} />
+          ))}
 
-          {day.matutino && day.vespertino && (
+          {day.shifts?.length > 1 && (
             <Paper
               elevation={0}
               sx={{
@@ -830,7 +899,7 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
                     Total de turnos:
                   </Typography>
                   <Typography variant="h6" fontWeight={700}>
-                    2 turnos
+                    {day.shifts.length} turno{day.shifts.length > 1 ? "s" : ""}
                   </Typography>
                 </Grid>
                 <Grid size={6}>
@@ -839,9 +908,10 @@ const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
                   </Typography>
                   <Typography variant="h6" fontWeight={700}>
                     {(() => {
-                      const total =
-                        (day.matutino?.minutesWorked || 0) +
-                        (day.vespertino?.minutesWorked || 0);
+                      const total = day.shifts.reduce(
+                        (acc, shift) => acc + (shift.minutesWorked || 0),
+                        0,
+                      );
                       const hours = Math.floor(total / 60);
                       const mins = total % 60;
                       return `${hours}h ${mins}m`;

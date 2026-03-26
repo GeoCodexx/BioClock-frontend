@@ -13,7 +13,7 @@ const FingerprintImage = ({
 }) => {
   const theme = useTheme();
   
-  const apiUrl = `http://192.168.1.72:4000/biometric-templates/image/${templateId}/${finger}`;
+  const apiUrl = `${import.meta.env.VITE_REACT_APP_API_URL}/biometric-templates/image/${templateId}/${finger}`;
 
   const { imageData, loading, error, progress } = useSecureBiometricImage(
     apiUrl,

@@ -612,9 +612,9 @@ const AttendanceEventDialog = ({
                 {hasCheckIn ? (
                   <Stack spacing={1.5}>
                     <Stack direction="row" alignItems="center" spacing={1}>
-                      <AccessTime
+                      {/* <AccessTime
                         sx={{ fontSize: 18, color: "text.secondary" }}
-                      />
+                      /> */}
                       <Typography variant="body2">
                         <strong>Hora:</strong>{" "}
                         {formatTime(dayData.checkIn.timestamp)}
@@ -641,18 +641,18 @@ const AttendanceEventDialog = ({
                       />
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={1}>
-                      <Computer
+                      {/* <Computer
                         sx={{ fontSize: 18, color: "text.secondary" }}
-                      />
+                      /> */}
                       <Typography variant="body2">
                         <strong>Dispositivo:</strong>{" "}
                         {dayData.checkIn.deviceId?.name || "-"}
                       </Typography>
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={1}>
-                      <Fingerprint
+                      {/* <Fingerprint
                         sx={{ fontSize: 18, color: "text.secondary" }}
-                      />
+                      /> */}
                       <Typography
                         variant="body2"
                         sx={{ textTransform: "capitalize" }}
@@ -700,9 +700,9 @@ const AttendanceEventDialog = ({
                 {hasCheckOut ? (
                   <Stack spacing={1.5}>
                     <Stack direction="row" alignItems="center" spacing={1}>
-                      <AccessTime
+                      {/* <AccessTime
                         sx={{ fontSize: 18, color: "text.secondary" }}
-                      />
+                      /> */}
                       <Typography variant="body2">
                         <strong>Hora:</strong>{" "}
                         {formatTime(dayData.checkOut.timestamp)}
@@ -729,18 +729,18 @@ const AttendanceEventDialog = ({
                       />
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={1}>
-                      <Computer
+                      {/* <Computer
                         sx={{ fontSize: 18, color: "text.secondary" }}
-                      />
+                      /> */}
                       <Typography variant="body2">
                         <strong>Dispositivo:</strong>{" "}
                         {dayData.checkOut.deviceId?.name || "-"}
                       </Typography>
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={1}>
-                      <Fingerprint
+                      {/* <Fingerprint
                         sx={{ fontSize: 18, color: "text.secondary" }}
-                      />
+                      /> */}
                       <Typography
                         variant="body2"
                         sx={{ textTransform: "capitalize" }}
@@ -764,12 +764,13 @@ const AttendanceEventDialog = ({
               sx={{
                 p: 2,
                 borderRadius: 2,
-                bgcolor: alpha(theme.palette.success.main, 0.08),
-                border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+                //bgcolor: alpha(theme.palette.success.main, 0.08),
+                bgcolor: "background.card",
+                border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
               }}
             >
               <Stack direction="row" alignItems="center" spacing={1}>
-                <AccessTime sx={{ fontSize: 22, color: "success.main" }} />
+                {/* <AccessTime sx={{ fontSize: 22, color: "success.main" }} /> */}
                 <Box>
                   <Typography
                     variant="caption"
@@ -781,7 +782,7 @@ const AttendanceEventDialog = ({
                   <Typography
                     variant="h6"
                     fontWeight={700}
-                    color="success.main"
+                    //color="success.main"
                   >
                     {hoursWorked}
                   </Typography>
