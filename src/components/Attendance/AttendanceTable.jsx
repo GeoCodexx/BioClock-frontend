@@ -135,18 +135,18 @@ const AttendanceTable = ({
   // Formatear solo hora
   const formatTime = (dateString) => {
     if (!dateString) return "—";
-    const date = new Date(dateString);
+    /*const date = new Date(dateString);
     const horas = String(date.getUTCHours()).padStart(2, "0");
     const minutos = String(date.getUTCMinutes()).padStart(2, "0");
     const segundos = String(date.getUTCSeconds()).padStart(2, "0");
 
-    return `${horas}:${minutos}:${segundos}`;
-    /*const date = new Date(dateString);
+    return `${horas}:${minutos}:${segundos}`;*/
+    const date = new Date(dateString);
     return date.toLocaleTimeString("es-ES", {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
-    });*/
+    });
   };
 
   // Normalizar tipo

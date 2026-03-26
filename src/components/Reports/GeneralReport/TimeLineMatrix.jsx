@@ -1005,7 +1005,7 @@ const TimelineMatrix = ({
     [setSelectedShift],
   );
 
-  const handleCloseInfo = useCallback(() => setShiftInfo(null), []);
+  //const handleCloseInfo = useCallback(() => setShiftInfo(null), []);
 
   /* ── Skeleton ── */
   if (showSkeleton) return <MatrixSkeleton isMobile={isMobile} />;

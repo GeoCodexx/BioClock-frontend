@@ -30,10 +30,7 @@ import {
   Close as CloseIcon,
   Login as LoginIcon,
   Logout as LogoutIcon,
-  AccessTime,
   Schedule,
-  Computer,
-  Fingerprint,
   Assignment,
   AttachFile,
   Send,
@@ -83,7 +80,7 @@ const AttendanceMonthCalendar = ({ data, fetchData }) => {
         color: theme.palette.info.main,
       },
       early_exit: {
-        label: "Salida Temprana",
+        label: "Salida Anticipada",
         Icon: ErrorIcon,
         colorHex: "#9c27b0", //"#9c27b0"
         color: theme.palette.secondary.main,
@@ -92,7 +89,7 @@ const AttendanceMonthCalendar = ({ data, fetchData }) => {
         label: "Incompleto",
         Icon: ErrorIcon,
         colorHex: "#f44336",
-        color: theme.palette.warning.dark,
+        color: theme.palette.error.light,
       },
       absent: {
         label: "Ausente",
@@ -104,7 +101,7 @@ const AttendanceMonthCalendar = ({ data, fetchData }) => {
         // NUEVO
         label: "Justificado",
         Icon: Assignment,
-        colorHex: "#3b82f6", // Púrpura
+        colorHex: "#3b82f6",
         color: theme.palette.info.main,
       },
     }),

@@ -252,18 +252,24 @@ const AttendanceForm = ({
       <Box
         component="form"
         id="attendance-form"
-        onSubmit={handleSubmit((data) =>
-          onSubmit({
-            ...data,
-            verificationMethod: "Manual",
-            // Convertir explícitamente a UTC real antes de enviar
-            // data.timestamp es un Date local de Lima (ej: 08:32 Lima)
-            // .toISOString() lo serializa como UTC real (ej: 13:32Z)
-            timestamp:
-              data.timestamp instanceof Date
-                ? fromZonedTime(data.timestamp, "America/Lima").toISOString()
-                : data.timestamp,
-          }),
+        onSubmit={handleSubmit(
+          (data) =>
+            onSubmit({
+              ...data,
+              verificationMethod: "Manual",
+              // Convertir explícitamente a UTC real antes de enviar
+              // data.timestamp es un Date local de Lima (ej: 08:32 Lima)
+              // .toISOString() lo serializa como UTC real (ej: 13:32Z)
+              timestamp:
+                data.timestamp instanceof Date
+                  ? data.timestamp.toISOString()
+                  : data.timestamp,
+            }),
+          /*console.log(
+            data.timestamp instanceof Date
+              ? data.timestamp.toISOString()
+              : data.timestamp,
+          ),*/
         )}
         noValidate
       >

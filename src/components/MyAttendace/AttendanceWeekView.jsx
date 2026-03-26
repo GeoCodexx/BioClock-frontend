@@ -35,9 +35,38 @@ import {
   Fingerprint,
   Assignment,
 } from "@mui/icons-material";
-import { format, parseISO, startOfWeek, addDays, isToday } from "date-fns";
+import { format, startOfWeek, addDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { formatInTimeZone } from "date-fns-tz";
+
+const parseDateOnlyInTimezone = (dateStr, timezone = "America/Lima") => {
+  // dateStr: "2026-03-23"
+  const [year, month, day] = dateStr.split("-").map(Number);
+
+  // Creamos una fecha "segura" al mediodía UTC para evitar saltos de día
+  const safeDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+
+  return safeDate;
+};
+
+const formatDateInTimezone = (
+  date,
+  timezone = "America/Lima",
+  pattern = "yyyy-MM-dd",
+) => {
+  return formatInTimeZone(date, timezone, pattern, { locale: es });
+};
+
+const formatTimeInTimezone = (
+  timestamp,
+  timezone = "America/Lima",
+  pattern = "HH:mm:ss",
+) => {
+  if (!timestamp) return "-";
+  return formatInTimeZone(new Date(timestamp), timezone, pattern, {
+    locale: es,
+  });
+};
 
 const isSameDayInTimezone = (
   dateA,
@@ -62,26 +91,35 @@ const AttendanceWeekView = ({ data }) => {
         label: "A Tiempo",
         Icon: CheckCircle,
         colorHex: "#10b981",
-        //colorHex: theme.palette.success.main,
+        colorHex: alpha(theme.palette.success.main, 0.5),
       },
       late: {
         label: "Tardanza",
         Icon: ErrorIcon,
-        colorHex: "#f59e0b",
+        //colorHex: "#f59e0b",
+        colorHex: alpha(theme.palette.warning.main, 0.5),
       },
       early: {
         label: "Temprano",
         Icon: InfoIcon,
-        colorHex: "#3b82f6",
+        //colorHex: "#3b82f6",
+        colorHex: alpha(theme.palette.info.main, 0.5),
       },
       early_exit: {
-        label: "Salida Temprana",
+        label: "Salida Anticipada",
         Icon: ErrorIcon,
-        colorHex: "#f44336",
+        //colorHex: "#7B1FA2",
+        colorHex: alpha(theme.palette.secondary.main, 0.5),
       },
       absent: {
         label: "Ausente",
         Icon: Cancel,
+        //colorHex: "#D32F2F",
+        colorHex: alpha(theme.palette.error.main, 0.5),
+      },
+      incomplete: {
+        label: "Incompleto",
+        icon: ErrorIcon,
         colorHex: "#9ca3af",
       },
     }),
@@ -95,16 +133,18 @@ const AttendanceWeekView = ({ data }) => {
   const weekDays = useMemo(() => {
     if (!data?.periods?.week?.dateRange?.start) return [];
 
-    const weekStart = startOfWeek(parseISO(data.periods.week.dateRange.start), {
-      weekStartsOn: 1, // Lunes
-    });
-
     const records = data.periods.week.records || {};
+
+    // Parsear fecha del backend sin depender del timezone del navegador
+    const weekStart = parseDateOnlyInTimezone(
+      data.periods.week.dateRange.start,
+      timezone,
+    );
 
     const processShiftRecords = (scheduleRecords) => {
       if (!scheduleRecords || scheduleRecords.length === 0) return null;
 
-      // Ordenar por timestamp por seguridad
+      // Ordenar por timestamp real
       const sortedRecords = [...scheduleRecords].sort(
         (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
       );
@@ -121,7 +161,7 @@ const AttendanceWeekView = ({ data }) => {
           checkOut: null,
           minutesWorked: 0,
           hoursWorked: null,
-          justification: null,
+          justification: checkIn?.justification || null,
           isVirtual: true,
         };
       }
@@ -177,14 +217,15 @@ const AttendanceWeekView = ({ data }) => {
           minutesWorked > 0
             ? `${Math.floor(minutesWorked / 60)}h ${minutesWorked % 60}m`
             : null,
-        justification: checkIn?.justification || checkOut?.justification,
+        justification:
+          checkIn?.justification || checkOut?.justification || null,
         isVirtual: false,
       };
     };
 
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(weekStart, i);
-      const dateStr = formatInTimeZone(date, timezone, "yyyy-MM-dd");
+      const dateStr = formatDateInTimezone(date, timezone, "yyyy-MM-dd");
       const dayRecords = records[dateStr] || [];
 
       // Agrupar por scheduleId._id
@@ -212,7 +253,7 @@ const AttendanceWeekView = ({ data }) => {
         hasRecords: dayRecords.some((r) => !r.isVirtual),
       };
     });
-  }, [data]);
+  }, [data, timezone]);
 
   const handleDayClick = (day) => {
     if (day.shifts?.length > 0) {
@@ -230,8 +271,8 @@ const AttendanceWeekView = ({ data }) => {
     const { date, shifts, hasRecords } = day;
 
     const isDayToday = isSameDayInTimezone(date, new Date(), timezone);
-    const dayName = format(date, "EEE", { locale: es }).toUpperCase();
-    const dayNumber = format(date, "d");
+    const dayName = formatDateInTimezone(date, timezone, "EEE").toUpperCase();
+    const dayNumber = formatDateInTimezone(date, timezone, "d");
 
     const shiftCount = shifts.length;
     const firstShift = shifts[0];
@@ -484,14 +525,24 @@ const AttendanceWeekView = ({ data }) => {
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {data?.periods?.week?.dateRange?.start &&
-                format(parseISO(data.periods.week.dateRange.start), "d MMM", {
-                  locale: es,
-                })}{" "}
+                formatDateInTimezone(
+                  parseDateOnlyInTimezone(
+                    data.periods.week.dateRange.start,
+                    timezone,
+                  ),
+                  timezone,
+                  "d MMM",
+                )}{" "}
               -{" "}
               {data?.periods?.week?.dateRange?.end &&
-                format(parseISO(data.periods.week.dateRange.end), "d MMM", {
-                  locale: es,
-                })}
+                formatDateInTimezone(
+                  parseDateOnlyInTimezone(
+                    data.periods.week.dateRange.end,
+                    timezone,
+                  ),
+                  timezone,
+                  "d MMM",
+                )}
             </Typography>
           </Box>
         </Stack>
@@ -607,25 +658,31 @@ const AttendanceWeekView = ({ data }) => {
         onClose={handleCloseDialog}
         day={selectedDay}
         statusConfig={statusConfig}
+        timezone={timezone}
       />
     </>
   );
 };
 
 // Componente Dialog (mantiene la misma estructura que tenías)
-const AttendanceDetailsDialog = ({ open, onClose, day, statusConfig }) => {
+const AttendanceDetailsDialog = ({
+  open,
+  onClose,
+  day,
+  statusConfig,
+  timezone = "America/Lima",
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   if (!day) return null;
 
   const formatTime = (timestamp) => {
-    if (!timestamp) return "-";
-    return format(new Date(timestamp), "HH:mm:ss", { locale: es });
+    return formatTimeInTimezone(timestamp, timezone, "HH:mm:ss");
   };
 
   const formatDate = (date) => {
-    return format(date, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+    return formatDateInTimezone(date, timezone, "EEEE, d 'de' MMMM 'de' yyyy");
   };
 
   const ShiftCard = ({ shift }) => {
