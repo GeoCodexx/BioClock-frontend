@@ -90,7 +90,7 @@ const AttendanceWeekView = ({ data }) => {
       on_time: {
         label: "A Tiempo",
         Icon: CheckCircle,
-        colorHex: "#10b981",
+        //colorHex: "#10b981",
         colorHex: alpha(theme.palette.success.main, 0.5),
       },
       late: {

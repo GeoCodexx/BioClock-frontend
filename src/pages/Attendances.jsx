@@ -268,11 +268,11 @@ export default function Attendances() {
         setDialog({ open: false, editAttendance: null, error: "" });
         await refreshAttendances();
       } catch (err) {
-        const errorMessage =
-          err.response?.data?.message ||
+        const errorMessage = err?.message;
+        /*  err.response?.data?.message ||
           `Error al ${
             dialog.editAttendance ? "actualizar" : "crear"
-          } asistencia`;
+          } asistencia`;*/
 
         setDialog((prev) => ({ ...prev, error: errorMessage }));
         showError(errorMessage);
