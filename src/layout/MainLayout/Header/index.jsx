@@ -31,7 +31,7 @@ const routeTitles = {
   "/schedules": "Horarios",
   "/attendances": "Asistencias",
   "/myattendance": "Mi Asistencia",
-  "/general-report": "Reporte General",
+  "/general-report": "Reportes",
   "/justifications": "Justificaciones",
   "/notifications": "Notificaciones",
   "/profile": "Mi Perfil",

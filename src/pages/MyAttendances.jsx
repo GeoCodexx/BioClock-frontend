@@ -153,13 +153,13 @@ const MyAttendances = () => {
       },
       in_progress: {
         sx: {
-          bgcolor: alpha(theme.palette.secondary.main, 0.1),
-          color: theme.palette.secondary.main,
-          //border: `2px solid ${theme.palette.secondary.main}`,
+          bgcolor: alpha(theme.palette.success.main, 0.1),
+          color: theme.palette.success.main,
+          //border: `2px solid ${theme.palette.success.main}`,
         },
-        label: "En transcurso",
+        label: "En Transcurso",
         Icon: AccessTime,
-        colorHex: theme.palette.secondary.main,
+        colorHex: theme.palette.success.main,
       },
     }),
     [theme.palette],

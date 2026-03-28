@@ -61,6 +61,7 @@ import LoadingOverlay from "../components/common/LoadingOverlay";
 import ScrollToTopButton from "../components/common/ScrolltoTopButton";
 import { createJustification } from "../services/justificationService";
 import FiltersCard from "../components/Reports/GeneralReport/FiltersCard";
+import useAuthStore from "../store/useAuthStore";
 
 // Constantes
 /*const STATUS_OPTIONS = [
@@ -77,7 +78,7 @@ import FiltersCard from "../components/Reports/GeneralReport/FiltersCard";
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25, 50, 100];
 
 // Componente Header memoizado
-const PageHeader = memo(({ date, isMobile }) => {
+const PageHeader = memo(({ date, isMobile, canSearch }) => {
   //const { mode } = useThemeMode();
   const breadcrumbs = (
     <Breadcrumbs
@@ -104,7 +105,9 @@ const PageHeader = memo(({ date, isMobile }) => {
         {!isMobile && <Typography variant="body2">Inicio</Typography>}
       </Link>
       <Typography variant="body2" color="text.primary" fontWeight={500}>
-        Reporte General de Asistencias
+        {canSearch
+          ? "Reporte General de Asistencias"
+          : "Reporte Personal de Asistencias"}
       </Typography>
     </Breadcrumbs>
   );
@@ -128,7 +131,9 @@ const PageHeader = memo(({ date, isMobile }) => {
             >
               <Box flex={1}>
                 <Typography variant="h6" fontWeight={700} gutterBottom>
-                  Reporte General de Asistencias
+                  {canSearch
+                    ? "Reporte General de Asistencias"
+                    : "Reporte Personal de Asistencias"}
                 </Typography>
                 {date && (
                   <Chip
@@ -160,7 +165,9 @@ const PageHeader = memo(({ date, isMobile }) => {
           >
             <Box>
               <Typography variant="h5" fontWeight={700} gutterBottom>
-                Reporte General de Asistencias
+                {canSearch
+                  ? "Reporte General de Asistencias"
+                  : "Reporte Personal de Asistencias"}
               </Typography>
               {date && (
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
@@ -532,6 +539,8 @@ PageHeader.displayName = "PageHeader";
 
 // Componente Principal
 export default function GeneralReportPage() {
+  const currentUser = useAuthStore((state) => state.user);
+  console.log(currentUser);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { showSuccess, showError } = useSnackbarStore();
@@ -1138,11 +1147,17 @@ export default function GeneralReportPage() {
       </Box>
     );
   }*/
-
+  const canSearch = ["Administrador", "RRHH"].includes(currentUser.role);
   return (
     <Box sx={{ width: "100%" }}>
       {/* Header */}
-      {isMobile || <PageHeader date={data.date} isMobile={isMobile} />}
+      {isMobile || (
+        <PageHeader
+          date={data.date}
+          isMobile={isMobile}
+          canSearch={canSearch}
+        />
+      )}
 
       {/* Resumen */}
       <Box sx={{ mt: { xs: 1, md: 0 } }}>
@@ -1213,6 +1228,7 @@ export default function GeneralReportPage() {
         currentMonth={currentMonth}
       /> */}
       <FiltersCard
+        canSearch={canSearch}
         search={search}
         searchValue={searchValue}
         scheduleId={scheduleId}

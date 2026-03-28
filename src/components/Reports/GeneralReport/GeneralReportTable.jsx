@@ -34,7 +34,7 @@ import {
 // Configuración de estados con sus colores y iconos
 const STATUS_CONFIG = {
   on_time: {
-    label: "A tiempo",
+    label: "A Tiempo",
     color: "success",
     icon: CheckCircle,
   },
@@ -44,13 +44,13 @@ const STATUS_CONFIG = {
     icon: Warning,
   },
   early: {
-    label: "Entrada temprana",
+    label: "Entrada Temprana",
     color: "warning",
     icon: AccessTime,
   },
   early_exit: {
-    label: "Salida anticipada",
-    color: "warning",
+    label: "Salida Anticipada",
+    color: "secondary",
     icon: AccessTime,
   },
   incomplete: {
@@ -96,9 +96,9 @@ const STATUS_CONFIG = {
 // Mapeo de estados a etiquetas descriptivas
 const TIME_STATUS_LABELS = {
   late: "Tarde",
-  early: "Entrada temprana",
-  early_exit: "Salida anticipada",
-  on_time: "A tiempo",
+  early: "Entrada Temprana",
+  early_exit: "Salida Anticipada",
+  on_time: "A Tiempo",
   absent: "Ausente",
 };
 
@@ -124,11 +124,6 @@ const StatusChip = memo(({ status, size = "small" }) => {
         fontWeight: 500,
         bgcolor: alpha(colorValue, 0.1),
         color: colorValue,
-        //border: "none",
-        border: `1px solid ${alpha(colorValue, 0.5)}`,
-        /*"& .MuiChip-icon": {
-          color: colorValue,
-        },*/
       }}
     />
   );
@@ -154,8 +149,8 @@ const TimeDisplay = memo(({ timestamp, showStatus, status }) => {
       color: theme.palette.info.main,
     },
     early_exit: {
-      backgroundColor: alpha(theme.palette.warning.main, 0.15),
-      color: theme.palette.warning.main,
+      backgroundColor: alpha(theme.palette.secondary.main, 0.15),
+      color: theme.palette.secondary.main,
     },
     absent: {
       backgroundColor: alpha(theme.palette.error.main, 0.15),

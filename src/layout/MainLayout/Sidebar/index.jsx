@@ -124,7 +124,7 @@ const menuItems = [
     ],
     children: [
       {
-        text: "Reporte General",
+        text: "Reportes",
         path: "/general-report",
         permission: "general-report:read",
         icon: <ChevronRightIcon />,

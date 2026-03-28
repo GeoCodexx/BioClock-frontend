@@ -35,6 +35,7 @@ import {
   setMonth,
   setYear,
   isWeekend,
+  isToday,
 } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -297,66 +298,6 @@ const MatrixCell = memo(
     prev.isWeekendDay === next.isWeekendDay,
 );
 MatrixCell.displayName = "MatrixCell";
-
-/* ─────────────────────────────────────────────
-   ShiftInfoPanel — shown on click (replaces Tooltip)
-   Desktop: Popover  |  Mobile: bottom Drawer
-───────────────────────────────────────────── */
-// const ShiftInfoPanel = memo(({ info, onClose, isMobile, isDark }) => {
-//   if (!info) return null;
-
-//   const { shift, anchorEl } = info;
-//   const cfg = STATUS_CONFIG[shift?.shiftStatus];
-//   const styles = isDark ? BADGE_STYLES.dark : BADGE_STYLES.light;
-//   const s = styles[shift?.shiftStatus];
-
-//   const content = shift ? (
-//     <Box sx={{ p: 2, minWidth: 200 }}>
-//       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
-//         <Typography variant="subtitle2" fontWeight={700}>{shift.scheduleName}</Typography>
-//         <IconButton size="small" onClick={onClose} sx={{ p: 0.5 }}><Close fontSize="small" /></IconButton>
-//       </Stack>
-//       <Divider sx={{ mb: 1.5 }} />
-//       <Stack spacing={0.75}>
-//         <Stack direction="row" alignItems="center" spacing={1}>
-//           <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: s?.wrapper?.border ?? "grey.400" }} />
-//           <Typography variant="body2" fontWeight={600}>{cfg?.label ?? shift.shiftStatus}</Typography>
-//         </Stack>
-//         {shift.checkIn  && <Typography variant="caption" color="text.secondary">Entrada: <strong>{shift.checkIn}</strong></Typography>}
-//         {shift.checkOut && <Typography variant="caption" color="text.secondary">Salida: <strong>{shift.checkOut}</strong></Typography>}
-//         {shift.date     && <Typography variant="caption" color="text.secondary">Fecha: <strong>{shift.date}</strong></Typography>}
-//       </Stack>
-//     </Box>
-//   ) : null;
-
-//   if (isMobile) {
-//     return (
-//       <Drawer
-//         anchor="bottom"
-//         open={Boolean(info)}
-//         onClose={onClose}
-//         PaperProps={{ sx: { borderTopLeftRadius: 16, borderTopRightRadius: 16, pb: "env(safe-area-inset-bottom)" } }}
-//       >
-//         {content}
-//       </Drawer>
-//     );
-//   }
-
-//   return (
-//     <Popover
-//       open={Boolean(info)}
-//       anchorEl={anchorEl}
-//       onClose={onClose}
-//       anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-//       transformOrigin={{ vertical: "top", horizontal: "center" }}
-//       disableScrollLock
-//       slotProps={{ paper: { elevation: 4, sx: { borderRadius: 2 } } }}
-//     >
-//       {content}
-//     </Popover>
-//   );
-// });
-// ShiftInfoPanel.displayName = "ShiftInfoPanel";
 
 /* ─────────────────────────────────────────────
    Mobile Legend Drawer — on-demand only
@@ -688,6 +629,7 @@ const VirtualMatrix = memo(
         dividerStrong: theme.palette.divider,
         headerBg: alpha(theme.palette.primary.main, 0.08),
         weekendHBg: alpha(theme.palette.warning.main, 0.08),
+        todayHBg: alpha(theme.palette.primary.main, 0.28),
         stickyBg: isDark
           ? alpha(theme.palette.background.paper, 0.96)
           : theme.palette.background.paper,
@@ -804,6 +746,7 @@ const VirtualMatrix = memo(
             const isDay = dateInfo.type === "day";
             const dateObj = isDay ? parseISO(dateInfo.key) : null;
             const isWknd = isDay && isWeekend(dateObj);
+            const isCurrentDay = isDay && isToday(dateObj);
             const dateStr = isDay
               ? format(dateObj, isMobile ? "dd" : "dd MMM", { locale: es })
               : dateInfo.key;
@@ -811,13 +754,23 @@ const VirtualMatrix = memo(
               ? format(dateObj, "EEE", { locale: es })
               : null;
 
+            // Prioridad: hoy > fin de semana > normal
+            const headerCellBg = isCurrentDay
+              ? colors.todayHBg
+              : isWknd
+                ? colors.weekendHBg
+                : colors.headerBg;
+
             return (
               <div
                 key={ci}
                 style={{
-                  backgroundColor: isWknd ? colors.weekendHBg : colors.headerBg,
+                  backgroundColor: headerCellBg,
                   borderRight: `1px solid ${colors.divider}`,
-                  borderBottom: `2px solid ${colors.dividerStrong}`,
+                  // ── Nuevo: borde inferior más grueso y con color primario si es hoy ──
+                  borderBottom: isCurrentDay
+                    ? `3px solid ${theme.palette.primary.main}`
+                    : `2px solid ${colors.dividerStrong}`,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -830,10 +783,12 @@ const VirtualMatrix = memo(
                       fontSize: "0.62rem",
                       opacity: 0.65,
                       textTransform: "capitalize",
-                      fontWeight: isWknd ? 600 : 400,
-                      color: isWknd
-                        ? theme.palette.warning.main
-                        : theme.palette.text.primary,
+                      fontWeight: isWknd || isCurrentDay ? 600 : 400,
+                      color: isCurrentDay
+                        ? theme.palette.primary.main // ── Nuevo
+                        : isWknd
+                          ? theme.palette.warning.main
+                          : theme.palette.text.primary,
                     }}
                   >
                     {dayOfWeek}
@@ -845,9 +800,11 @@ const VirtualMatrix = memo(
                       fontSize: "0.55rem",
                       opacity: 0.65,
                       textTransform: "capitalize",
-                      color: isWknd
-                        ? theme.palette.warning.main
-                        : theme.palette.text.secondary,
+                      color: isCurrentDay
+                        ? theme.palette.primary.main // ── Nuevo
+                        : isWknd
+                          ? theme.palette.warning.main
+                          : theme.palette.text.secondary,
                     }}
                   >
                     {format(dateObj, "EEEEE", { locale: es })}{" "}
@@ -857,9 +814,11 @@ const VirtualMatrix = memo(
                 <span
                   style={{
                     fontSize: isMobile ? "0.68rem" : "0.78rem",
-                    fontWeight: 600,
+                    fontWeight: isCurrentDay ? 700 : 600, // ── Nuevo: más bold si es hoy
                     textTransform: "capitalize",
-                    color: theme.palette.text.primary,
+                    color: isCurrentDay
+                      ? theme.palette.primary.main // ── Nuevo
+                      : theme.palette.text.primary,
                   }}
                 >
                   {dateStr}
@@ -1053,7 +1012,7 @@ const TimelineMatrix = ({
           borderBottomRightRadius: 0,
           display: "flex",
           alignItems: "center",
-          //justifyContent: { xs: "center", sm: "space-between" },
+          justifyContent: { xs: "normal", md: "space-between" },
           gap: 1,
           flexWrap: "wrap",
           bgcolor: isDark
@@ -1134,14 +1093,6 @@ const TimelineMatrix = ({
           />
         </Paper>
       </Fade>
-
-      {/* Shift info panel (replaces Tooltip) */}
-      {/* <ShiftInfoPanel
-        info={shiftInfo}
-        onClose={handleCloseInfo}
-        isMobile={isMobile}
-        isDark={isDark}
-      /> */}
 
       {/* Mobile legend drawer */}
       {isMobile && (

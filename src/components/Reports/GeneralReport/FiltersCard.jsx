@@ -47,7 +47,7 @@ const STATUS_OPTIONS = [
   { value: "on_time", label: "A tiempo" },
   { value: "late", label: "Tardanza" },
   { value: "early", label: "Temprano" },
-  { value: "early_exit", label: "Salida temprana" },
+  { value: "early_exit", label: "Salida anticipada" },
   { value: "incomplete", label: "Incompleto" },
   { value: "absent", label: "Ausente" },
   { value: "justified", label: "Justificado" },
@@ -56,6 +56,7 @@ const STATUS_OPTIONS = [
 // ─── Mobile Action Bar ───────────────────────────────────────────────────────
 
 const MobileActionBar = ({
+  canSearch,
   searchValue,
   onSearchChange,
   onHandleClearSearch,
@@ -70,48 +71,50 @@ const MobileActionBar = ({
   return (
     <Stack spacing={1.5}>
       {/* Row 1: Search */}
-      <TextField
-        fullWidth
-        size="small"
-        placeholder="Buscar por nombre o DNI…"
-        value={searchValue}
-        onChange={onSearchChange}
-        inputRef={searchInputRef}
-        error={searchValue.length > 0 && searchValue.length < 3}
-        helperText={
-          searchValue.length > 0 && searchValue.length < 3
-            ? "Mínimo 3 caracteres"
-            : searchValue.length >= 3
-              ? `Buscando: "${searchValue}"`
-              : ""
-        }
-        slotProps={{
-          input: {
-            sx: { fontSize: "0.9rem", borderRadius: 2.5 },
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon
-                  fontSize="small"
-                  color={searchValue.length >= 3 ? "primary" : "action"}
-                />
-              </InputAdornment>
-            ),
-            endAdornment: searchValue && (
-              <Fade in={Boolean(searchValue)}>
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={onHandleClearSearch}
-                    edge="end"
-                    size="small"
-                  >
-                    <ClearIcon fontSize="small" />
-                  </IconButton>
+      {canSearch && (
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Buscar por nombre o DNI…"
+          value={searchValue}
+          onChange={onSearchChange}
+          inputRef={searchInputRef}
+          error={searchValue.length > 0 && searchValue.length < 3}
+          helperText={
+            searchValue.length > 0 && searchValue.length < 3
+              ? "Mínimo 3 caracteres"
+              : searchValue.length >= 3
+                ? `Buscando: "${searchValue}"`
+                : ""
+          }
+          slotProps={{
+            input: {
+              sx: { fontSize: "0.9rem", borderRadius: 2.5 },
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon
+                    fontSize="small"
+                    color={searchValue.length >= 3 ? "primary" : "action"}
+                  />
                 </InputAdornment>
-              </Fade>
-            ),
-          },
-        }}
-      />
+              ),
+              endAdornment: searchValue && (
+                <Fade in={Boolean(searchValue)}>
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={onHandleClearSearch}
+                      edge="end"
+                      size="small"
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                </Fade>
+              ),
+            },
+          }}
+        />
+      )}
 
       {/* Row 2: View toggle + Filter button + Export */}
       <Stack direction="row" spacing={1} alignItems="center">
@@ -166,10 +169,10 @@ const MobileActionBar = ({
           badgeContent={activeFilterCount}
           color="secondary"
           overlap="circular"
-        //   anchorOrigin={{
-        //     vertical: "top",
-        //     horizontal: "left",
-        //   }}
+          //   anchorOrigin={{
+          //     vertical: "top",
+          //     horizontal: "left",
+          //   }}
         >
           <Button
             variant={activeFilterCount > 0 ? "contained" : "outlined"}
@@ -253,6 +256,7 @@ const ActiveFilterChips = ({
 // ─── Filters Drawer (mobile) ─────────────────────────────────────────────────
 
 const FiltersDrawer = ({
+  canSearch,
   open,
   onClose,
   scheduleId,
@@ -476,35 +480,37 @@ const FiltersDrawer = ({
             )}
 
             {/* Usuarios inactivos */}
-            <Box
-              sx={(theme) => ({
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: "divider",
-                px: 2,
-                py: 1.25,
-                bgcolor: alpha(theme.palette.action.hover, 0.4),
-              })}
-            >
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    size="small"
-                    onChange={(e) => onChangeCheckboxUser(e.target.checked)}
-                  />
-                }
-                label={
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    fontWeight={500}
-                  >
-                    Incluir usuarios inactivos
-                  </Typography>
-                }
-                sx={{ m: 0 }}
-              />
-            </Box>
+            {canSearch && (
+              <Box
+                sx={(theme) => ({
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  px: 2,
+                  py: 1.25,
+                  bgcolor: alpha(theme.palette.action.hover, 0.4),
+                })}
+              >
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      onChange={(e) => onChangeCheckboxUser(e.target.checked)}
+                    />
+                  }
+                  label={
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      fontWeight={500}
+                    >
+                      Incluir usuarios inactivos
+                    </Typography>
+                  }
+                  sx={{ m: 0 }}
+                />
+              </Box>
+            )}
           </Stack>
         </LocalizationProvider>
       </Box>
@@ -636,6 +642,7 @@ const ExportDrawer = ({
 
 const FiltersCard = memo(
   ({
+    canSearch,
     search,
     searchValue,
     scheduleId,
@@ -703,6 +710,7 @@ const FiltersCard = memo(
           >
             <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
               <MobileActionBar
+                canSearch={canSearch}
                 searchValue={searchValue}
                 onSearchChange={onSearchChange}
                 onHandleClearSearch={onHandleClearSearch}
@@ -735,6 +743,7 @@ const FiltersCard = memo(
 
           {/* Filters Drawer */}
           <FiltersDrawer
+            canSearch={canSearch}
             open={filtersDrawerOpen}
             onClose={() => setFiltersDrawerOpen(false)}
             scheduleId={scheduleId}
@@ -798,57 +807,70 @@ const FiltersCard = memo(
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
             <Grid container spacing={2}>
               {/* Búsqueda */}
-              <Grid size={{ xs: 12, md: viewMode === "table" ? 3.5 : 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Buscar"
-                  placeholder="Nombres, Apellidos o DNI"
-                  value={searchValue}
-                  onChange={onSearchChange}
-                  inputRef={searchInputRef}
-                  error={searchValue.length > 0 && searchValue.length < 3}
-                  slotProps={{
-                    input: {
-                      style: { fontSize: "0.9rem" },
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon
-                            color={
-                              searchValue.length >= 3 ? "primary" : "action"
-                            }
-                          />
-                        </InputAdornment>
-                      ),
-                      endAdornment: searchValue && (
-                        <Fade in={Boolean(searchValue)}>
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={onHandleClearSearch}
-                              edge="end"
-                              size="small"
-                              sx={{ padding: 0.5 }}
-                            >
-                              <ClearIcon fontSize="small" />
-                            </IconButton>
+              {canSearch && (
+                <Grid size={{ xs: 12, md: viewMode === "table" ? 3.5 : 6 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Buscar"
+                    placeholder="Nombres, Apellidos o DNI"
+                    value={searchValue}
+                    onChange={onSearchChange}
+                    inputRef={searchInputRef}
+                    error={searchValue.length > 0 && searchValue.length < 3}
+                    slotProps={{
+                      input: {
+                        style: { fontSize: "0.9rem" },
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon
+                              color={
+                                searchValue.length >= 3 ? "primary" : "action"
+                              }
+                            />
                           </InputAdornment>
-                        </Fade>
-                      ),
-                    },
-                  }}
-                  helperText={
-                    searchValue.length > 0 && searchValue.length < 3
-                      ? "Mínimo 3 caracteres para buscar"
-                      : searchValue.length >= 3
-                        ? `Buscando: "${searchValue}"`
-                        : ""
-                  }
-                />
-              </Grid>
+                        ),
+                        endAdornment: searchValue && (
+                          <Fade in={Boolean(searchValue)}>
+                            <InputAdornment position="end">
+                              <IconButton
+                                onClick={onHandleClearSearch}
+                                edge="end"
+                                size="small"
+                                sx={{ padding: 0.5 }}
+                              >
+                                <ClearIcon fontSize="small" />
+                              </IconButton>
+                            </InputAdornment>
+                          </Fade>
+                        ),
+                      },
+                    }}
+                    helperText={
+                      searchValue.length > 0 && searchValue.length < 3
+                        ? "Mínimo 3 caracteres para buscar"
+                        : searchValue.length >= 3
+                          ? `Buscando: "${searchValue}"`
+                          : ""
+                    }
+                  />
+                </Grid>
+              )}
 
               {/* Filtro por turno */}
               <Grid
-                size={{ xs: 12, sm: 6, md: viewMode === "table" ? 2.25 : 3 }}
+                size={{
+                  xs: 12,
+                  sm: 6,
+                  md:
+                    viewMode === "table"
+                      ? canSearch
+                        ? 2.25
+                        : 3.125
+                      : canSearch
+                        ? 3
+                        : 6,
+                }}
               >
                 <FormControl fullWidth size="small">
                   <InputLabel sx={{ fontSize: "0.9rem" }}>Turno</InputLabel>
@@ -878,7 +900,18 @@ const FiltersCard = memo(
 
               {/* Filtro por estado */}
               <Grid
-                size={{ xs: 12, sm: 6, md: viewMode === "table" ? 2.25 : 3 }}
+                size={{
+                  xs: 12,
+                  sm: 6,
+                  md:
+                    viewMode === "table"
+                      ? canSearch
+                        ? 2.25
+                        : 3.125
+                      : canSearch
+                        ? 3
+                        : 6,
+                }}
               >
                 <FormControl fullWidth size="small">
                   <InputLabel sx={{ fontSize: "0.9rem" }}>Estado</InputLabel>
@@ -906,7 +939,13 @@ const FiltersCard = memo(
 
               {viewMode !== "matrix" && (
                 <>
-                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+                  <Grid
+                    size={{
+                      xs: 12,
+                      sm: canSearch ? 6 : 6.875,
+                      md: canSearch ? 2 : 2.875,
+                    }}
+                  >
                     <DatePicker
                       label="Desde"
                       value={dateFrom}
@@ -922,7 +961,13 @@ const FiltersCard = memo(
                       format="dd/MM/yyyy"
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+                  <Grid
+                    size={{
+                      xs: 12,
+                      sm: canSearch ? 6 : 6.875,
+                      md: canSearch ? 2 : 2.875,
+                    }}
+                  >
                     <DatePicker
                       label="Hasta"
                       value={dateTo}
@@ -986,16 +1031,18 @@ const FiltersCard = memo(
                   Tabla
                 </ToggleButton>
               </ToggleButtonGroup>
-              <FormControlLabel
-                control={<Checkbox onChange={handleCheckboxUserChange} />}
-                label="Incluir usuarios inactivos"
-                sx={{
-                  "& .MuiFormControlLabel-label": {
-                    color: "text.secondary",
-                    fontSize: "0.9rem",
-                  },
-                }}
-              />
+              {canSearch && (
+                <FormControlLabel
+                  control={<Checkbox onChange={handleCheckboxUserChange} />}
+                  label="Incluir usuarios inactivos"
+                  sx={{
+                    "& .MuiFormControlLabel-label": {
+                      color: "text.secondary",
+                      fontSize: "0.9rem",
+                    },
+                  }}
+                />
+              )}
             </Stack>
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
